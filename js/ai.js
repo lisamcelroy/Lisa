@@ -118,18 +118,58 @@ const RECIPE_SCHEMA = {
   },
 };
 
-/** Ask Claude to invent recipes from what is on hand, favouring food that expires soon. */
-export async function suggestRecipesWithClaude(apiKey, inventory, { soon = [], request = "" } = {}) {
-  const list = inventory.map((it) => `${it.name} (${it.qty} ${it.unit}, ${it.location})`).join("; ");
-  const prompt =
-    `Here is what is in my kitchen: ${list || "nothing yet"}. ` +
-    (soon.length ? `These need using up in the next few days: ${soon.join(", ")}. ` : "") +
+/**
+ * The prompt for recipe ideas. Kept stable for the same kitchen (sorted names,
+ * no quantities) so repeat requests can be served from cache.
+ */
+export function buildIdeasPrompt(inventory, { soon = [], request = "", exclude = [], count = 4 } = {}) {
+  const names = [...new Set(inventory.map((it) => it.name))].sort();
+  return (
+    `Here is what is in my kitchen: ${names.join(", ") || "nothing yet"}. ` +
+    (soon.length ? `These need using up in the next few days, so favour them: ${[...soon].sort().join(", ")}. ` : "") +
     (request ? `What I'm in the mood for: ${request}. ` : "") +
-    "Suggest 3 practical home recipes that use mostly what I have, assuming salt, pepper, oil, water and common spices are available. " +
+    (exclude.length ? `Don't repeat these, I've already seen them: ${exclude.join("; ")}. ` : "") +
+    `Suggest ${count} practical, varied home recipes that use mostly what I have, ` +
+    "assuming salt, pepper, oil, water and common spices are available. Keep the shopping needed to 0-2 items per recipe. " +
     `Write ingredient names in lower case and, where one matches, use exactly one of these names: ${FOOD_NAMES}. ` +
-    "Keep steps short and clear.";
-  const data = await askForJson(apiKey, prompt, RECIPE_SCHEMA, "medium");
-  return data.recipes;
+    "Keep steps short and clear (3-6 steps)."
+  );
+}
+
+const JSON_SHAPE =
+  'Reply with only JSON of this shape: {"recipes": [{"title": string, "minutes": integer, "servings": integer, ' +
+  '"ingredients": [{"name": string, "qty": number, "unit": string, "optional": boolean}], "steps": [string]}]}';
+
+/** Keep only well-formed recipes from a model reply. */
+export function cleanIdeas(data) {
+  const list = Array.isArray(data) ? data : Array.isArray(data?.recipes) ? data.recipes : [];
+  return list
+    .filter((r) => r && typeof r.title === "string" && Array.isArray(r.ingredients) && r.ingredients.length)
+    .map((r) => ({
+      title: r.title.trim(),
+      minutes: Number.isFinite(+r.minutes) && +r.minutes > 0 ? Math.round(+r.minutes) : 30,
+      servings: Number.isFinite(+r.servings) && +r.servings > 0 ? Math.round(+r.servings) : 2,
+      ingredients: r.ingredients
+        .filter((i) => i && typeof i.name === "string" && i.name.trim())
+        .map((i) => ({ name: i.name, qty: Number(i.qty) || 1, unit: String(i.unit || "count"), optional: Boolean(i.optional) })),
+      steps: Array.isArray(r.steps) ? r.steps.map(String) : [],
+    }));
+}
+
+/** Recipe ideas through the person's own Anthropic API key. */
+export async function suggestRecipesWithClaude(apiKey, inventory, opts = {}) {
+  const data = await askForJson(apiKey, buildIdeasPrompt(inventory, opts), RECIPE_SCHEMA, "medium");
+  return cleanIdeas(data);
+}
+
+/**
+ * Recipe ideas through the claude.ai page capability (the viewer's own Claude
+ * account; no key needed). `sample` is the function from claude.use("sample").
+ */
+export async function suggestRecipesWithSample(sample, inventory, opts = {}, { fresh = false, signal } = {}) {
+  const prompt = buildIdeasPrompt(inventory, opts) + "\n\n" + JSON_SHAPE;
+  const data = await sample.json(prompt, { signal, cache: fresh ? false : { gcTime: 6 * 60 * 60 * 1000 } });
+  return cleanIdeas(data);
 }
 
 /** Read a recipe from a photo (cookbook page, card, screenshot). */

@@ -12,7 +12,8 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 let state = loadState();
-const ui = { tab: "kitchen", loc: "all", search: "", recipeFilter: "ready", recipeSearch: "", review: [], aiRecipes: [] };
+const ui = { tab: "kitchen", loc: "all", search: "", recipeFilter: "ready", recipeSearch: "", review: [] };
+state.ideas ||= { key: "", recipes: [] };
 
 function commit() {
   saveState(state);
@@ -354,7 +355,7 @@ function recipeCard(r) {
 }
 
 function renderRecipes() {
-  $("#ai-card").hidden = !claudeOn();
+  renderIdeas();
   $$("#recipe-filter .chip").forEach((c) => c.classList.toggle("active", c.dataset.filter === ui.recipeFilter));
 
   const ranked = recommend(allRecipes(), state.inventory, { assumeStaples: state.settings.assumeStaples });
@@ -401,7 +402,7 @@ $("#recipes").addEventListener("click", (e) => {
 });
 
 function findRecipe(id) {
-  return allRecipes().find((r) => r.id === id) || ui.aiRecipes.find((r) => r.id === id);
+  return allRecipes().find((r) => r.id === id) || state.ideas.recipes.find((r) => r.id === id);
 }
 
 function openRecipe(id) {
@@ -410,7 +411,7 @@ function openRecipe(id) {
   const [r] = recommend([recipe], state.inventory, { assumeStaples: state.settings.assumeStaples });
   const have = new Set([...r.have, ...r.optionalHave]);
   const missing = new Set(r.missing);
-  const isAi = ui.aiRecipes.includes(recipe);
+  const isIdea = Boolean(recipe.idea);
 
   $("#recipe-detail").innerHTML = `
     <h2>${esc(recipe.title)}</h2>
@@ -427,7 +428,7 @@ function openRecipe(id) {
     <ol class="steps">${recipe.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
     <div class="row end">
       ${recipe.custom ? `<button class="btn danger" data-act="delete">Delete</button>` : ""}
-      ${isAi ? `<button class="btn" data-act="keep">Save to my recipes</button>` : ""}
+      ${isIdea ? `<button class="btn" data-act="keep">Save to my recipes</button>` : ""}
       ${r.missing.length ? `<button class="btn" data-act="shop">Add ${r.missing.length} to shopping list</button>` : ""}
       <button class="btn primary" data-act="cook">I cooked this</button>
       <button class="btn" data-act="close">Close</button>
@@ -457,9 +458,8 @@ function openRecipe(id) {
       dlg.close();
     }
     if (act === "keep") {
-      ui.aiRecipes = ui.aiRecipes.filter((x) => x !== recipe);
-      saveCustomRecipe({ ...recipe, id: undefined, tags: ["mine", "claude"] });
-      renderAiResults();
+      state.ideas.recipes = state.ideas.recipes.filter((x) => x !== recipe);
+      saveCustomRecipe({ ...recipe, id: undefined, idea: undefined, tags: ["mine", "claude"] });
       dlg.close();
       toast("Saved to your recipes");
     }
@@ -467,44 +467,116 @@ function openRecipe(id) {
   if (!dlg.open) dlg.showModal();
 }
 
-// Claude recipe ideas
-function renderAiResults() {
-  if (!ui.aiRecipes.length) {
-    $("#ai-results").innerHTML = "";
-    return;
-  }
-  const ranked = recommend(ui.aiRecipes, state.inventory, { assumeStaples: state.settings.assumeStaples });
-  $("#ai-results").innerHTML = `<div class="recipe-grid" style="margin-top:12px">${ranked.map(recipeCard).join("")}</div>`;
+// ---------- Fresh recipe ideas ----------
+// On claude.ai the page asks Claude through the viewer's own account (the
+// `sample` capability). Run locally, it uses the API key from Settings.
+// Ideas are fetched automatically when the Recipes tab opens and the set of
+// ingredients has changed since the last batch.
+
+let sampleFn = null;
+const ideas = { loading: false, ctl: null, error: "", blocked: false, autoTried: new Set() };
+const HIDE_CODES = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
+
+const kitchenKey = () => [...new Set(state.inventory.map((it) => it.name))].sort().join("|");
+
+function ideaSource() {
+  if (sampleFn && !ideas.blocked) return "sample";
+  if (claudeOn()) return "key";
+  return null;
 }
 
-$("#ai-results").addEventListener("click", (e) => {
+function renderIdeas() {
+  const src = ideaSource();
+  const show = Boolean(src) && state.inventory.length > 0 && ui.recipeFilter !== "mine";
+  $("#ideas").hidden = !show;
+  $("#ideas-hint").hidden = Boolean(src) || !state.inventory.length || Boolean(window.claude);
+  $("#library-title").hidden = !show;
+  if (!show) return;
+
+  const key = kitchenKey();
+  const current = state.ideas.key === key;
+  if (!current && !ideas.loading && !ideas.autoTried.has(key)) {
+    ideas.autoTried.add(key);
+    setTimeout(() => fetchIdeas(), 0);
+  }
+
+  const recipes = state.ideas.recipes;
+  if (ideas.loading && !recipes.length) {
+    $("#ideas-list").innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+  } else if (recipes.length) {
+    const ranked = recommend(recipes, state.inventory, { assumeStaples: state.settings.assumeStaples });
+    $("#ideas-list").innerHTML = ranked.map(recipeCard).join("");
+  } else {
+    $("#ideas-list").innerHTML = "";
+  }
+
+  $("#ideas-status").textContent = ideas.loading
+    ? recipes.length ? "Updating for what you have now..." : "Finding recipes for what you have..."
+    : ideas.error || (current && recipes.length ? "Made for what's in your kitchen now" : "");
+  $("#ai-suggest").disabled = ideas.loading;
+  $("#ai-suggest").textContent = ideas.loading ? "Thinking..." : $("#ai-request").value.trim() ? "Get ideas" : "More ideas";
+  $("#ideas-stop").hidden = !(ideas.loading && ideas.ctl && src === "sample");
+}
+
+async function fetchIdeas({ fresh = false, more = false } = {}) {
+  const src = ideaSource();
+  if (!src || ideas.loading || !state.inventory.length) return;
+  const key = kitchenKey();
+  const ctl = new AbortController();
+  Object.assign(ideas, { loading: true, error: "", ctl });
+  renderIdeas();
+
+  const opts = {
+    soon: state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS).map((it) => it.name),
+    request: $("#ai-request").value.trim(),
+    exclude: more ? state.ideas.recipes.map((r) => r.title) : [],
+  };
+  try {
+    const ai = await import("./ai.js");
+    const raw = src === "sample"
+      ? await ai.suggestRecipesWithSample(sampleFn, state.inventory, opts, { fresh, signal: ctl.signal })
+      : await ai.suggestRecipesWithClaude(state.settings.apiKey, state.inventory, opts);
+    if (!raw.length) throw { code: "empty_completion" };
+    state.ideas = {
+      key,
+      recipes: raw.map((r) => ({
+        ...r,
+        id: "idea-" + newId(),
+        tags: ["idea"],
+        idea: true,
+        ingredients: r.ingredients.map((i) => ({ ...i, name: canonicalName(i.name), unit: normalizeUnit(i.unit) })),
+      })),
+    };
+    saveState(state);
+  } catch (err) {
+    const code = err?.code;
+    if (code !== "cancelled") console.error(err);
+    if (HIDE_CODES.includes(code)) ideas.blocked = true;
+    else if (code === "rate_limited") ideas.error = "Usage limit reached. Try again a bit later.";
+    else if (code === "session_expired") ideas.error = "Sign in to claude.ai again to get ideas.";
+    else if (code !== "cancelled") ideas.error = !code && err?.message ? err.message : "Couldn't get ideas just now.";
+  } finally {
+    Object.assign(ideas, { loading: false, ctl: null });
+    if (ui.tab === "recipes") renderRecipes();
+  }
+}
+
+$("#ideas-list").addEventListener("click", (e) => {
   const card = e.target.closest("[data-recipe]");
   if (card) openRecipe(card.dataset.recipe);
 });
 
-$("#ai-suggest").addEventListener("click", async () => {
-  const btn = $("#ai-suggest");
-  btn.disabled = true;
-  btn.textContent = "Thinking...";
-  try {
-    const { suggestRecipesWithClaude } = await import("./ai.js");
-    const soon = state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS).map((it) => it.name);
-    const recipes = await suggestRecipesWithClaude(state.settings.apiKey, state.inventory, { soon, request: $("#ai-request").value.trim() });
-    ui.aiRecipes = recipes.map((r) => ({
-      ...r,
-      id: "ai-" + newId(),
-      tags: ["claude"],
-      ingredients: r.ingredients.map((i) => ({ ...i, name: canonicalName(i.name), unit: normalizeUnit(i.unit) })),
-    }));
-    renderAiResults();
-  } catch (err) {
-    console.error(err);
-    toast(err.message || "Claude couldn't come up with ideas right now");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Ask Claude";
-  }
+$("#ai-suggest").addEventListener("click", () => fetchIdeas({ fresh: true, more: !$("#ai-request").value.trim() }));
+$("#ai-request").addEventListener("input", () => renderIdeas());
+$("#ai-request").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") fetchIdeas({ fresh: true });
 });
+$("#ideas-stop").addEventListener("click", () => ideas.ctl?.abort());
+
+window.claude?.use?.("sample").then((fn) => {
+  sampleFn = fn;
+  if (ui.tab === "recipes") renderRecipes();
+}).catch(() => {});
 
 // ---------- Shopping ----------
 

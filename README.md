@@ -22,6 +22,10 @@ what is actually in your kitchen, starting with food that is about to go off.
 - Add your own recipes by pasting them (photo import works with Claude enabled). They join the matches.
 
 **Recipes**
+- Fresh ideas: opening the Recipes tab asks Claude for new recipes built from what you have (favouring food
+  that expires soon), and asks again whenever your ingredients change. On claude.ai this uses your Claude
+  account; run yourself, it uses the API key from Settings. "More ideas" gets a different batch, and any idea
+  can be saved to your recipes.
 - 34 built-in recipes, ranked by how much of each you already have
 - Ready to cook / Almost there (1-2 items missing) / All / Mine filters
 - Recipes that use up expiring food get boosted and labelled
@@ -33,7 +37,7 @@ what is actually in your kitchen, starting with food that is about to go off.
 
 **Optional: Claude**
 Add an Anthropic API key in Settings for much better receipt reading (straight from the photo),
-recipe photo import, and "Ask Claude" for new recipe ideas built around what you have. The key is
+recipe photo import, and fresh recipe ideas when running the app yourself. The key is
 stored only in your browser and sent only to Anthropic. Without a key everything else still works.
 
 All data stays in your browser (localStorage). Use Settings > Export backup to save a copy or move

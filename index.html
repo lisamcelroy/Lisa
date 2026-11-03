@@ -106,13 +106,20 @@
         </div>
         <input id="recipe-search" type="search" placeholder="Search recipes" aria-label="Search recipes" />
       </div>
-      <div class="card ai-card" id="ai-card" hidden>
-        <div class="row">
-          <input id="ai-request" placeholder="In the mood for... (optional)" aria-label="What are you in the mood for" />
-          <button class="btn primary" id="ai-suggest">Ask Claude</button>
+      <div class="card ideas" id="ideas" hidden>
+        <div class="ideas-head">
+          <h2>Fresh ideas for your kitchen</h2>
+          <span class="muted small" id="ideas-status" role="status" aria-live="polite"></span>
         </div>
-        <div id="ai-results"></div>
+        <div id="ideas-list" class="recipe-grid"></div>
+        <div class="row ideas-actions">
+          <input id="ai-request" placeholder="In the mood for... (optional)" aria-label="What are you in the mood for" />
+          <button class="btn primary" id="ai-suggest">More ideas</button>
+          <button class="btn" id="ideas-stop" hidden>Stop</button>
+        </div>
       </div>
+      <p class="muted small ideas-hint" id="ideas-hint" hidden>Want recipe ideas made from your exact ingredients? Add a Claude API key in Settings.</p>
+      <h2 class="section-title" id="library-title">From the recipe book</h2>
       <div id="recipes" class="recipe-grid"></div>
     </section>
 
@@ -146,7 +153,7 @@
       <h2>Settings</h2>
       <label class="switch"><input type="checkbox" id="set-staples" /> Assume I always have salt, pepper, oil, vinegar and basic spices</label>
       <h3>Claude (optional)</h3>
-      <p class="muted small">Add an Anthropic API key for much better receipt reading, recipe photos, and custom recipe ideas. The key is stored only in this browser and sent only to Anthropic.</p>
+      <p class="muted small">On claude.ai, fresh recipe ideas use your Claude account automatically. Running the app yourself? Add an Anthropic API key for recipe ideas, better receipt reading and recipe photos. The key is stored only in this browser and sent only to Anthropic.</p>
       <input id="set-apikey" type="password" placeholder="sk-ant-..." autocomplete="off" aria-label="Anthropic API key" />
       <label class="switch"><input type="checkbox" id="set-useclaude" /> Use Claude for scanning and ideas</label>
       <h3>Your data</h3>
