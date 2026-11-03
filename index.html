@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#2f6f4f" />
+  <meta name="description" content="Track your fridge and pantry, scan grocery receipts, and get recipes that use what you have." />
+  <title>FridgeMate</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon.svg" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>FridgeMate</h1>
+    <button class="icon-btn" id="open-settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1c.5.4 1.1.7 1.7 1l.4 2.7h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.4L19.4 13ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z" transform="translate(-1 0)"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <!-- Kitchen -->
+    <section id="view-kitchen" class="view" data-view="kitchen">
+      <div class="stats" id="stats"></div>
+      <div id="use-soon"></div>
+
+      <form id="add-form" class="card add-form" autocomplete="off">
+        <h2>Add to kitchen</h2>
+        <div class="row">
+          <input id="add-name" list="food-names" placeholder="e.g. spinach, 2% milk, eggs" required aria-label="Item name" />
+        </div>
+        <div class="row">
+          <input id="add-qty" type="number" min="0" step="any" value="1" aria-label="Quantity" />
+          <select id="add-unit" aria-label="Unit"></select>
+          <select id="add-location" aria-label="Where">
+            <option value="">Auto</option>
+            <option value="fridge">Fridge</option>
+            <option value="freezer">Freezer</option>
+            <option value="pantry">Pantry</option>
+          </select>
+          <button class="btn primary" type="submit">Add</button>
+        </div>
+      </form>
+
+      <div class="toolbar">
+        <div class="chips" id="location-filter" role="tablist">
+          <button class="chip active" data-loc="all">All</button>
+          <button class="chip" data-loc="fridge">Fridge</button>
+          <button class="chip" data-loc="freezer">Freezer</button>
+          <button class="chip" data-loc="pantry">Pantry</button>
+        </div>
+        <input id="inventory-search" type="search" placeholder="Search" aria-label="Search kitchen" />
+      </div>
+      <div id="inventory"></div>
+    </section>
+
+    <!-- Scan -->
+    <section id="view-scan" class="view" data-view="scan" hidden>
+      <div class="card">
+        <h2>Scan a grocery receipt</h2>
+        <p class="muted">Take a photo of your receipt and the items are added to your fridge, freezer or pantry automatically.</p>
+        <label class="btn primary file-btn">
+          <input type="file" accept="image/*" capture="environment" id="receipt-file" hidden />
+          Take or choose photo
+        </label>
+        <p class="muted small" id="scan-engine"></p>
+        <div class="progress" id="scan-progress" hidden><div></div><span></span></div>
+        <details>
+          <summary>Or paste receipt text</summary>
+          <textarea id="receipt-text" rows="6" placeholder="ORG BNNA          1.29&#10;MLK 2% 4L         5.49&#10;CHKN BRST BNLS   12.99"></textarea>
+          <button class="btn" id="parse-receipt-text">Read items</button>
+        </details>
+      </div>
+
+      <div class="card" id="review" hidden>
+        <h2>Check the items</h2>
+        <p class="muted">Untick anything that isn't food, fix names, then add.</p>
+        <div id="review-list"></div>
+        <div class="row end">
+          <button class="btn" id="review-cancel">Cancel</button>
+          <button class="btn primary" id="review-add">Add to kitchen</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Add a recipe</h2>
+        <p class="muted">Paste a recipe you love (or snap a photo with Claude enabled) and it joins your matches.</p>
+        <label class="btn file-btn" id="recipe-photo-label">
+          <input type="file" accept="image/*" capture="environment" id="recipe-file" hidden />
+          Recipe photo
+        </label>
+        <textarea id="recipe-text" rows="7" placeholder="Lemon Chicken&#10;Ingredients&#10;2 chicken breasts&#10;1 lemon&#10;2 cloves garlic&#10;Directions&#10;1. Season chicken...&#10;2. ..."></textarea>
+        <button class="btn" id="import-recipe">Save recipe</button>
+      </div>
+    </section>
+
+    <!-- Recipes -->
+    <section id="view-recipes" class="view" data-view="recipes" hidden>
+      <div class="toolbar">
+        <div class="chips" id="recipe-filter">
+          <button class="chip active" data-filter="ready">Ready to cook</button>
+          <button class="chip" data-filter="almost">Almost there</button>
+          <button class="chip" data-filter="all">All</button>
+          <button class="chip" data-filter="mine">Mine</button>
+        </div>
+        <input id="recipe-search" type="search" placeholder="Search recipes" aria-label="Search recipes" />
+      </div>
+      <div class="card ai-card" id="ai-card" hidden>
+        <div class="row">
+          <input id="ai-request" placeholder="In the mood for... (optional)" aria-label="What are you in the mood for" />
+          <button class="btn primary" id="ai-suggest">Ask Claude</button>
+        </div>
+        <div id="ai-results"></div>
+      </div>
+      <div id="recipes" class="recipe-grid"></div>
+    </section>
+
+    <!-- Shopping -->
+    <section id="view-shopping" class="view" data-view="shopping" hidden>
+      <form id="shop-form" class="card row" autocomplete="off">
+        <input id="shop-name" list="food-names" placeholder="Add to shopping list" required aria-label="Shopping item" />
+        <button class="btn primary" type="submit">Add</button>
+      </form>
+      <div id="shopping"></div>
+      <div class="row end" id="shop-actions" hidden>
+        <button class="btn" id="shop-clear">Remove checked</button>
+        <button class="btn primary" id="shop-bought">Bought: move checked to kitchen</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Sections">
+    <button data-tab="kitchen" class="active"><span class="tab-icon" aria-hidden="true">&#9638;</span>Kitchen</button>
+    <button data-tab="scan"><span class="tab-icon" aria-hidden="true">&#9635;</span>Scan</button>
+    <button data-tab="recipes"><span class="tab-icon" aria-hidden="true">&#9832;</span>Recipes</button>
+    <button data-tab="shopping"><span class="tab-icon" aria-hidden="true">&#9776;</span>Shopping<span class="badge" id="shop-count" hidden></span></button>
+  </nav>
+
+  <datalist id="food-names"></datalist>
+
+  <dialog id="recipe-dialog"><div id="recipe-detail"></div></dialog>
+
+  <dialog id="settings-dialog">
+    <form method="dialog" class="settings">
+      <h2>Settings</h2>
+      <label class="switch"><input type="checkbox" id="set-staples" /> Assume I always have salt, pepper, oil, vinegar and basic spices</label>
+      <h3>Claude (optional)</h3>
+      <p class="muted small">Add an Anthropic API key for much better receipt reading, recipe photos, and custom recipe ideas. The key is stored only in this browser and sent only to Anthropic.</p>
+      <input id="set-apikey" type="password" placeholder="sk-ant-..." autocomplete="off" aria-label="Anthropic API key" />
+      <label class="switch"><input type="checkbox" id="set-useclaude" /> Use Claude for scanning and ideas</label>
+      <h3>Your data</h3>
+      <div class="row">
+        <button class="btn" type="button" id="export-data">Export backup</button>
+        <label class="btn file-btn"><input type="file" accept="application/json" id="import-data" hidden />Import backup</label>
+        <button class="btn danger" type="button" id="reset-data">Clear everything</button>
+      </div>
+      <div class="row end"><button class="btn primary" value="close">Done</button></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

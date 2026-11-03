@@ -1,0 +1,10 @@
+{
+  "name": "FridgeMate",
+  "short_name": "FridgeMate",
+  "description": "Your fridge and pantry, receipt scanning, and recipes from what you have.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f4ef",
+  "theme_color": "#2f6f4f",
+  "icons": [{ "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
