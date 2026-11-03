@@ -9,6 +9,9 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -21,8 +24,25 @@
   </header>
 
   <main>
+    <!-- Fridge (visual) -->
+    <section id="view-fridge" class="view" data-view="fridge">
+      <div class="fridge-hero">
+        <div>
+          <h2 class="hero-title">What's in my kitchen</h2>
+          <p class="muted small" id="fridge-summary"></p>
+        </div>
+        <button class="btn primary" id="fridge-add">+ Add food</button>
+      </div>
+      <div class="chips" id="appliance-filter">
+        <button class="chip active" data-show="both">Everything</button>
+        <button class="chip" data-show="fridge">Fridge</button>
+        <button class="chip" data-show="pantry">Pantry</button>
+      </div>
+      <div class="appliances" id="appliances"></div>
+    </section>
+
     <!-- Kitchen -->
-    <section id="view-kitchen" class="view" data-view="kitchen">
+    <section id="view-kitchen" class="view" data-view="kitchen" hidden>
       <div class="stats" id="stats"></div>
       <div id="use-soon"></div>
 
@@ -139,15 +159,17 @@
   </main>
 
   <nav class="tabbar" aria-label="Sections">
-    <button data-tab="kitchen" class="active"><span class="tab-icon" aria-hidden="true">&#9638;</span>Kitchen</button>
-    <button data-tab="scan"><span class="tab-icon" aria-hidden="true">&#9635;</span>Scan</button>
-    <button data-tab="recipes"><span class="tab-icon" aria-hidden="true">&#9832;</span>Recipes</button>
-    <button data-tab="shopping"><span class="tab-icon" aria-hidden="true">&#9776;</span>Shopping<span class="badge" id="shop-count" hidden></span></button>
+    <button data-tab="fridge" class="active"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="4"/><path d="M5 9.5h14M8.5 5.5v2M8.5 12.5v3.5"/></svg></span>Fridge</button>
+    <button data-tab="kitchen"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5.5" cy="6.5" r="1.4"/><circle cx="5.5" cy="12" r="1.4"/><circle cx="5.5" cy="17.5" r="1.4"/><path d="M10 6.5h9M10 12h9M10 17.5h9"/></svg></span>List</button>
+    <button data-tab="scan"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8V6.5A2.5 2.5 0 0 1 6.5 4H8M16 4h1.5A2.5 2.5 0 0 1 20 6.5V8M20 16v1.5a2.5 2.5 0 0 1-2.5 2.5H16M8 20H6.5A2.5 2.5 0 0 1 4 17.5V16M8 9.5h8M8 12h8M8 14.5h5"/></svg></span>Scan</button>
+    <button data-tab="recipes"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 11h16a8 7.5 0 0 1-16 0z"/><path d="M9 7.5c0-1.5 1-1.5 1-3M13 7.5c0-1.5 1-1.5 1-3"/></svg></span>Recipes</button>
+    <button data-tab="shopping"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 4.5h2.5l2.2 10.5h10l2-7.5H7"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg></span>Shopping<span class="badge" id="shop-count" hidden></span></button>
   </nav>
 
   <datalist id="food-names"></datalist>
 
   <dialog id="recipe-dialog"><div id="recipe-detail"></div></dialog>
+  <dialog id="item-dialog" class="item-dialog"><div id="item-detail"></div></dialog>
 
   <dialog id="settings-dialog">
     <form method="dialog" class="settings">

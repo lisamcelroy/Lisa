@@ -6,7 +6,14 @@ what is actually in your kitchen, starting with food that is about to go off.
 
 ## What it does
 
-**Kitchen**
+**Fridge** (the home tab)
+- A drawing of your fridge, freezer and pantry with every item as a little illustrated bubble,
+  sorted onto shelves: dairy on top, meat and fish in the middle, fruit and veg in the crisper,
+  sauces in the door; grains, cans, sauces, a bread box and a produce basket in the pantry
+- Items that need using soon wobble with an orange ring; expired ones get a red ring
+- Tap an item to change the amount, move it, mark it used up, or see recipes that use it
+
+**List**
 - Fridge, freezer and pantry inventory with quantities and units
 - Typing "eggs" or "2% milk" files the item in the right place and estimates a use-by date
 - A "Use these soon" panel for anything expiring within 3 days
@@ -73,6 +80,8 @@ Covers name matching, receipt parsing, recipe import, recipe ranking and cooking
 index.html            app shell
 css/styles.css        styles (light and dark)
 js/app.js             UI and wiring
+js/fridge.js          the fridge and pantry drawing: which shelf each item goes on
+js/icons.js           food icons (inline SVG)
 js/data/foods.js      food catalog: names, receipt aliases, storage location, shelf life
 js/data/recipes.js    built-in recipes
 js/normalize.js       turns free text into catalog foods

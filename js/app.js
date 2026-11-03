@@ -6,6 +6,8 @@ import { parseRecipeText } from "./recipeImport.js";
 import { recommend, cookRecipe, daysLeft, SOON_DAYS } from "./recommend.js";
 import { loadState, saveState, makeItem, addToInventory, newId, toSynced, adoptRemote, mergeOnLoad } from "./store.js";
 import { connectCloud } from "./cloud.js";
+import { renderAppliances } from "./fridge.js";
+import { foodIcon } from "./icons.js";
 import { UNIT_CHOICES, formatQty, normalizeUnit } from "./units.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -13,7 +15,7 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 let state = loadState();
-const ui = { tab: "kitchen", loc: "all", search: "", recipeFilter: "ready", recipeSearch: "", review: [] };
+const ui = { tab: "fridge", show: "both", itemId: null, loc: "all", search: "", recipeFilter: "ready", recipeSearch: "", review: [] };
 state.ideas ||= { key: "", recipes: [] };
 
 // Saving: every change goes to this browser's storage straight away and, on
@@ -56,6 +58,100 @@ function expiryText(item) {
   if (d > 60) return `<span class="exp">keeps well</span>`;
   return `<span class="exp">${d}d left</span>`;
 }
+
+// ---------- Fridge (visual) ----------
+
+function renderFridge() {
+  const inv = state.inventory;
+  const n = (loc) => inv.filter((it) => it.location === loc).length;
+  const soon = inv.filter((it) => daysLeft(it) <= SOON_DAYS).length;
+  $("#fridge-summary").textContent = inv.length
+    ? `${n("fridge")} in the fridge, ${n("freezer")} in the freezer, ${n("pantry")} in the pantry` + (soon ? `. ${soon} to use soon.` : ".")
+    : "Empty for now. Add food or scan a receipt to stock it up.";
+  $$("#appliance-filter .chip").forEach((c) => c.classList.toggle("active", c.dataset.show === ui.show));
+  const { fridge, pantry } = renderAppliances(inv);
+  const box = $("#appliances");
+  box.classList.toggle("both", ui.show === "both");
+  box.innerHTML = (ui.show !== "pantry" ? fridge : "") + (ui.show !== "fridge" ? pantry : "");
+}
+
+$("#appliance-filter").addEventListener("click", (e) => {
+  const chip = e.target.closest(".chip");
+  if (!chip) return;
+  ui.show = chip.dataset.show;
+  renderFridge();
+});
+
+$("#appliances").addEventListener("click", (e) => {
+  const food = e.target.closest(".food");
+  if (food) openItem(food.dataset.id);
+});
+
+$("#fridge-add").addEventListener("click", () => {
+  switchTab("kitchen");
+  $("#add-name").focus();
+});
+
+// Item popup: change amount, move it, use it up, or find recipes that use it.
+function renderItemDialog() {
+  const item = state.inventory.find((it) => it.id === ui.itemId);
+  const dlg = $("#item-dialog");
+  if (!item) return dlg.open && dlg.close();
+  const { svg, color } = foodIcon(item.name, item.category);
+  $("#item-detail").innerHTML = `
+    <div class="food-bubble big-bubble" style="--food:${color}">${svg}</div>
+    <h2>${esc(item.name)}</h2>
+    <p class="muted small">${esc(item.category)}${expiryText(item) ? " &middot; " + expiryText(item) : ""}</p>
+    <div class="stepper">
+      <button class="step" data-act="dec" aria-label="Less">&minus;</button>
+      <span class="qty">${esc(formatQty(item.qty, item.unit))}</span>
+      <button class="step" data-act="inc" aria-label="More">+</button>
+    </div>
+    <div class="where" role="group" aria-label="Where it's kept">
+      ${LOCATIONS.map((l) => `<button class="chip loc-${l} ${l === item.location ? "active" : ""}" data-move="${l}">${titleCase(l)}</button>`).join("")}
+    </div>
+    <div class="row end">
+      <button class="btn danger" data-act="usedup">Used it up</button>
+      <button class="btn" data-act="recipes">Recipes with this</button>
+      <button class="btn primary" data-act="close">Done</button>
+    </div>`;
+}
+
+function openItem(id) {
+  ui.itemId = id;
+  renderItemDialog();
+  const dlg = $("#item-dialog");
+  if (!dlg.open) dlg.showModal();
+}
+
+$("#item-dialog").addEventListener("click", (e) => {
+  const dlg = $("#item-dialog");
+  if (e.target === dlg) return dlg.close();
+  const item = state.inventory.find((it) => it.id === ui.itemId);
+  if (!item) return dlg.close();
+  const move = e.target.closest("[data-move]")?.dataset.move;
+  const act = e.target.closest("[data-act]")?.dataset.act;
+  if (act === "close") return dlg.close();
+  if (act === "recipes") {
+    dlg.close();
+    ui.recipeFilter = "all";
+    ui.recipeSearch = item.name;
+    $("#recipe-search").value = item.name;
+    return switchTab("recipes");
+  }
+  if (move) item.location = move;
+  if (act === "inc") item.qty = +(item.qty + stepAmount(item)).toFixed(2);
+  if (act === "dec") item.qty = +(item.qty - stepAmount(item)).toFixed(2);
+  if (act === "usedup" || item.qty <= 0) {
+    state.inventory = state.inventory.filter((it) => it.id !== item.id);
+    toast(`${titleCase(item.name)} used up`);
+    dlg.close();
+  }
+  if (move || act) {
+    commit();
+    renderItemDialog();
+  }
+});
 
 // ---------- Kitchen ----------
 
@@ -727,6 +823,7 @@ $(".tabbar").addEventListener("click", (e) => {
 function render() {
   renderShopping();
   updateScanEngine();
+  if (ui.tab === "fridge") renderFridge();
   if (ui.tab === "kitchen") renderKitchen();
   if (ui.tab === "recipes") renderRecipes();
 }
