@@ -2,7 +2,7 @@
 // in Settings. The key stays in this browser and requests go straight to Anthropic.
 import { FOODS, LOCATIONS } from "./data/foods.js";
 
-const SDK_URL = "https://esm.sh/@anthropic-ai/sdk@1.1.0";
+const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.135.0/+esm";
 const MODEL = "claude-opus-5-5";
 const FOOD_NAMES = FOODS.map((f) => f.name).join(", ");
 
