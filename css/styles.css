@@ -266,3 +266,7 @@ ol.steps li { margin-bottom: 6px; }
 .skeleton { height: 118px; border-radius: var(--radius); background: var(--surface); opacity: .6; animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .3; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+.sync { margin-left: auto; margin-right: 8px; font-size: .78rem; color: var(--muted); }
+.sync[data-status="saved"]::before { content: "\2713  "; color: var(--accent); }
+.sync[data-status="offline"], .sync[data-status="local"] { color: var(--warn); }

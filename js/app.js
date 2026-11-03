@@ -4,7 +4,8 @@ import { canonicalName, titleCase, foodInfo } from "./normalize.js";
 import { parseReceipt } from "./receipt.js";
 import { parseRecipeText } from "./recipeImport.js";
 import { recommend, cookRecipe, daysLeft, SOON_DAYS } from "./recommend.js";
-import { loadState, saveState, makeItem, addToInventory, newId } from "./store.js";
+import { loadState, saveState, makeItem, addToInventory, newId, toSynced, adoptRemote, mergeOnLoad } from "./store.js";
+import { connectCloud } from "./cloud.js";
 import { UNIT_CHOICES, formatQty, normalizeUnit } from "./units.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -15,8 +16,19 @@ let state = loadState();
 const ui = { tab: "kitchen", loc: "all", search: "", recipeFilter: "ready", recipeSearch: "", review: [] };
 state.ideas ||= { key: "", recipes: [] };
 
-function commit() {
+// Saving: every change goes to this browser's storage straight away and, on
+// claude.ai, to the person's private saved copy (see cloud.js).
+const sessionStart = Date.now();
+let cloud = null;
+
+function persist() {
+  state.updatedAt = Date.now();
   saveState(state);
+  cloud?.save(toSynced(state));
+}
+
+function commit() {
+  persist();
   render();
 }
 
@@ -306,6 +318,7 @@ function saveCustomRecipe(recipe) {
     })),
     steps: recipe.steps || [],
     custom: true,
+    addedAt: recipe.addedAt || Date.now(),
   };
   state.customRecipes = [clean, ...state.customRecipes.filter((r) => r.id !== clean.id)];
   commit();
@@ -547,7 +560,7 @@ async function fetchIdeas({ fresh = false, more = false } = {}) {
         ingredients: r.ingredients.map((i) => ({ ...i, name: canonicalName(i.name), unit: normalizeUnit(i.unit) })),
       })),
     };
-    saveState(state);
+    persist();
   } catch (err) {
     const code = err?.code;
     if (code !== "cancelled") console.error(err);
@@ -583,7 +596,7 @@ window.claude?.use?.("sample").then((fn) => {
 function addToShopping(names) {
   for (const raw of names) {
     const name = canonicalName(raw);
-    if (name && !state.shopping.some((s) => s.name === name)) state.shopping.push({ id: newId(), name, done: false });
+    if (name && !state.shopping.some((s) => s.name === name)) state.shopping.push({ id: newId(), name, done: false, addedAt: Date.now() });
   }
   commit();
 }
@@ -717,6 +730,48 @@ function render() {
   if (ui.tab === "kitchen") renderKitchen();
   if (ui.tab === "recipes") renderRecipes();
 }
+
+// ---------- Saved copy on claude.ai ----------
+
+const SYNC_TEXT = {
+  connecting: "Loading your kitchen...",
+  saving: "Saving...",
+  saved: "Saved",
+  offline: "Not saved to your account yet",
+  local: "Saved on this device only",
+};
+
+function setSyncStatus(status) {
+  const el = $("#sync-status");
+  el.textContent = SYNC_TEXT[status] || "";
+  el.dataset.status = status;
+}
+
+connectCloud({
+  getState: () => toSynced(state),
+  onStatus: setSyncStatus,
+  onRemote(remote, first) {
+    if (first) {
+      const merged = mergeOnLoad(state, remote, sessionStart);
+      const addedHere = ["inventory", "shopping", "customRecipes"].some((k) => (merged[k] || []).length !== (remote[k] || []).length);
+      state = merged;
+      state.ideas ||= { key: "", recipes: [] };
+      if (addedHere) return commit();
+    } else {
+      state = adoptRemote(state, remote);
+      state.ideas ||= { key: "", recipes: [] };
+    }
+    saveState(state);
+    render();
+  },
+}).then((c) => (cloud = c)).catch((err) => {
+  console.error(err);
+  setSyncStatus("local");
+});
+
+// Save immediately when the page is hidden or closed.
+addEventListener("pagehide", () => cloud?.flush());
+document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && cloud?.flush());
 
 $("#add-unit").innerHTML = unitOptions("count");
 $("#food-names").innerHTML = FOODS.filter((f) => f.name !== "water").map((f) => `<option value="${f.name}"></option>`).join("");

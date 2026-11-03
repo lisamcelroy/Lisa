@@ -84,3 +84,40 @@ export function addToInventory(inventory, items) {
   }
   return next;
 }
+
+// ---------- Account sync helpers ----------
+
+const SYNCED_KEYS = ["inventory", "shopping", "customRecipes", "favorites", "ideas"];
+
+/** The part of the state saved to the person's account. The API key never leaves this device. */
+export function toSynced(state) {
+  const out = { updatedAt: state.updatedAt || 0 };
+  for (const k of SYNCED_KEYS) if (state[k] !== undefined) out[k] = state[k];
+  const { apiKey, ...settings } = state.settings || {};
+  out.settings = settings;
+  return out;
+}
+
+/** Replace the synced part of `local` with `remote`, keeping device-only settings. */
+export function adoptRemote(local, remote) {
+  const next = { ...local };
+  for (const k of SYNCED_KEYS) if (remote[k] !== undefined) next[k] = remote[k];
+  next.settings = { ...local.settings, ...(remote.settings || {}), apiKey: local.settings?.apiKey || "" };
+  next.updatedAt = remote.updatedAt || 0;
+  return next;
+}
+
+/**
+ * First load on a device whose local copy may be stale or empty: start from the
+ * saved copy and keep only entries added on this device since `since`
+ * (things the person added before the saved copy finished loading).
+ */
+export function mergeOnLoad(local, remote, since) {
+  const next = adoptRemote(local, remote);
+  for (const k of ["inventory", "shopping", "customRecipes"]) {
+    const have = new Set((next[k] || []).map((x) => x.id));
+    const fresh = (local[k] || []).filter((x) => x && !have.has(x.id) && (x.addedAt || 0) >= since);
+    if (fresh.length) next[k] = [...(next[k] || []), ...fresh];
+  }
+  return next;
+}

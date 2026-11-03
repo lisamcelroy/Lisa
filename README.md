@@ -40,8 +40,11 @@ Add an Anthropic API key in Settings for much better receipt reading (straight f
 recipe photo import, and fresh recipe ideas when running the app yourself. The key is
 stored only in your browser and sent only to Anthropic. Without a key everything else still works.
 
-All data stays in your browser (localStorage). Use Settings > Export backup to save a copy or move
-it to another device.
+**Saving.** On claude.ai, your kitchen, shopping list, saved recipes and ideas are saved to your own
+private storage on the page (only you can read it), so they survive closing the page, cleared browser
+data, and switching devices. The header shows "Saved" once a change is stored. Run on your own, data
+stays in this browser's storage. Your API key is never saved anywhere but this browser.
+Settings > Export backup still gives you a file copy.
 
 ## Running it
 
@@ -77,7 +80,8 @@ js/receipt.js         receipt text -> items
 js/recipeImport.js    pasted recipe text -> recipe
 js/recommend.js       recipe ranking and cooking deductions
 js/units.js           unit conversion
-js/store.js           local storage
+js/store.js           local storage and merge rules for the saved copy
+js/cloud.js           saving to your private storage on claude.ai
 js/ocr.js             on-device text recognition (Tesseract.js, loaded on demand)
 js/ai.js              optional Claude integration
 ```
