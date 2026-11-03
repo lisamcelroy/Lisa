@@ -67,11 +67,29 @@ const CATEGORY_ICONS = {
   staples: ["bottle", "#9fd8ff"], other: ["jar", "#c9bfe6"],
 };
 
+// Each icon is filled with a soft airbrushed gradient: a second fruit colour
+// glows from the upper left into the food's own colour, so shapes look like
+// blurry, painted fruit rather than flat stickers.
+const GLOWS = ["#ffe95a", "#ff9a55", "#ff86c2", "#c79bf0", "#ffcf5a"];
+let gradientId = 0;
+
+function glowFor(name) {
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return GLOWS[h % GLOWS.length];
+}
+
 /** @returns {{svg: string, color: string}} */
 export function foodIcon(name, category = "other") {
   const [shape, color] = FOOD_ICONS[name] || CATEGORY_ICONS[category] || CATEGORY_ICONS.other;
+  const id = `fg${gradientId++}`;
+  const glow = glowFor(String(name));
+  const defs =
+    `<defs><radialGradient id="${id}" cx="32%" cy="28%" r="85%">` +
+    `<stop offset="0" stop-color="${glow}"/><stop offset=".55" stop-color="${color}"/>` +
+    `<stop offset="1" stop-color="${color}" stop-opacity=".92"/></radialGradient></defs>`;
   return {
     color,
-    svg: `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${SHAPES[shape](color)}</svg>`,
+    svg: `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${defs}${SHAPES[shape](`url(#${id})`)}</svg>`,
   };
 }

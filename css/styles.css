@@ -1,124 +1,137 @@
 :root {
-  --bg: #fff6ee;
-  --blob-1: #ffe1ec;
-  --blob-2: #dff5ec;
-  --blob-3: #e8e4ff;
-  --surface: #ffffff;
-  --surface-2: #fff0e6;
-  --text: #2b2340;
-  --muted: #7a7090;
-  --border: #f3e1d4;
-  --accent: #19a88b;
-  --accent-deep: #0f8a71;
-  --accent-ink: #ffffff;
-  --accent-soft: #d9f5ec;
-  --pink: #ff7aa2;
-  --pink-soft: #ffe1ec;
-  --lilac: #9c86ff;
-  --warn: #e58a00;
-  --warn-soft: #fff0d6;
-  --danger: #ef4864;
-  --danger-soft: #ffe0e5;
-  --fridge: #4fb3f6;
-  --freezer: #8a97ff;
-  --pantry: #e9944a;
+  /* Fruit-bowl palette on warm cream */
+  --bg: #fff8e7;
+  --blob-1: #ffe3ec;
+  --blob-2: #fbf0c4;
+  --blob-3: #efe2fb;
+  --surface: #fffdf6;
+  --surface-2: #fbf0d8;
+  --text: #3b2930;
+  --muted: #8b7670;
+  --border: #f1e2c3;
+  --olive: #a0a73a;
+  --raspberry: #d93653;
+  --sun: #f2d32f;
+  --lilac: #9a6bc9;
+  --pink: #ff86c2;
+  --coral: #ff7650;
+  --accent: #8e9a26;
+  --accent-deep: #6f7a17;
+  --accent-ink: #fffdf6;
+  --accent-soft: #eef0cc;
+  --pink-soft: #ffe1ee;
+  --warn: #e36a12;
+  --warn-soft: #ffe9cf;
+  --danger: #d93653;
+  --danger-soft: #ffe0e6;
+  --fridge: #9a6bc9;
+  --freezer: #e46aa6;
+  --pantry: #8e9a26;
   --radius: 26px;
   --radius-sm: 18px;
-  --shadow: 0 2px 0 rgb(43 35 64 / 4%), 0 10px 24px -12px rgb(43 35 64 / 22%);
-  --press: 0 4px 0 rgb(0 0 0 / 14%);
+  --shadow: 0 2px 0 rgb(59 41 48 / 4%), 0 10px 24px -12px rgb(120 70 60 / 25%);
+  --press: 0 4px 0 rgb(59 41 48 / 16%);
 
   /* fridge and pantry */
-  --fridge-shell: #eaf6ff;
-  --fridge-edge: #bfe2fb;
-  --fridge-inside: #f6fbff;
-  --freezer-inside: #eef1ff;
-  --glass: rgb(120 190 240 / 45%);
-  --drawer: #e3f3ff;
-  --wood: #f4cf9f;
-  --wood-dark: #c98b4f;
-  --wood-inside: #fff3e3;
-  --bin: #ffe6c8;
+  --fridge-shell: #f6eeff;
+  --fridge-edge: #dcc6f4;
+  --fridge-inside: #fffaff;
+  --freezer-inside: #ffeef6;
+  --glass: rgb(154 107 201 / 32%);
+  --drawer: #ffe6f1;
+  --wood: #ead566;
+  --wood-dark: #a0a73a;
+  --wood-inside: #fffbe9;
+  --bin: #fff0b8;
   color-scheme: light;
   font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1a1626;
-    --blob-1: #2a1d33;
-    --blob-2: #15292a;
-    --blob-3: #221f3d;
-    --surface: #252036;
-    --surface-2: #2f2943;
-    --text: #f2eefc;
-    --muted: #aaa2c2;
-    --border: #3a3352;
-    --accent: #4fd6b4;
-    --accent-deep: #2fae8f;
-    --accent-ink: #0f241e;
-    --accent-soft: #1e3a35;
-    --pink: #ff8fb3;
-    --pink-soft: #3b2333;
-    --lilac: #b4a3ff;
-    --warn: #ffb547;
-    --warn-soft: #3a2d1a;
-    --danger: #ff7a8f;
-    --danger-soft: #3e2028;
-    --fridge: #7cc8ff;
-    --freezer: #a9b2ff;
-    --pantry: #f0ad6f;
+    --bg: #1e1519;
+    --blob-1: #3a1a28;
+    --blob-2: #2e2a12;
+    --blob-3: #291d3a;
+    --surface: #2a1f24;
+    --surface-2: #36292f;
+    --text: #fbefe4;
+    --muted: #bba59f;
+    --border: #463539;
+    --olive: #c3cb55;
+    --raspberry: #ff5f7a;
+    --sun: #ffe15a;
+    --lilac: #c09bf0;
+    --pink: #ff9fcf;
+    --coral: #ff9473;
+    --accent: #c3cb55;
+    --accent-deep: #a2aa34;
+    --accent-ink: #1e1519;
+    --accent-soft: #343619;
+    --pink-soft: #3d2030;
+    --warn: #ffab5c;
+    --warn-soft: #3d2b17;
+    --danger: #ff6f88;
+    --danger-soft: #422029;
+    --fridge: #c09bf0;
+    --freezer: #ff9fcf;
+    --pantry: #c3cb55;
     --shadow: 0 10px 24px -12px rgb(0 0 0 / 60%);
-    --press: 0 4px 0 rgb(0 0 0 / 35%);
-    --fridge-shell: #24324a;
-    --fridge-edge: #3b5578;
-    --fridge-inside: #1f2a3d;
-    --freezer-inside: #23264a;
-    --glass: rgb(124 200 255 / 30%);
-    --drawer: #253a55;
-    --wood: #6b4a2f;
-    --wood-dark: #a8743f;
-    --wood-inside: #2d2420;
-    --bin: #3d2f22;
+    --press: 0 4px 0 rgb(0 0 0 / 40%);
+    --fridge-shell: #2e2440;
+    --fridge-edge: #4f3d6e;
+    --fridge-inside: #251d33;
+    --freezer-inside: #33202e;
+    --glass: rgb(192 155 240 / 30%);
+    --drawer: #3a2435;
+    --wood: #6e6528;
+    --wood-dark: #8e9a26;
+    --wood-inside: #29251a;
+    --bin: #3a3418;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #1a1626;
-  --blob-1: #2a1d33;
-  --blob-2: #15292a;
-  --blob-3: #221f3d;
-  --surface: #252036;
-  --surface-2: #2f2943;
-  --text: #f2eefc;
-  --muted: #aaa2c2;
-  --border: #3a3352;
-  --accent: #4fd6b4;
-  --accent-deep: #2fae8f;
-  --accent-ink: #0f241e;
-  --accent-soft: #1e3a35;
-  --pink: #ff8fb3;
-  --pink-soft: #3b2333;
-  --lilac: #b4a3ff;
-  --warn: #ffb547;
-  --warn-soft: #3a2d1a;
-  --danger: #ff7a8f;
-  --danger-soft: #3e2028;
-  --fridge: #7cc8ff;
-  --freezer: #a9b2ff;
-  --pantry: #f0ad6f;
+  --bg: #1e1519;
+  --blob-1: #3a1a28;
+  --blob-2: #2e2a12;
+  --blob-3: #291d3a;
+  --surface: #2a1f24;
+  --surface-2: #36292f;
+  --text: #fbefe4;
+  --muted: #bba59f;
+  --border: #463539;
+  --olive: #c3cb55;
+  --raspberry: #ff5f7a;
+  --sun: #ffe15a;
+  --lilac: #c09bf0;
+  --pink: #ff9fcf;
+  --coral: #ff9473;
+  --accent: #c3cb55;
+  --accent-deep: #a2aa34;
+  --accent-ink: #1e1519;
+  --accent-soft: #343619;
+  --pink-soft: #3d2030;
+  --warn: #ffab5c;
+  --warn-soft: #3d2b17;
+  --danger: #ff6f88;
+  --danger-soft: #422029;
+  --fridge: #c09bf0;
+  --freezer: #ff9fcf;
+  --pantry: #c3cb55;
   --shadow: 0 10px 24px -12px rgb(0 0 0 / 60%);
-  --press: 0 4px 0 rgb(0 0 0 / 35%);
-  --fridge-shell: #24324a;
-  --fridge-edge: #3b5578;
-  --fridge-inside: #1f2a3d;
-  --freezer-inside: #23264a;
-  --glass: rgb(124 200 255 / 30%);
-  --drawer: #253a55;
-  --wood: #6b4a2f;
-  --wood-dark: #a8743f;
-  --wood-inside: #2d2420;
-  --bin: #3d2f22;
+  --press: 0 4px 0 rgb(0 0 0 / 40%);
+  --fridge-shell: #2e2440;
+  --fridge-edge: #4f3d6e;
+  --fridge-inside: #251d33;
+  --freezer-inside: #33202e;
+  --glass: rgb(192 155 240 / 30%);
+  --drawer: #3a2435;
+  --wood: #6e6528;
+  --wood-dark: #8e9a26;
+  --wood-inside: #29251a;
+  --bin: #3a3418;
   color-scheme: dark;
 }
 
@@ -142,7 +155,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-h1, h2, h3, .hero-title { font-family: "Fredoka", "Nunito", system-ui, sans-serif; font-weight: 600; line-height: 1.15; margin: 0 0 8px; }
+h1, h2, h3, .hero-title { font-family: "DM Serif Display", Georgia, "Times New Roman", serif; font-weight: 400; line-height: 1.12; margin: 0 0 8px; letter-spacing: .005em; }
 h1 { font-size: 1.5rem; }
 h2 { font-size: 1.15rem; }
 h3 { font-size: 1rem; margin-top: 16px; }
@@ -157,11 +170,17 @@ p { margin: 0 0 10px; }
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
-.topbar h1 {
-  margin: 0; font-weight: 700; letter-spacing: .01em;
-  background: linear-gradient(90deg, var(--accent), var(--lilac) 60%, var(--pink));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
+.topbar h1 { margin: 0; line-height: 1; }
+.logo { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.wordmark { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 1.75rem; letter-spacing: -.01em; }
+.wordmark span:nth-child(6n+1) { color: var(--olive); }
+.wordmark span:nth-child(6n+2) { color: var(--raspberry); }
+.wordmark span:nth-child(6n+3) { color: var(--sun); }
+.wordmark span:nth-child(6n+4) { color: var(--lilac); }
+.wordmark span:nth-child(6n+5) { color: var(--pink); }
+.wordmark span:nth-child(6n) { color: var(--coral); }
+.hand { font-family: "Chewy", "Nunito", system-ui, sans-serif; font-weight: 400; color: var(--coral); letter-spacing: .03em; }
+.logo .hand { font-size: .82rem; margin-top: 1px; }
 
 .sync {
   margin-left: auto; font-size: .78rem; font-weight: 700; color: var(--muted);
@@ -179,7 +198,16 @@ p { margin: 0 0 10px; }
 .sync:not(:empty) + .icon-btn { margin-left: 0; }
 .icon-btn:active { transform: scale(.92); }
 
-main { max-width: 900px; margin: 0 auto; padding: 8px 16px 16px; }
+main { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 8px 16px 16px; }
+
+.fruit-deco { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.fruit-deco svg { position: absolute; opacity: .42; }
+.fruit-deco .d1 { width: 120px; top: 88px; right: -26px; transform: rotate(14deg); }
+.fruit-deco .d2 { width: 96px; top: 46%; left: -30px; transform: rotate(-18deg); }
+.fruit-deco .d3 { width: 110px; bottom: 120px; right: -18px; transform: rotate(-8deg); }
+.fruit-deco .d4 { width: 84px; bottom: 34%; right: 18%; opacity: .22; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fruit-deco svg { opacity: .25; } }
+:root[data-theme="dark"] .fruit-deco svg { opacity: .25; }
 
 /* ---------- Building blocks ---------- */
 
@@ -236,7 +264,7 @@ input[type=checkbox] { accent-color: var(--accent); }
 
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
 .stat { background: var(--surface); border-radius: 22px; padding: 12px 8px; text-align: center; box-shadow: var(--shadow); }
-.stat b { display: block; font-family: "Fredoka", sans-serif; font-size: 1.6rem; font-weight: 600; }
+.stat b { display: block; font-family: "DM Serif Display", Georgia, "Times New Roman", serif; font-size: 1.8rem; font-weight: 400; }
 .stat span { font-size: .78rem; font-weight: 700; color: var(--muted); }
 .stat:nth-child(1) b { color: var(--fridge); }
 .stat:nth-child(2) b { color: var(--freezer); }
@@ -288,7 +316,7 @@ input[type=checkbox] { accent-color: var(--accent); }
 .unknown { font-size: .75rem; color: var(--warn); font-family: "Nunito", sans-serif; font-weight: 700; }
 
 .progress { position: relative; height: 26px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin: 10px 0; }
-.progress div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--lilac)); border-radius: 999px; transition: width .2s; }
+.progress div { height: 100%; width: 0; background: linear-gradient(90deg, var(--olive), var(--sun), var(--coral), var(--pink)); border-radius: 999px; transition: width .2s; }
 .progress span { position: absolute; inset: 0; display: grid; place-items: center; font-size: .8rem; font-weight: 800; }
 
 /* ---------- Recipes ---------- */
@@ -303,13 +331,13 @@ input[type=checkbox] { accent-color: var(--accent); }
 .recipe:active { transform: scale(.98); }
 .recipe h3 { margin: 0; font-size: 1.05rem; }
 .meter { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-.meter div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--lilac)); border-radius: 999px; }
+.meter div { height: 100%; background: linear-gradient(90deg, var(--olive), var(--sun) 45%, var(--coral) 75%, var(--pink)); border-radius: 999px; }
 .tagline { font-size: .8rem; font-weight: 700; color: var(--muted); }
 .rescue { font-size: .8rem; color: var(--warn); font-weight: 800; }
 .missing { font-size: .85rem; }
 .missing b { color: var(--danger); font-weight: 800; }
 
-.ideas { background: linear-gradient(135deg, var(--accent-soft), var(--pink-soft)); }
+.ideas { background: linear-gradient(135deg, var(--pink-soft), color-mix(in srgb, var(--sun) 22%, var(--surface)) 60%, color-mix(in srgb, var(--lilac) 16%, var(--surface))); }
 .ideas-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 12px; }
 .ideas-head h2 { margin: 0; }
 .ideas .recipe { box-shadow: none; }
@@ -344,7 +372,7 @@ ol.steps li { margin-bottom: 8px; }
 .item-dialog h2 { text-transform: capitalize; font-size: 1.4rem; margin-bottom: 2px; }
 .item-dialog .stepper { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px 0; }
 .item-dialog .stepper .step { width: 46px; height: 46px; font-size: 1.5rem; }
-.item-dialog .stepper .qty { font-family: "Fredoka", sans-serif; font-size: 1.3rem; min-width: 90px; }
+.item-dialog .stepper .qty { font-family: "DM Serif Display", Georgia, "Times New Roman", serif; font-size: 1.3rem; min-width: 90px; }
 .item-dialog .where { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 .item-dialog .where .chip.active.loc-fridge { background: var(--fridge); color: #fff; }
 .item-dialog .where .chip.active.loc-freezer { background: var(--freezer); color: #fff; }
@@ -404,7 +432,7 @@ ol.steps li { margin-bottom: 8px; }
 
 .appliance { position: relative; border-radius: 34px; padding: 12px; }
 .zone-label {
-  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; margin: 2px 6px 8px;
+  font-family: "DM Serif Display", Georgia, "Times New Roman", serif; font-weight: 400; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; margin: 2px 6px 8px;
 }
 .zone-label .count {
   font-family: "Nunito", sans-serif; font-size: .75rem; font-weight: 800; background: var(--surface); color: var(--muted);
@@ -420,7 +448,7 @@ ol.steps li { margin-bottom: 8px; }
 }
 .fridge .handle {
   position: absolute; right: -9px; top: 70px; width: 12px; height: 70px; border-radius: 999px;
-  background: linear-gradient(90deg, #d7ecfb, #9ccbee); box-shadow: 0 3px 0 rgb(0 0 0 / 10%);
+  background: linear-gradient(90deg, #efe2fb, #c6a6ea); box-shadow: 0 3px 0 rgb(0 0 0 / 10%);
 }
 .compartment { border-radius: 24px; padding: 10px; }
 .compartment.freezer {
@@ -429,14 +457,14 @@ ol.steps li { margin-bottom: 8px; }
     radial-gradient(circle at 78% 30%, rgb(255 255 255 / 70%) 0 1.5px, transparent 2.5px),
     radial-gradient(circle at 46% 80%, rgb(255 255 255 / 60%) 0 2px, transparent 3px),
     var(--freezer-inside);
-  margin-bottom: 10px; box-shadow: inset 0 3px 10px rgb(80 100 200 / 12%);
+  margin-bottom: 10px; box-shadow: inset 0 3px 10px rgb(228 106 166 / 14%);
 }
 .compartment.freezer .zone-label { color: var(--freezer); }
 .fridge-body { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.compartment.main { background: var(--fridge-inside); box-shadow: inset 0 3px 10px rgb(60 140 200 / 12%); }
+.compartment.main { background: var(--fridge-inside); box-shadow: inset 0 3px 10px rgb(154 107 201 / 12%); }
 .compartment.main .zone-label { color: var(--fridge); }
 .compartment.door {
-  background: var(--fridge-inside); box-shadow: inset 0 3px 10px rgb(60 140 200 / 12%);
+  background: var(--fridge-inside); box-shadow: inset 0 3px 10px rgb(154 107 201 / 12%);
   border: 3px dashed var(--fridge-edge);
 }
 .shelf { padding: 6px 0 12px; margin-bottom: 8px; position: relative; }
@@ -446,7 +474,7 @@ ol.steps li { margin-bottom: 8px; }
 }
 .drawer {
   background: var(--drawer); border-radius: 20px; padding: 8px 6px 10px; margin-top: 4px;
-  box-shadow: inset 0 -4px 0 rgb(60 140 200 / 15%);
+  box-shadow: inset 0 -4px 0 rgb(228 106 166 / 16%);
   position: relative;
 }
 .drawer::before {
@@ -479,8 +507,8 @@ ol.steps li { margin-bottom: 8px; }
 .bin { background: var(--bin); border-radius: 22px 22px 28px 28px; padding: 8px 4px 10px; box-shadow: inset 0 -5px 0 rgb(0 0 0 / 6%); }
 .basket {
   background:
-    repeating-linear-gradient(45deg, transparent 0 8px, rgb(201 139 79 / 14%) 8px 10px),
-    repeating-linear-gradient(-45deg, transparent 0 8px, rgb(201 139 79 / 14%) 8px 10px),
+    repeating-linear-gradient(45deg, transparent 0 8px, rgb(160 167 58 / 18%) 8px 10px),
+    repeating-linear-gradient(-45deg, transparent 0 8px, rgb(160 167 58 / 18%) 8px 10px),
     var(--bin);
 }
 
@@ -508,6 +536,7 @@ ol.steps li { margin-bottom: 8px; }
   white-space: nowrap; max-width: 64px; overflow: hidden; text-overflow: ellipsis;
 }
 .food-name {
+  font-family: "Nunito", system-ui, sans-serif;
   font-size: .72rem; font-weight: 800; line-height: 1.15; text-align: center; text-transform: capitalize;
   max-width: 74px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
