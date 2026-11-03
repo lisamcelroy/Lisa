@@ -274,12 +274,37 @@ $("#inventory-search").addEventListener("input", (e) => {
 
 // ---------- Scan receipts ----------
 
-function updateScanEngine() {
-  $("#scan-engine").textContent = claudeOn()
-    ? "Using Claude to read receipts."
-    : "Reads receipts on your device. For tricky receipts, add a Claude API key in Settings.";
-  $("#recipe-photo-label").hidden = !claudeOn();
+// Which reader handles photos: Claude through claude.ai (the viewer's own
+// account), Claude through the person's API key, or on-device text recognition.
+let photoSample = null; // set once the page knows it can send images to Claude
+
+function photoEngine() {
+  if (photoSample) return "sample";
+  if (claudeOn()) return "key";
+  return "device";
 }
+
+function updateScanEngine() {
+  const engine = photoEngine();
+  $("#scan-engine").textContent = engine === "device"
+    ? "Reads receipts on your device. For tricky receipts, add a Claude API key in Settings."
+    : "Claude reads your receipt.";
+  $("#recipe-engine").textContent = engine === "device"
+    ? "Reads the page on your device, then you check the text before saving. Works best with a flat, well-lit page."
+    : "Claude reads the page. For a recipe over two pages, choose both photos together.";
+}
+
+function setRecipeProgress(pct, label) {
+  const bar = $("#recipe-progress");
+  bar.hidden = pct === null;
+  if (pct !== null) {
+    bar.querySelector("div").style.width = `${pct}%`;
+    bar.querySelector("span").textContent = label || `${pct}%`;
+  }
+}
+
+// Codes after which this page can't send photos to Claude for the rest of the visit.
+const PHOTO_OFF_CODES = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed", "images_unavailable"];
 
 function showReview(items) {
   // Unrecognised receipt lines (food === null) start unticked so non-food doesn't sneak in.
@@ -370,10 +395,20 @@ $("#receipt-file").addEventListener("change", async (e) => {
   e.target.value = "";
   if (!file) return;
   try {
-    if (claudeOn()) {
+    let items = null;
+    if (photoEngine() !== "device") {
       setProgress(60, "Claude is reading your receipt...");
-      const { scanReceiptWithClaude } = await import("./ai.js");
-      const items = await scanReceiptWithClaude(state.settings.apiKey, file);
+      const ai = await import("./ai.js");
+      try {
+        items = photoSample
+          ? await ai.scanReceiptWithSample(photoSample, file)
+          : await ai.scanReceiptWithClaude(state.settings.apiKey, file);
+      } catch (err) {
+        if (!(photoSample && PHOTO_OFF_CODES.includes(err?.code))) throw err;
+        photoSample = null; // fall back to reading on this device
+      }
+    }
+    if (items) {
       showReview(items.map((it) => {
         const name = canonicalName(it.name);
         return { name, qty: it.qty, unit: it.unit, location: it.location, shelfLife: it.shelf_life_days, raw: it.name, food: foodInfo(name) || undefined };
@@ -432,22 +467,75 @@ $("#import-recipe").addEventListener("click", () => {
   openRecipe(saved.id);
 });
 
-$("#recipe-file").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  e.target.value = "";
-  if (!file) return;
+async function readRecipeTextOnDevice(files) {
+  const { recognizeText } = await import("./ocr.js");
+  let text = "";
+  for (let i = 0; i < files.length; i++) {
+    const label = files.length > 1 ? `Reading page ${i + 1} of ${files.length}` : "Reading the page";
+    text += (await recognizeText(files[i], (p) => setRecipeProgress(p, `${label} ${p}%`))) + "\n";
+  }
+  return text.trim();
+}
+
+async function importRecipePhotos(fileList) {
+  const files = Array.from(fileList || []).slice(0, 4);
+  if (!files.length) return;
+  let engine = photoEngine();
   try {
-    toast("Claude is reading the recipe...");
-    const { scanRecipeWithClaude } = await import("./ai.js");
-    const recipe = await scanRecipeWithClaude(state.settings.apiKey, file);
-    const saved = saveCustomRecipe({ ...recipe, tags: ["mine"] });
-    toast(`Saved "${saved.title}"`);
-    openRecipe(saved.id);
+    if (engine !== "device") {
+      setRecipeProgress(55, files.length > 1 ? `Claude is reading ${files.length} pages...` : "Claude is reading the recipe...");
+      const ai = await import("./ai.js");
+      let recipe = null;
+      try {
+        recipe = engine === "sample"
+          ? await ai.scanRecipeWithSample(photoSample, files)
+          : await ai.scanRecipeWithClaude(state.settings.apiKey, files);
+      } catch (err) {
+        if (engine === "sample" && PHOTO_OFF_CODES.includes(err?.code)) {
+          photoSample = null; // fall back to reading on this device
+          engine = "device";
+        } else throw err;
+      }
+      if (engine !== "device") {
+        if (!recipe) throw { code: "no_recipe" };
+        const saved = saveCustomRecipe({ ...recipe, tags: ["mine", "book"] });
+        toast(`Saved "${saved.title}" with ${saved.ingredients.length} ingredients`);
+        openRecipe(saved.id);
+        return;
+      }
+    }
+    // On-device: read the text, then let the person check it before saving.
+    setRecipeProgress(0, "Loading the reader...");
+    const text = await readRecipeTextOnDevice(files);
+    if (!text) throw { code: "no_recipe" };
+    $("#recipe-text").value = text;
+    $("#recipe-paste").open = true;
+    $("#recipe-text").scrollIntoView({ behavior: "smooth", block: "center" });
+    toast("Check the text, fix anything that looks off, then tap Save recipe");
   } catch (err) {
     console.error(err);
-    toast(err.message || "Couldn't read that recipe");
+    const code = err?.code;
+    toast(
+      code === "no_recipe" ? "Couldn't find a recipe in that photo. Try a closer, sharper shot."
+      : code === "image_rejected" ? "That photo couldn't be used. Try a different one."
+      : code === "rate_limited" ? "Usage limit reached. Try again a bit later."
+      : code === "invalid_json" ? "Claude couldn't read that one cleanly. Try again."
+      : err?.message && !code ? err.message
+      : "Couldn't read that recipe"
+    );
+  } finally {
+    setRecipeProgress(null);
+    updateScanEngine();
   }
-});
+}
+
+for (const id of ["#recipe-file", "#recipe-camera"]) {
+  $(id).addEventListener("change", (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    importRecipePhotos(files);
+  });
+}
 
 // ---------- Recipes ----------
 
@@ -682,8 +770,11 @@ $("#ai-request").addEventListener("keydown", (e) => {
 });
 $("#ideas-stop").addEventListener("click", () => ideas.ctl?.abort());
 
-window.claude?.use?.("sample").then((fn) => {
+window.claude?.use?.("sample").then(async (fn) => {
   sampleFn = fn;
+  const limits = fn ? await fn.limits().catch(() => null) : null;
+  photoSample = limits?.images ? fn : null;
+  updateScanEngine();
   if (ui.tab === "recipes") renderRecipes();
 }).catch(() => {});
 

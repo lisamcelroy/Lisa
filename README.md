@@ -26,7 +26,11 @@ what is actually in your kitchen, starting with food that is about to go off.
 - You get a review list before anything is added. Lines it doesn't recognise (paper towels, etc.)
   start unticked.
 - You can paste receipt text instead of taking a photo.
-- Add your own recipes by pasting them (photo import works with Claude enabled). They join the matches.
+- Add recipes from a cookbook or recipe card: take a photo (or choose several for a recipe that runs
+  over two pages). On claude.ai, Claude reads the page through your account and saves it straight to
+  your recipes; elsewhere it's read on your device and you check the text before saving. You can also
+  type or paste a recipe. Saved recipes join the matches.
+- On claude.ai, receipt photos are read by Claude too, with on-device reading as the fallback.
 
 **Recipes**
 - Fresh ideas: opening the Recipes tab asks Claude for new recipes built from what you have (favouring food

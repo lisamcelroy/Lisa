@@ -172,11 +172,48 @@ export async function suggestRecipesWithSample(sample, inventory, opts = {}, { f
   return cleanIdeas(data);
 }
 
-/** Read a recipe from a photo (cookbook page, card, screenshot). */
-export async function scanRecipeWithClaude(apiKey, file) {
+const RECIPE_PHOTO_PROMPT =
+  "These are photos of a recipe, for example a cookbook page, a recipe card or a screenshot. " +
+  "If there are several photos they are pages of the same recipe, in order. Transcribe it as one recipe: " +
+  "the title, every ingredient with its amount and unit, and the method as short steps in the book's order. " +
+  "Estimate total minutes and servings from the page if they aren't printed. " +
+  `Write ingredient names in lower case and, where one matches, use exactly one of these names: ${FOOD_NAMES}. ` +
+  'If no recipe is visible, return {"recipes": []}.';
+
+/** Read a recipe from one or more photos with the person's own API key. */
+export async function scanRecipeWithClaude(apiKey, files) {
+  const list = Array.from(files.length !== undefined ? files : [files]);
+  const blocks = await Promise.all(list.map(imageBlock));
+  const data = await askForJson(apiKey, [...blocks, { type: "text", text: RECIPE_PHOTO_PROMPT }], RECIPE_SCHEMA);
+  return cleanIdeas(data)[0] || null;
+}
+
+/** Read a recipe from photos through the claude.ai page capability (viewer's own account). */
+export async function scanRecipeWithSample(sample, files) {
+  const images = Array.from(files.length !== undefined ? files : [files]);
+  const data = await sample.json(RECIPE_PHOTO_PROMPT + "\n\n" + JSON_SHAPE, { images, cache: false });
+  return cleanIdeas(data)[0] || null;
+}
+
+/** Read a grocery receipt photo through the claude.ai page capability. */
+export async function scanReceiptWithSample(sample, file) {
   const prompt =
-    "Transcribe the recipe in this image as one recipe. " +
-    `Write ingredient names in lower case and, where one matches, use exactly one of these names: ${FOOD_NAMES}.`;
-  const data = await askForJson(apiKey, [await imageBlock(file), { type: "text", text: prompt }], RECIPE_SCHEMA);
-  return data.recipes[0];
+    "This is a photo of a grocery receipt. List only the food and drink items bought; skip totals, taxes, " +
+    "fees, discounts and non-food products. Expand receipt abbreviations into plain names (ORG BNNA -> banana). " +
+    `When an item is one of these known foods, use exactly that name: ${FOOD_NAMES}. ` +
+    "Use unit 'count' for things bought by the piece, otherwise g, kg, lb, ml, l, can or pkg. " +
+    "Pick where it is normally stored once home (fridge, freezer or pantry), and a realistic shelf life in days there.\n\n" +
+    'Reply with only JSON of this shape: {"items": [{"name": string, "qty": number, "unit": string, ' +
+    '"location": "fridge"|"freezer"|"pantry", "shelf_life_days": integer}]}';
+  const data = await sample.json(prompt, { images: [file], cache: false });
+  const items = Array.isArray(data?.items) ? data.items : [];
+  return items
+    .filter((it) => it && typeof it.name === "string" && it.name.trim())
+    .map((it) => ({
+      name: it.name,
+      qty: Number(it.qty) || 1,
+      unit: String(it.unit || "count"),
+      location: LOCATIONS.includes(it.location) ? it.location : "fridge",
+      shelf_life_days: Number.isFinite(+it.shelf_life_days) ? Math.round(+it.shelf_life_days) : undefined,
+    }));
 }

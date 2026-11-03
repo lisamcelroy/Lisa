@@ -104,15 +104,26 @@
         </div>
       </div>
 
-      <div class="card">
-        <h2>Add a recipe</h2>
-        <p class="muted">Paste a recipe you love (or snap a photo with Claude enabled) and it joins your matches.</p>
-        <label class="btn file-btn" id="recipe-photo-label">
-          <input type="file" accept="image/*" capture="environment" id="recipe-file" hidden />
-          Recipe photo
-        </label>
-        <textarea id="recipe-text" rows="7" placeholder="Lemon Chicken&#10;Ingredients&#10;2 chicken breasts&#10;1 lemon&#10;2 cloves garlic&#10;Directions&#10;1. Season chicken...&#10;2. ..."></textarea>
-        <button class="btn" id="import-recipe">Save recipe</button>
+      <div class="card recipe-card">
+        <h2>Add a recipe from a book</h2>
+        <p class="muted">Snap the page of a cookbook or a recipe card and it's saved to your recipes, ready to match with what's in your kitchen.</p>
+        <div class="row">
+          <label class="btn primary file-btn">
+            <input type="file" accept="image/*" capture="environment" id="recipe-camera" hidden />
+            Take a photo
+          </label>
+          <label class="btn file-btn">
+            <input type="file" accept="image/*" multiple id="recipe-file" hidden />
+            Choose photos
+          </label>
+        </div>
+        <p class="muted small" id="recipe-engine"></p>
+        <div class="progress" id="recipe-progress" hidden><div></div><span></span></div>
+        <details id="recipe-paste">
+          <summary>Or type or paste a recipe</summary>
+          <textarea id="recipe-text" rows="8" placeholder="Lemon Chicken&#10;Ingredients&#10;2 chicken breasts&#10;1 lemon&#10;2 cloves garlic&#10;Directions&#10;1. Season chicken...&#10;2. ..."></textarea>
+          <button class="btn" id="import-recipe">Save recipe</button>
+        </details>
       </div>
     </section>
 
