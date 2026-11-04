@@ -45,6 +45,9 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   settings (`toPersonal`), so each person keeps their own name. Others join by typing the code;
   they need edit (Contributor) access to the artifact from the claude.ai Share menu to write.
   Writes are last-writer-wins on the whole doc. "Stop sharing" keeps a personal copy.
+- Also hosted on Netlify from this repo (`netlify.toml`: no build, runs `npm test` first, no-cache
+  headers). There the app has no `window.claude`, so it saves in the browser only, sharing is off,
+  and Claude needs an API key in Settings.
 - Keep the storage key `fridgemate:v1` (from the app's first name) so existing kitchens load.
 
 ## Files

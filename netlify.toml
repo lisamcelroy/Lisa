@@ -1,0 +1,48 @@
+# Netlify hosting for Inside my Kitchen.
+# Plain HTML, CSS and JavaScript: nothing to build. Netlify runs the tests first,
+# so a change that breaks them is never published, then serves the folder as is.
+
+[build]
+  publish = "."
+  command = "npm test"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Always check for a newer version, so updates show up straight away.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
+
+# Icons and pictures rarely change: keep them for a day.
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+# Project files that aren't part of the app.
+[[redirects]]
+  from = "/test/*"
+  to = "/"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/CLAUDE.md"
+  to = "/"
+  status = 404
+  force = true

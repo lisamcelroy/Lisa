@@ -135,3 +135,13 @@ js/ai.js              optional Claude integration
 To teach it a new food or receipt abbreviation, add an entry or alias in `js/data/foods.js`.
 To add a built-in recipe, add it to `js/data/recipes.js` using catalog ingredient names
 (the tests check this).
+
+## Hosting on Netlify
+
+The repo includes `netlify.toml`, so Netlify needs no settings: connect the GitHub repo
+(Add new site, Import an existing project, GitHub, this repo) and deploy. Every push to the
+main branch then republishes the site automatically, after the tests pass.
+
+On the hosted site the kitchen is saved in each browser. Saving to an account and sharing a
+kitchen work on the claude.ai version; Claude recipe ideas and photo reading need an Anthropic
+API key in Settings.
