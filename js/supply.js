@@ -36,10 +36,12 @@ export function groceryOutlook(inventory, { now = new Date(), readyCount = 0, mi
   const fresh = freshItems(inventory, now).length;
   const soonMissing = missingDays.map((iso) => new Date(`${iso}T00:00:00`)).filter((d) => d >= today && d - today <= 6 * DAY).sort((a, b) => a - b);
 
-  const short = inventory.length > 0 && (readyCount <= 2 || freshDays <= 2 || soonMissing.some((d) => d - today <= 2 * DAY));
+  const empty = inventory.length === 0;
+  const short = empty || readyCount <= 2 || freshDays <= 2 || soonMissing.some((d) => d - today <= 2 * DAY);
   const reasons = [];
-  if (readyCount <= 2) reasons.push(readyCount ? `only ${readyCount} meal${readyCount === 1 ? "" : "s"} you can make right now` : "nothing you can cook right now without shopping");
-  if (freshDays <= 2) reasons.push(fresh ? `fresh food runs out ${freshDays === 0 ? "today" : freshDays === 1 ? "tomorrow" : "in 2 days"}` : "no fresh food left");
+  if (empty) reasons.push("your kitchen is empty");
+  if (!empty && readyCount <= 2) reasons.push(readyCount ? `only ${readyCount} meal${readyCount === 1 ? "" : "s"} you can make right now` : "nothing you can cook right now without shopping");
+  if (!empty && freshDays <= 2) reasons.push(fresh ? `fresh food runs out ${freshDays === 0 ? "today" : freshDays === 1 ? "tomorrow" : "in 2 days"}` : "no fresh food left");
   if (soonMissing.length) reasons.push("planned meals still need ingredients");
 
   // Shop before fresh food runs out, and before the first planned meal that needs something.

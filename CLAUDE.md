@@ -117,8 +117,9 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 - Recipes can be rated "We loved it" or "Not for us" (`state.recipeFeedback`, synced). Not-for-us
   recipes sink to the bottom, are never suggested on Home, and are mentioned to Claude.
 - Between 11:30 pm and 5 am a cute sleep nudge (8 hours of solid sleep) shows under the greeting.
-- When groceries run low, Home shows a suggested shopping day and, if there's almost nothing to cook,
-  a suggested cheat day (order in or eat out) with "Plan it".
+- Home always shows the groceries card: a suggested shopping day, and a cheat day line. When there's
+  almost nothing to cook it suggests a cheat day (order in or eat out) with "Plan it" (and Undo once
+  planned); otherwise it says "try to save some money by cooking at home".
 - Every recipe shows "Suggested for" meal tags, with a meal filter row on Recipes. Home only suggests
   a recipe that suits the meal for the time of day (breakfast until 11, lunch until 4pm, then dinner);
   the planner lists recipes that suit the slot first. Never suggest a heavy dinner for breakfast.

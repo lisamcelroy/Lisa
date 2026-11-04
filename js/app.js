@@ -418,7 +418,7 @@ function renderHome() {
         }).join("")}
       </div>
       <div class="today-foot">
-        <span class="kcal-total">${c.meals ? `${c.known ? "" : "at least "}~${c.total} kcal today` : "No meals planned yet"}</span>
+        <span class="kcal-total">${!c.meals ? "No meals planned yet" : c.total ? `${c.known ? "" : "at least "}~${c.total} kcal today` : "Calories not tracked today"}</span>
         <button class="btn small" data-go="plan">Open planner</button>
       </div>
     </div>`;
@@ -454,22 +454,29 @@ function supplyCardHtml(ranked) {
   }));
   const plannedDinners = Object.keys(state.plan).filter((iso) => state.plan[iso]?.dinner);
   const o = groceryOutlook(state.inventory, { now: today, readyCount: ready, missingDays, plannedDinners });
-  if (!state.inventory.length || (!o.short && o.shopDay - today > 3 * 864e5)) return "";
   const shop = dayWord(o.shopDay, today);
   const cap = (w) => w[0].toUpperCase() + w.slice(1);
+  // A cheat day already on the plan (this week or next)?
+  const planned = days.find((iso) => /^cheat day/i.test(state.plan[iso]?.dinner?.text || ""));
+  const cheatRow = planned
+    ? `<span class="supply-text">Cheat day planned for <b>${esc(dayWord(fromIsoDay(planned), today))}</b>. Enjoy the night off!</span>
+       <button class="btn small" data-uncheat="${planned}">Undo</button>`
+    : o.cheatDay
+      ? `<span class="supply-text">Suggested cheat day: <b>${esc(cap(dayWord(o.cheatDay, today)))}</b>. Order in or eat out, no cooking needed.</span>
+         <button class="btn small" data-cheat="${isoOf(o.cheatDay)}">Plan it</button>`
+      : `<span class="supply-text">No cheat day needed. You've got food to cook, so try to save some money by cooking at home.</span>`;
   return `<div class="card supply-card${o.short ? " short" : ""}">
-      <h2>${o.short ? "Groceries are running low" : "Shopping day coming up"}</h2>
+      <h2>${o.short ? "Groceries are running low" : "Groceries and treats"}</h2>
       ${o.reasons.length ? `<p class="muted small">${esc(cap(o.reasons.join(", ")))}.</p>` : ""}
       <div class="supply-row">
         <span class="supply-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M3.5 4.5h2.5l2.2 10.5h10l2-7.5H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19" r="1.5" fill="currentColor"/><circle cx="17" cy="19" r="1.5" fill="currentColor"/></svg></span>
         <span class="supply-text">Suggested shopping day: <b>${esc(cap(shop))}</b></span>
         <button class="btn small" data-go="shopping">Shopping list</button>
       </div>
-      ${o.cheatDay ? `<div class="supply-row">
+      <div class="supply-row">
         <span class="supply-icon cheat" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 11h16a8 7.5 0 0 1-16 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 7.5l1 -3M8.5 8l-1 -2.6M15.5 8l1 -2.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-        <span class="supply-text">Suggested cheat day: <b>${esc(cap(dayWord(o.cheatDay, today)))}</b>. Order in or eat out, no cooking needed.</span>
-        <button class="btn small" data-cheat="${isoOf(o.cheatDay)}">Plan it</button>
-      </div>` : ""}
+        ${cheatRow}
+      </div>
     </div>`;
 }
 
@@ -478,6 +485,11 @@ $("#view-home").addEventListener("click", (e) => {
   if (cheat) {
     setPlan(cheat, "dinner", { text: "Cheat day: order in or eat out", kcal: null });
     return toast(`Cheat day planned for ${dayWord(fromIsoDay(cheat))}. Enjoy!`);
+  }
+  const uncheat = e.target.closest("[data-uncheat]")?.dataset.uncheat;
+  if (uncheat) {
+    setPlan(uncheat, "dinner", null);
+    return toast("Cheat day removed. Cooking at home it is!");
   }
   const go = e.target.closest("[data-go]")?.dataset.go;
   if (go) return switchTab(go);
@@ -1692,7 +1704,7 @@ function renderPlan() {
     return `<div class="plan-day ${iso === today ? "today" : ""} ${iso < today ? "past" : ""} ${iso === planUi.selected ? "picked" : ""}" data-day-card="${iso}">
       <div class="plan-day-head">
         <div><b>${d.toLocaleDateString(undefined, { weekday: "long" })}</b> <span class="muted small">${dayMonth(d)}${iso === today ? " &middot; today" : ""}</span></div>
-        ${c.meals ? `<span class="day-kcal">${c.known ? "" : "at least "}~${c.total} kcal</span>` : ""}
+        ${c.meals && c.total ? `<span class="day-kcal">${c.known ? "" : "at least "}~${c.total} kcal</span>` : ""}
       </div>
       ${defrostNote(iso)}
       <div class="slots">
