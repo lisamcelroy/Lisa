@@ -44,7 +44,7 @@
   --wood-inside: #fffbe9;
   --bin: #fff0b8;
   color-scheme: light;
-  font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: "Zalando Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -155,7 +155,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-h1, h2, h3, .hero-title { font-family: "DM Serif Display", Georgia, "Times New Roman", serif; font-weight: 400; line-height: 1.12; margin: 0 0 8px; letter-spacing: .005em; }
+h1, h2, h3, .hero-title { font-family: "Funnel Sans", "Zalando Sans", system-ui, sans-serif; font-weight: 800; line-height: 1.12; margin: 0 0 8px; letter-spacing: -.015em; }
 h1 { font-size: 1.5rem; }
 h2 { font-size: 1.15rem; }
 h3 { font-size: 1rem; margin-top: 16px; }
@@ -174,14 +174,14 @@ p { margin: 0 0 10px; }
 .logo { display: flex; align-items: center; gap: 8px; }
 .logo > div { display: flex; flex-direction: column; align-items: flex-start; }
 .logo-mark { width: 40px; height: 40px; color: var(--text); flex: none; }
-.wordmark { font-family: "Climate Crisis", "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 1.32rem; letter-spacing: 0; font-variation-settings: "YEAR" 1979; }
+.wordmark { font-family: "Climate Crisis", "Funnel Sans", system-ui, sans-serif; font-weight: 400; font-size: 1.32rem; letter-spacing: 0; font-variation-settings: "YEAR" 1979; }
 .wordmark span:nth-child(6n+1) { color: var(--olive); }
 .wordmark span:nth-child(6n+2) { color: var(--raspberry); }
 .wordmark span:nth-child(6n+3) { color: var(--sun); }
 .wordmark span:nth-child(6n+4) { color: var(--lilac); }
 .wordmark span:nth-child(6n+5) { color: var(--pink); }
 .wordmark span:nth-child(6n) { color: var(--coral); }
-.hand { font-family: "Chewy", "Nunito", system-ui, sans-serif; font-weight: 400; color: var(--coral); letter-spacing: .03em; }
+.hand { font-family: "Chewy", "Zalando Sans", system-ui, sans-serif; font-weight: 400; color: var(--coral); letter-spacing: .03em; }
 .logo .hand { font-size: .82rem; margin-top: 1px; }
 
 .sync {
@@ -266,7 +266,7 @@ input[type=checkbox] { accent-color: var(--accent); }
 
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
 .stat { background: var(--surface); border-radius: 22px; padding: 12px 8px; text-align: center; box-shadow: var(--shadow); }
-.stat b { display: block; font-family: "DM Serif Display", Georgia, "Times New Roman", serif; font-size: 1.8rem; font-weight: 400; }
+.stat b { display: block; font-family: "Funnel Sans", "Zalando Sans", system-ui, sans-serif; font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; }
 .stat span { font-size: .78rem; font-weight: 700; color: var(--muted); }
 .stat:nth-child(1) b { color: var(--fridge); }
 .stat:nth-child(2) b { color: var(--freezer); }
@@ -315,7 +315,7 @@ input[type=checkbox] { accent-color: var(--accent); }
 .review-row .fields input[type=text] { flex: 1 1 150px; }
 .review-row .raw { grid-column: 2; font-size: .75rem; color: var(--muted); font-family: ui-monospace, monospace; }
 .review-row input[type=checkbox] { width: 22px; height: 22px; }
-.unknown { font-size: .75rem; color: var(--warn); font-family: "Nunito", sans-serif; font-weight: 700; }
+.unknown { font-size: .75rem; color: var(--warn); font-family: "Zalando Sans", sans-serif; font-weight: 700; }
 
 .progress { position: relative; height: 26px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin: 10px 0; }
 .progress div { height: 100%; width: 0; background: linear-gradient(90deg, var(--olive), var(--sun), var(--coral), var(--pink)); border-radius: 999px; transition: width .2s; }
@@ -374,7 +374,7 @@ ol.steps li { margin-bottom: 8px; }
 .item-dialog h2 { text-transform: capitalize; font-size: 1.4rem; margin-bottom: 2px; }
 .item-dialog .stepper { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px 0; }
 .item-dialog .stepper .step { width: 46px; height: 46px; font-size: 1.5rem; }
-.item-dialog .stepper .qty { font-family: "DM Serif Display", Georgia, "Times New Roman", serif; font-size: 1.3rem; min-width: 90px; }
+.item-dialog .stepper .qty { font-family: "Funnel Sans", "Zalando Sans", system-ui, sans-serif; font-weight: 800; font-size: 1.3rem; min-width: 90px; }
 .item-dialog .where { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 .item-dialog .where .chip.active.loc-fridge { background: var(--fridge); color: #fff; }
 .item-dialog .where .chip.active.loc-freezer { background: var(--freezer); color: #fff; }
@@ -434,10 +434,10 @@ ol.steps li { margin-bottom: 8px; }
 
 .appliance { position: relative; border-radius: 34px; padding: 12px; }
 .zone-label {
-  font-family: "DM Serif Display", Georgia, "Times New Roman", serif; font-weight: 400; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; margin: 2px 6px 8px;
+  font-family: "Funnel Sans", "Zalando Sans", system-ui, sans-serif; font-weight: 800; font-size: 1.15rem; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; margin: 2px 6px 8px;
 }
 .zone-label .count {
-  font-family: "Nunito", sans-serif; font-size: .75rem; font-weight: 800; background: var(--surface); color: var(--muted);
+  font-family: "Zalando Sans", sans-serif; font-size: .75rem; font-weight: 800; background: var(--surface); color: var(--muted);
   border-radius: 999px; padding: 1px 9px;
 }
 .shelf-label { font-size: .7rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 0 6px 4px; }
@@ -538,7 +538,7 @@ ol.steps li { margin-bottom: 8px; }
   white-space: nowrap; max-width: 64px; overflow: hidden; text-overflow: ellipsis;
 }
 .food-name {
-  font-family: "Nunito", system-ui, sans-serif;
+  font-family: "Zalando Sans", system-ui, sans-serif;
   font-size: .72rem; font-weight: 800; line-height: 1.15; text-align: center; text-transform: capitalize;
   max-width: 74px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
