@@ -51,6 +51,8 @@ const N = {
   oil: { kcal: 884, each: 14, density: 0.92 }, spices: { kcal: 300, each: 2 },
   "cumin": { kcal: 300, each: 2, density: 0.5 }, "paprika": { kcal: 300, each: 2, density: 0.5 }, "chili powder": { kcal: 300, each: 2, density: 0.5 }, "cayenne": { kcal: 300, each: 2, density: 0.5 }, "chili flakes": { kcal: 300, each: 2, density: 0.5 }, "oregano": { kcal: 300, each: 2, density: 0.5 }, "thyme": { kcal: 300, each: 2, density: 0.5 }, "rosemary": { kcal: 300, each: 2, density: 0.5 }, "dried basil": { kcal: 300, each: 2, density: 0.5 }, "italian seasoning": { kcal: 300, each: 2, density: 0.5 }, "bay leaves": { kcal: 300, each: 2, density: 0.5 }, "cinnamon": { kcal: 300, each: 2, density: 0.5 }, "nutmeg": { kcal: 300, each: 2, density: 0.5 }, "turmeric": { kcal: 300, each: 2, density: 0.5 }, "curry powder": { kcal: 300, each: 2, density: 0.5 }, "garlic powder": { kcal: 300, each: 2, density: 0.5 }, "onion powder": { kcal: 300, each: 2, density: 0.5 }, "ground ginger": { kcal: 300, each: 2, density: 0.5 },
   vanilla: { kcal: 288, each: 5, density: 0.9 },
+  kotleti: { kcal: 220, each: 90, pkg: 500 },
+  "burger patties": { kcal: 250, each: 115, pkg: 450 },
   broccolini: { kcal: 35, each: 20, bunch: 200, density: 0.4 },
   soda: { kcal: 40, density: 1.04, can: 355, each: 355 },
   "spice rub": { kcal: 300, each: 2, density: 0.5 },

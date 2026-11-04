@@ -8,8 +8,9 @@ const FRUIT = /\b(apples?|oranges?|clementines?|mandarins?|tangerines?|grapes?|m
 const RULES = [
   ["frozen", /\b(frozen|ice cream|gelato|popsicles?|sorbet)\b/i],
   ["spices", /\b(spices?|seasonings?|rubs?|spice blend|powder|paprika|cumin|oregano|thyme|rosemary|cinnamon|nutmeg|cloves|cardamom|coriander seeds?|peppercorns?|flakes)\b/i],
+  ["protein", /\b(veggie|plant[- ]based|meatless|vegan|beyond|impossible|tempeh|seitan|falafel)\b/i],
   ["seafood", /\b(fish|salmon|tuna|cod|haddock|halibut|tilapia|trout|mackerel|sardines?|anchov(y|ies)|shrimps?|prawns?|crabs?|lobsters?|scallops?|mussels?|clams?|oysters?|squid|calamari|octopus|seafood)\b/i],
-  ["meat", /\b(beef|pork|lamb|veal|chicken|turkey|duck|goose|bacon|ham|sausages?|salami|chorizo|prosciutto|pepperoni|steaks?|ribs?|brisket|roast|mince|jerky|meatballs?|venison|bison|hot ?dogs?|wieners?|pastrami|deli meat|cold cuts?)\b/i],
+  ["meat", /\b(beef|pork|lamb|veal|chicken|turkey|duck|goose|bacon|ham|sausages?|salami|chorizo|prosciutto|pepperoni|steaks?|ribs?|brisket|roast|mince|jerky|meatballs?|venison|bison|patt(y|ies)|cutlets?|kotlet\w*|schnitzels?|nuggets?|meatloaf|hot ?dogs?|wieners?|pastrami|deli meat|cold cuts?)\b/i],
   ["condiments", /\b(sauce|ketchup|dressing|jam|jelly|marmalade|syrup|vinegar|oil|relish|pickles?|mayo|mustard|spread|dip|salsa|pesto|hummus|tahini|aioli|sriracha|gochujang|miso|chutney|honey)\b/i],
   ["drinks", /\b(juice|soda|pop|sparkling|water|coffee|tea|kombucha|beer|wine|cider|drinks?|lemonade|smoothies?|cola|coke|pepsi|sprite|ginger ale|root beer|seltzer|tonic|gatorade|powerade|energy drink|espresso|latte|milkshake)\b/i],
   ["dairy", /\b(cheese|milk|cream|yogh?o?urt|kefir|ghee|custard|creamer|eggs?|brie|camembert|gouda|provolone|ricotta|mascarpone|halloumi|paneer)\b/i],
@@ -24,7 +25,7 @@ const RULES = [
 
 // Where each kind usually lives and roughly how long it keeps there (days).
 const DEFAULTS = {
-  produce: ["fridge", 7], fruit: ["fridge", 7], meat: ["fridge", 2], seafood: ["fridge", 2], dairy: ["fridge", 14],
+  protein: ["fridge", 7], produce: ["fridge", 7], fruit: ["fridge", 7], meat: ["fridge", 2], seafood: ["fridge", 2], dairy: ["fridge", 14],
   bakery: ["pantry", 6], baking: ["pantry", 365], grains: ["pantry", 365], condiments: ["pantry", 180],
   spices: ["pantry", 730], canned: ["pantry", 730], drinks: ["fridge", 14], snacks: ["pantry", 90], frozen: ["freezer", 180],
 };

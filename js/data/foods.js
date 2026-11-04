@@ -148,6 +148,8 @@ export const FOODS = [
   { name: "ground pork", aliases: ["grd pork", "minced pork"], category: "meat", location: "fridge", shelfLife: 2 },
   { name: "lamb", aliases: ["lamb chops", "lamb shank", "leg of lamb", "ground lamb"], category: "meat", location: "fridge", shelfLife: 3 },
   { name: "turkey", aliases: ["turkey breast", "deli turkey", "sliced turkey", "whole turkey"], category: "meat", location: "fridge", shelfLife: 3 },
+  { name: "kotleti", aliases: ["kotlety", "kotlet", "kotleta", "kotletki", "chicken patty", "chicken patties", "chicken cutlet", "chicken cutlets", "meat patties", "cutlets", "cutlet", "schnitzel", "chicken nuggets", "nuggets"], category: "meat", location: "fridge", shelfLife: 3 },
+  { name: "burger patties", aliases: ["burger patty", "hamburger patties", "beef patties", "beef patty", "burgers"], category: "meat", location: "fridge", shelfLife: 2 },
   { name: "hot dogs", aliases: ["hot dog", "wieners", "franks", "frankfurters"], category: "meat", location: "fridge", shelfLife: 7 },
   { name: "pepperoni", aliases: ["salami", "chorizo"], category: "meat", location: "fridge", shelfLife: 21 },
   { name: "white fish", aliases: ["cod", "tilapia", "haddock", "halibut", "pollock", "fish fillet", "fish fillets", "fish"], category: "seafood", location: "fridge", shelfLife: 2 },
@@ -245,5 +247,5 @@ export const VARIETY_GROUPS = new Set([
   "orange", "peach", "melon", "buns", "jam", "hot sauce", "teriyaki sauce", "salad dressing", "cereal", "orange juice",
   "frozen berries", "lamb", "pork", "turkey", "french fries", "berries", "lettuce", "butternut squash", "jalapeno",
   "pasta", "noodles", "rice", "steak", "vinegar", "broth", "canned tomatoes", "sugar", "oil", "coffee", "tea",
-  "soda", "spice rub", "broccolini",
+  "soda", "spice rub", "broccolini", "kotleti", "burger patties",
 ]);

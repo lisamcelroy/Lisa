@@ -146,6 +146,7 @@ const FOOD_ICONS = {
   "dried basil": ["shaker", "#14a88e"], "italian seasoning": ["shaker", "#7aa04a"], "bay leaves": ["leaf", "#6f9a4a"], cinnamon: ["shaker", "#a0582d"],
   nutmeg: ["shaker", "#9a6a3d"], turmeric: ["shaker", "#f2b01e"], "curry powder": ["shaker", "#e8a21e"], "garlic powder": ["shaker", "#efe3cf"],
   "onion powder": ["shaker", "#ead9b8"], "ground ginger": ["shaker", "#e0b06a"], vanilla: ["bottle", "#5a3b2e"],
+  kotleti: ["disc", "#c98b4f"], "burger patties": ["disc", "#9a5a3a"],
   broccolini: ["bunch", "#2f9a5a"], soda: ["can", "#d8301e"], "spice rub": ["shaker", "#a0402a"],
   "asparagus": ["spears", "#5fae4e"],
   "green beans": ["pods", "#4fa84a"],

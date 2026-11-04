@@ -35,7 +35,7 @@ export function needsDefrost(item) {
 const DEFROST_HOURS_BY_NAME = {
   chicken: 48, turkey: 48, "pork": 24, lamb: 24, steak: 24, "ground beef": 24, "ground turkey": 24, "ground pork": 24,
   "chicken breast": 24, "chicken thigh": 24, "chicken wing": 24, "chicken drumstick": 24, "pork chop": 24,
-  sausage: 12, bacon: 12, "hot dogs": 12, ham: 12, shrimp: 8, scallops: 8, salmon: 12, "white fish": 12,
+  kotleti: 12, "burger patties": 12, sausage: 12, bacon: 12, "hot dogs": 12, ham: 12, shrimp: 8, scallops: 8, salmon: 12, "white fish": 12,
   bread: 2, buns: 2, bagel: 2, tortilla: 1, "frozen berries": 4,
 };
 const DEFROST_HOURS_BY_CATEGORY = { meat: 24, seafood: 12, protein: 12, dairy: 12, bakery: 2, produce: 6 };

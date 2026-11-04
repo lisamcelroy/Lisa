@@ -77,7 +77,10 @@ export function newId() {
  */
 export function makeItem({ name, qty = 1, unit = "count", location, category, expiresAt, shelfLife, keepName = false }, now = Date.now()) {
   // keepName: use the name exactly as given (e.g. a seasoning the catalog doesn't know, like "za'atar").
-  const canonical = keepName ? String(name).trim() : canonicalName(name);
+  // "Beyond burger", "veggie nuggets": plant-based, so never filed as the meat they imitate.
+  const plant = /\b(veggie|plant[- ]based|meatless|vegan|beyond|impossible)\b/i.test(String(name));
+  let canonical = keepName ? String(name).trim() : canonicalName(name);
+  if (plant && ["meat", "seafood"].includes(foodInfo(canonical)?.category)) canonical = tidyName(name);
   const info = foodInfo(canonical);
   // Not in the catalog: work it out from the name ("purple kohlrabi" is a vegetable).
   const guess = info ? null : guessFood(canonical);

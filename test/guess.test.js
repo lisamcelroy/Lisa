@@ -78,3 +78,15 @@ test("items the catalog now knows are re-sorted even if guessed before", () => {
   const [a] = recategorize([{ name: "diet coke", category: "other", location: "fridge" }]);
   assert.equal(a.category, "drinks");
 });
+
+test("kotleti and other patties are meat", () => {
+  const z = (name) => zoneFor(makeItem({ name }));
+  assert.equal(z("kotleti"), "meat");
+  assert.equal(z("chicken patties"), "meat");
+  assert.equal(makeItem({ name: "chicken patties" }).label, "chicken patties");
+  assert.equal(z("beef patties"), "meat");
+  assert.equal(guessFood("turkey kotletki").category, "meat");
+  assert.equal(guessFood("veggie patties").category, "protein", "plant-based, not meat");
+  const [k] = recategorize([{ name: "kotleti", category: "other", location: "fridge" }]);
+  assert.equal(k.category, "meat");
+});
