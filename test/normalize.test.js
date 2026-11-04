@@ -32,3 +32,19 @@ test("specific foods satisfy generic ingredients", () => {
   assert.ok(satisfies("chicken thigh", "chicken"));
   assert.ok(!satisfies("cheese", "cheddar"));
 });
+
+import { typedName, searchText } from "../js/normalize.js";
+
+test("typed ingredient names are kept when they're more specific", () => {
+  assert.equal(typedName("chicken wings"), "chicken wing");
+  assert.equal(typedName("Chicken Drumsticks"), "chicken drumstick");
+  assert.equal(typedName("2 boneless skinless chicken breasts"), "chicken breast");
+  assert.equal(typedName("chicken"), "chicken");
+  assert.equal(typedName("smoked chicken sausage"), "smoked chicken sausage");
+  assert.equal(typedName("dragon fruit"), "dragon fruit");
+});
+
+test("search text is forgiving", () => {
+  assert.equal(searchText("Wings!"), "wing");
+  assert.ok(searchText("Crispy Chicken Wings").includes(searchText("wings")));
+});

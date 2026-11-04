@@ -120,6 +120,11 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   editor as "Check your recipe". Editing a recipe-book recipe or an idea saves your version with the
   same id (`edited: true` for book recipes, which get "Restore original"); `allRecipes()` lets your
   version replace the book one.
+- Recipe search sits at the top of Recipes. It searches everything (your recipes, the book and
+  Claude's ideas) and ignores the other filters while typing; matching is forgiving (`searchText`:
+  case, punctuation and plurals, so "wings" finds "chicken wing"). No results offers to ask Claude.
+- The recipe editor keeps what you type (`typedName`): the catalog name only when the text means
+  exactly that food, so "chicken wings" never becomes "chicken".
 - Seasonings live on a spice rack and count for recipes that just say "spices".
 - Anything in the freezer must be defrosted before use; recipes and the plan remind you.
 - Calories are estimates; say so in the UI.

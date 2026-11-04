@@ -181,6 +181,10 @@
 
     <!-- Recipes -->
     <section id="view-recipes" class="view" data-view="recipes" hidden>
+      <div class="recipe-searchbar">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="recipe-search" type="search" placeholder="Search recipes or ingredients" aria-label="Search recipes" autocomplete="off" />
+      </div>
       <div class="card time-card" id="time-card">
         <div class="time-ask" id="time-ask">
           <h2>How much time do you have to cook today?</h2>
@@ -219,7 +223,6 @@
           <button class="chip" data-filter="all">All</button>
           <button class="chip" data-filter="mine">Mine</button>
         </div>
-        <input id="recipe-search" type="search" placeholder="Search recipes" aria-label="Search recipes" />
       </div>
       <div class="meal-row" id="meal-filter" role="group" aria-label="Suggested for"></div>
       <div class="kw-row" id="keyword-filter" role="group" aria-label="Filter by occasion"></div>

@@ -118,7 +118,7 @@ const FOOD_ICONS = {
   butter: ["block", "#fde27a"], cheese: ["cheese", "#fdcb4e"], cheddar: ["cheese", "#f7b733"], feta: ["block", "#f4efe2"],
   mozzarella: ["block", "#f8f4ea"], parmesan: ["cheese", "#f5d67b"], cream: ["carton", "#7ab8e8"], "cream cheese": ["cup", "#9cc4ea"],
   egg: ["egg", "#fcad1a"], milk: ["carton", "#5aa9e6"], "sour cream": ["cup", "#c4a3cc"], yogurt: ["cup", "#f59ab0"],
-  bacon: ["bacon", "#d9532e"], "chicken breast": ["drumstick", "#f07a5c"], "chicken thigh": ["drumstick", "#ec6b4f"],
+  bacon: ["bacon", "#d9532e"], "chicken breast": ["drumstick", "#f07a5c"], "chicken thigh": ["drumstick", "#ec6b4f"], "chicken wing": ["drumstick", "#f0864f"], "chicken drumstick": ["drumstick", "#ec6b4f"],
   chicken: ["drumstick", "#f07a5c"], "ground beef": ["meat", "#e8604c"], "ground turkey": ["meat", "#f2907a"], ham: ["meat", "#f59aa6"],
   "pork chop": ["meat", "#f08a78"], salmon: ["fish", "#f07a5c"], sausage: ["long", "#c9583a"], shrimp: ["fish", "#f59a76"],
   steak: ["meat", "#d9483a"], tofu: ["block", "#f4efe2"],

@@ -1,6 +1,6 @@
 import { FOODS, LOCATIONS } from "./data/foods.js";
 import { RECIPES } from "./data/recipes.js";
-import { canonicalName, titleCase, foodInfo, matchFood, satisfies } from "./normalize.js";
+import { canonicalName, titleCase, foodInfo, matchFood, satisfies, searchText, typedName } from "./normalize.js";
 import { parseReceipt } from "./receipt.js";
 import { parseRecipeText } from "./recipeImport.js";
 import { recommend, cookRecipe, daysLeft, SOON_DAYS } from "./recommend.js";
@@ -766,7 +766,7 @@ function saveCustomRecipe(recipe) {
     servings: recipe.servings || 2,
     tags: recipe.tags || ["mine"],
     ingredients: (recipe.ingredients || []).map((ing) => ({
-      name: canonicalName(ing.name),
+      name: ing.typed ? ing.name : canonicalName(ing.name),
       qty: Number(ing.qty) || 1,
       unit: normalizeUnit(ing.unit) || "count",
       optional: Boolean(ing.optional),
@@ -936,7 +936,7 @@ function renderRecipeFolds() {
     $(el).classList.toggle("collapsed", shut.has(id));
     $(`[data-fold="${id}"]`).setAttribute("aria-expanded", String(!shut.has(id)));
   }
-  const n = (ui.recipeFilter !== "all" ? 1 : 0) + (ui.meal !== "any" ? 1 : 0) + ui.keywords.size + (ui.recipeSearch ? 1 : 0);
+  const n = (ui.recipeFilter !== "ready" ? 1 : 0) + (ui.meal !== "any" ? 1 : 0) + ui.keywords.size;
   $("#filter-count").textContent = n ? `${n} on` : "";
 }
 
@@ -947,10 +947,14 @@ function renderRecipes() {
   renderIdeas();
   $$("#recipe-filter .chip").forEach((c) => c.classList.toggle("active", c.dataset.filter === ui.recipeFilter));
 
-  const ranked = recommend(allRecipes(), state.inventory, { assumeStaples: state.settings.assumeStaples });
-  const q = ui.recipeSearch.toLowerCase();
   renderKeywordFilter();
-  let list = ranked.filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.tags.some((t) => t.includes(q)) || r.recipe.ingredients.some((i) => i.name.includes(q)) || keywordsFor(r.recipe).some((k) => KEYWORD_LABEL[k].toLowerCase().includes(q)));
+  const q = searchText(ui.recipeSearch);
+  document.body.classList.toggle("searching", Boolean(q));
+  $("#library-title").textContent = q ? "Search results" : "From the recipe book";
+  if (q) return renderSearch(q);
+
+  const ranked = recommend(allRecipes(), state.inventory, { assumeStaples: state.settings.assumeStaples });
+  let list = ranked;
   if (ui.keywords.size) list = list.filter((r) => { const ks = keywordsFor(r.recipe); return [...ui.keywords].every((k) => ks.includes(k)); });
   const time = cookTime();
   if (time) list = list.filter((r) => fitsTime(r.recipe, time));
@@ -987,6 +991,27 @@ function renderRecipes() {
     return;
   }
   $("#recipes").innerHTML = blockedNote(blockedCount) + list.map(recipeCard).join("");
+}
+
+// Search: every recipe (yours, the book and Claude's ideas), ignoring the other
+// filters so nothing is hidden. Forgiving: "Wings" finds "Crispy Chicken Wings"
+// and recipes with "chicken wing" in them.
+function recipeHaystack(recipe) {
+  return searchText([
+    recipe.title, ...(recipe.tags || []), ...recipe.ingredients.map((i) => i.name),
+    ...keywordsFor(recipe).map((k) => KEYWORD_LABEL[k]), ...mealsFor(recipe).map((m) => MEAL_TYPE_LABEL[m]),
+  ].join(" "));
+}
+
+function renderSearch(q) {
+  const words = q.split(" ").filter(Boolean);
+  const pool = [...allRecipes(), ...state.ideas.recipes];
+  const list = recommend(pool, state.inventory, { assumeStaples: state.settings.assumeStaples })
+    .filter((r) => { const hay = recipeHaystack(r.recipe); return words.every((w) => hay.includes(w)); })
+    .sort((a, b) => (searchText(b.recipe.title).includes(q) - searchText(a.recipe.title).includes(q)) || b.score - a.score);
+  $("#recipes").innerHTML = list.length
+    ? `<p class="muted small search-count">${list.length} recipe${list.length === 1 ? "" : "s"} for "${esc(ui.recipeSearch)}"</p>` + list.map(recipeCard).join("")
+    : `<div class="empty">No recipes for "${esc(ui.recipeSearch)}" yet. <button class="btn small" data-act="ask-claude">Ask Claude for ${esc(ui.recipeSearch)} ideas</button></div>`;
 }
 
 // Suggested meals: a line on each recipe and a filter row.
@@ -1063,6 +1088,15 @@ $("#recipe-search").addEventListener("input", (e) => {
 });
 
 $("#recipes").addEventListener("click", (e) => {
+  if (e.target.closest("[data-act=ask-claude]")) {
+    $("#ai-request").value = ui.recipeSearch;
+    ui.recipeSearch = "";
+    $("#recipe-search").value = "";
+    renderRecipes();
+    fetchIdeas({ fresh: true });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
   if (e.target.closest("[data-act=kw-all]")) {
     ui.recipeFilter = "all";
     return renderRecipes();
@@ -1213,11 +1247,11 @@ function openRecipeEditor(id, { checking = false } = {}) {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const ingredients = [...form.querySelectorAll(".ing-edit")].map((row) => ({
-      name: row.querySelector(".ie-name").value.trim(),
+      name: typedName(row.querySelector(".ie-name").value),
       qty: Number(row.querySelector(".ie-qty").value) || 1,
       unit: row.querySelector(".ie-unit").value,
       optional: row.querySelector(".ie-opt input").checked,
-    })).filter((i) => i.name);
+    })).filter((i) => i.name).map((i) => ({ ...i, typed: true }));
     if (!ingredients.length) return toast("Add at least one ingredient");
     const chosen = [...form.querySelectorAll('input[name="meal"]:checked')].map((i) => i.value);
     const fromBook = !recipe.custom && !recipe.idea;

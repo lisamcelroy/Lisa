@@ -25,7 +25,7 @@ const N = {
   cream: { kcal: 340, density: 1 }, "cream cheese": { kcal: 342, density: 0.95, pkg: 225 }, egg: { kcal: 143, each: 50 },
   milk: { kcal: 50, density: 1.03 }, "sour cream": { kcal: 198, density: 1 }, yogurt: { kcal: 75, each: 170, density: 1.03 },
 
-  bacon: { kcal: 400, slice: 20, each: 20 }, "chicken breast": { kcal: 165, each: 200 }, "chicken thigh": { kcal: 209, each: 120 },
+  bacon: { kcal: 400, slice: 20, each: 20 }, "chicken breast": { kcal: 165, each: 200 }, "chicken thigh": { kcal: 209, each: 120 }, "chicken wing": { kcal: 203, each: 35 }, "chicken drumstick": { kcal: 172, each: 75 },
   chicken: { kcal: 190, each: 150 }, "ground beef": { kcal: 250, pkg: 450 }, "ground turkey": { kcal: 170, pkg: 450 },
   ham: { kcal: 145, slice: 15, each: 15 }, "pork chop": { kcal: 231, each: 180 }, salmon: { kcal: 208, each: 170 },
   sausage: { kcal: 300, each: 75 }, shrimp: { kcal: 99, each: 15, pkg: 400 }, steak: { kcal: 250, each: 250 },

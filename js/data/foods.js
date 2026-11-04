@@ -57,6 +57,8 @@ export const FOODS = [
   { name: "bacon", aliases: ["bcn"], category: "meat", location: "fridge", shelfLife: 7 },
   { name: "chicken breast", aliases: ["chicken breasts", "chkn brst", "chicken brst", "boneless skinless chicken breast"], category: "meat", location: "fridge", shelfLife: 2, parent: "chicken" },
   { name: "chicken thigh", aliases: ["chicken thighs", "chkn thigh", "chkn thghs"], category: "meat", location: "fridge", shelfLife: 2, parent: "chicken" },
+  { name: "chicken wing", aliases: ["chicken wings", "wings", "wing", "chkn wings", "party wings"], category: "meat", location: "fridge", shelfLife: 2, parent: "chicken" },
+  { name: "chicken drumstick", aliases: ["chicken drumsticks", "drumsticks", "drumstick", "chicken legs", "chicken leg"], category: "meat", location: "fridge", shelfLife: 2, parent: "chicken" },
   { name: "chicken", aliases: ["chkn", "whole chicken", "rotisserie chicken"], category: "meat", location: "fridge", shelfLife: 2 },
   { name: "ground beef", aliases: ["grd beef", "lean ground beef", "minced beef", "hamburger"], category: "meat", location: "fridge", shelfLife: 2 },
   { name: "ground turkey", aliases: ["grd turkey"], category: "meat", location: "fridge", shelfLife: 2 },

@@ -71,6 +71,31 @@ export function matchFood(text) {
   return null;
 }
 
+/** Lower case, punctuation-free and singular, for forgiving searches ("Wings" finds "chicken wing"). */
+export function searchText(text) {
+  return singularPhrase(cleanText(text));
+}
+
+// Words that describe how a food is prepared or sized, not what it is.
+const DESCRIPTORS = new Set([
+  "boneless", "skinless", "large", "small", "medium", "chopped", "diced", "sliced", "minced", "grated",
+  "shredded", "ripe", "raw", "cooked", "whole", "baby", "fresh", "frozen", "peeled", "crushed", "finely",
+  "roughly", "thinly", "about", "cup", "cups", "clove", "cloves", "piece", "pieces",
+]);
+
+/**
+ * Name for an ingredient someone typed on purpose (the recipe editor): the catalog
+ * name when the text means exactly that food, otherwise their own words, so
+ * "chicken wings" never quietly turns into "chicken".
+ */
+export function typedName(text) {
+  const food = matchFood(text);
+  const words = singularPhrase(expand(text)).split(" ").filter((w) => w && !DESCRIPTORS.has(w));
+  if (!food) return expand(text) || cleanText(text);
+  const known = new Set([food.name, ...food.aliases].flatMap((p) => singularPhrase(cleanText(p)).split(" ")));
+  return words.every((w) => known.has(w)) ? food.name : words.join(" ");
+}
+
 /** Canonical name for anything typed by the user, falling back to a tidy version of their text. */
 export function canonicalName(text) {
   const food = matchFood(text);

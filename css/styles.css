@@ -1185,3 +1185,17 @@ button.date-badge:active { transform: scale(.95); }
 
 /* The "use soon" card style is for the Home card only, not fridge tiles that expire soon. */
 .food.soon { background: none; border-left: 0; }
+
+/* Recipe search, at the top of the Recipes page. */
+.recipe-searchbar { position: relative; margin: 0 0 14px; }
+.recipe-searchbar svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.recipe-searchbar input { width: 100%; box-sizing: border-box; padding-left: 46px; border-radius: 999px; background: var(--surface); border: 1px solid var(--hair); }
+/* While searching, results take over: other sections step aside and nothing stays folded. */
+body.searching #time-card, body.searching #ideas, body.searching #ideas-hint, body.searching #rec-filters { display: none !important; }
+body.searching #rec-book > .fold-body { display: block !important; }
+body.searching #rec-book > .fold { pointer-events: none; }
+body.searching #rec-book > .fold .chev { display: none; }
+.search-count { grid-column: 1 / -1; margin: 0 4px 4px; }
+
+/* Clear button in the search box, in the palette instead of browser blue. */
+.recipe-searchbar input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 18 18%27%3E%3Cpath d=%27M6 6l6 6M12 6l-6 6%27 stroke=%27%23fdf6ea%27 stroke-width=%272%27 stroke-linecap=%27round%27/%3E%3C/svg%3E") center / 18px no-repeat; }
