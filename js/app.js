@@ -19,9 +19,11 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 let state = loadState();
-const ui = { tab: "fridge", show: "both", itemId: null, keywords: new Set(), loc: "all", search: "", recipeFilter: "ready", recipeSearch: "", review: [] };
+const ui = { tab: "home", show: "both", itemId: null, keywords: new Set(), loc: "all", search: "", recipeFilter: "ready", recipeSearch: "", review: [] };
 state.ideas ||= { key: "", recipes: [] };
 state.plan ||= {};
+// Sections the person has folded away (fridge drawing and list groups).
+const folded = () => new Set(state.settings.collapsed || []);
 
 // Saving: every change goes to this browser's storage straight away and, on
 // claude.ai, to the person's private saved copy (see cloud.js).
@@ -77,7 +79,7 @@ function renderFridge() {
     : "Empty for now. Add food or scan a receipt to stock it up.";
   $$("#appliance-filter .chip").forEach((c) => c.classList.toggle("active", c.dataset.show === ui.show));
   renderDefrostBanner();
-  const { fridge, pantry, rack } = renderAppliances(inv);
+  const { fridge, pantry, rack } = renderAppliances(inv, folded());
   const box = $("#appliances");
   box.classList.toggle("both", ui.show === "both");
   const show = (part) => ui.show === "both" || ui.show === part;
@@ -234,8 +236,12 @@ function defrostNote(iso) {
 }
 
 function renderDefrostBanner() {
+  $("#defrost-banner").innerHTML = defrostCardHtml();
+}
+
+function defrostCardHtml() {
   const due = defrostReminders();
-  $("#defrost-banner").innerHTML = due.length
+  return due.length
     ? `<div class="card defrost-card">
         <h2>Take out of the freezer</h2>
         ${due.map((x) => `<div class="defrost-row"><span><b>${esc(frozenNames(x.frozen).join(", "))}</b> for ${x.when}'s ${esc(MEAL_LABEL[x.meal].toLowerCase())} (${esc(x.title)})</span>
@@ -247,6 +253,138 @@ function renderDefrostBanner() {
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-defrost]");
   if (btn) defrostFor(btn.dataset.defrost.split("|"));
+});
+
+// ---------- Home ----------
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+}
+
+function renderHome() {
+  const name = (state.settings.name || "").trim();
+  $("#hello").textContent = name ? `Hi, ${name}!` : "Hi there!";
+
+  const today = isoDay(new Date());
+  const day = state.plan[today] || {};
+  const c = dayCalories(day);
+  const due = defrostReminders().filter((x) => x.when === "today");
+  const soon = state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS && !needsDefrost(it));
+  const ranked = recommend(allRecipes(), state.inventory, { assumeStaples: state.settings.assumeStaples });
+  const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length);
+
+  // What the assistant says.
+  const lines = [];
+  if (!state.inventory.length) lines.push("Your fridge is empty. Scan a receipt or add some food and I'll get to work.");
+  else if (c.meals === 3) lines.push(`${greeting()}! All three meals are planned today${c.total ? `, about ${c.total} kcal` : ""}.`);
+  else if (c.meals) lines.push(`${greeting()}! You have ${c.meals} of 3 meals planned today${c.total ? `, about ${c.total} kcal so far` : ""}.`);
+  else lines.push(`${greeting()}! Nothing is planned for today yet.${ready.length ? ` You could make ${ready[0].recipe.title} right now.` : ""}`);
+  if (due.length) lines.push(`Don't forget to defrost the ${frozenNames(due.flatMap((x) => x.frozen)).join(" and ")}.`);
+  else if (soon.length) lines.push(`Use up the ${soon.slice(0, 2).map((it) => it.name).join(" and ")} soon.`);
+  $("#hello-sub").textContent = lines.join(" ");
+
+  // Today's meals.
+  $("#home-today").innerHTML = `
+    <div class="card today-card">
+      <div class="today-head">
+        <h2>Today's meals</h2>
+        <span class="muted small">${esc(new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }))}</span>
+      </div>
+      <div class="slots">
+        ${MEALS.map((m) => {
+          const e = day[m];
+          const ref = `${today}|${m}`;
+          if (!e) return `<button class="slot empty meal-${m}" data-home-pick="${ref}"><span class="slot-label">${MEAL_LABEL[m]}</span><span class="slot-add">+ Add</span></button>`;
+          return `<button class="slot filled meal-${m} slot-main" data-home-open="${ref}"><span class="slot-label">${MEAL_LABEL[m]}</span><span class="slot-title">${esc(e.title || e.text)}</span>${Number.isFinite(e.kcal) && e.kcal > 0 ? `<span class="slot-kcal">~${e.kcal} kcal</span>` : ""}</button>`;
+        }).join("")}
+      </div>
+      <div class="today-foot">
+        <span class="kcal-total">${c.meals ? `${c.known ? "" : "at least "}~${c.total} kcal today` : "No meals planned yet"}</span>
+        <button class="btn small" data-go="plan">Open planner</button>
+      </div>
+    </div>`;
+
+  $("#home-defrost").innerHTML = defrostCardHtml();
+
+  $("#home-soon").innerHTML = soon.length
+    ? `<div class="card soon">
+        <h2>Use these soon</h2>
+        <div class="soon-list">${soon.map((it) => `<span class="pill">${esc(it.name)} &middot; ${expiryText(it)}</span>`).join("")}</div>
+        <button class="btn small" data-action="show-rescue">Recipes that use them</button>
+      </div>`
+    : "";
+
+  $("#home-cook").innerHTML = ready.length
+    ? `<h2 class="section-title">You could make right now</h2><div class="recipe-grid">${ready.slice(0, 2).map(recipeCard).join("")}</div>`
+    : state.inventory.length
+      ? ""
+      : `<div class="row home-start"><button class="btn primary" data-go="scan">Scan a receipt</button><button class="btn" data-go="kitchen">Add food</button></div>`;
+}
+
+$("#view-home").addEventListener("click", (e) => {
+  const go = e.target.closest("[data-go]")?.dataset.go;
+  if (go) return switchTab(go);
+  if (e.target.closest("[data-action=show-rescue]")) {
+    ui.recipeFilter = "rescue";
+    return switchTab("recipes");
+  }
+  const pick = e.target.closest("[data-home-pick]")?.dataset.homePick;
+  if (pick) return openSlotPicker(...pick.split("|"));
+  const open = e.target.closest("[data-home-open]")?.dataset.homeOpen;
+  if (open) {
+    const [d, m] = open.split("|");
+    const id = state.plan[d]?.[m]?.recipeId;
+    return id && findRecipe(id) ? openRecipe(id) : openSlotPicker(d, m);
+  }
+  const card = e.target.closest("[data-recipe]");
+  if (card) openRecipe(card.dataset.recipe);
+});
+
+// ---------- Your name (asked once) ----------
+
+function maybeAskName(tries = 0) {
+  if (state.settings.name || state.settings.nameAsked) return;
+  // Wait for the saved copy to load first, so a name saved on another device is used.
+  if (syncStatus === "connecting" && tries < 10) return setTimeout(() => maybeAskName(tries + 1), 500);
+  const dlg = $("#name-dialog");
+  if (!dlg.open) dlg.showModal();
+  setTimeout(() => $("#name-input").focus(), 50);
+}
+
+function saveName(name) {
+  state.settings.name = String(name || "").trim().slice(0, 40);
+  state.settings.nameAsked = true; // never ask again, even if skipped
+  commit();
+  $("#name-dialog").close();
+  if (state.settings.name) toast(`Nice to meet you, ${state.settings.name}!`);
+}
+
+$("#name-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  saveName($("#name-input").value);
+});
+$("#name-skip").addEventListener("click", () => saveName(""));
+$("#name-dialog").addEventListener("cancel", (e) => {
+  e.preventDefault();
+  saveName("");
+});
+
+// ---------- Folding sections ----------
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-fold]");
+  if (!btn) return;
+  const id = btn.dataset.fold;
+  const set = folded();
+  set.has(id) ? set.delete(id) : set.add(id);
+  state.settings.collapsed = [...set];
+  commit();
+});
+
+document.addEventListener("click", (e) => {
+  const mode = e.target.closest("[data-view-mode]")?.dataset.viewMode;
+  if (mode && mode !== ui.tab) switchTab(mode);
 });
 
 // ---------- Spice rack ----------
@@ -347,7 +485,9 @@ function renderKitchen() {
   $("#inventory").innerHTML = GROUPS.map((loc) => {
     const items = visible.filter((it) => groupOf(it) === loc).sort((a, b) => daysLeft(a) - daysLeft(b) || a.name.localeCompare(b.name));
     if (!items.length) return "";
-    return `<div class="group-title"><span class="dot ${loc}"></span>${loc} (${items.length})</div>
+    const shut = folded().has("list-" + loc);
+    return `<button class="group-title fold" data-fold="list-${loc}" aria-expanded="${!shut}"><span class="chev" aria-hidden="true"></span><span class="dot ${loc}"></span>${loc} (${items.length})</button>
+      ${shut ? "" : `
       ${items.map((it) => `
         <div class="item" data-id="${it.id}">
           <div class="item-name">${esc(it.name)}</div>
@@ -359,7 +499,7 @@ function renderKitchen() {
             <select data-action="move" aria-label="Move ${esc(it.name)}">${locationOptions(it.location)}</select>
             <button class="x" data-action="remove" aria-label="Remove ${esc(it.name)}">&times;</button>
           </div>
-        </div>`).join("")}`;
+        </div>`).join("")}`}`;
   }).join("");
 }
 
@@ -812,7 +952,7 @@ function openRecipe(id) {
     <p class="muted">${recipe.minutes} min &middot; serves ${recipe.servings}${kcalText(recipe) ? ` &middot; <span class="kcal" title="Estimated per serving from the ingredients, without optional extras">${kcalText(recipe)} per serving</span>` : ""}${r.usesSoon.length ? ` &middot; <span class="rescue">uses up ${esc(r.usesSoon.join(", "))}</span>` : ""}</p>
     ${kwPills(recipe)}
     ${r.frozen.length ? `<p class="defrost-note">Defrost first: ${r.frozen.map((n) => `${esc(frozenItemFor(n)?.name || n)} (${esc(defrostHint(frozenItemFor(n) || { name: n }))})`).join(", ")}.</p>` : ""}
-    <h3>Ingredients</h3>
+    <details class="fold-details" open><summary><h3>Ingredients</h3></summary>
     <ul class="ing-list">
       ${recipe.ingredients.map((ing) => {
         const cls = have.has(ing.name) ? "ok" : missing.has(ing.name) ? "no" : "opt";
@@ -820,9 +960,9 @@ function openRecipe(id) {
         const ice = r.frozen.includes(ing.name) ? ' <span class="ice-tag">frozen</span>' : "";
         return `<li><span class="${cls}">${mark}</span><span>${esc(formatQty(ing.qty, ing.unit))} ${esc(ing.name)}${ing.optional ? ' <span class="muted">(optional)</span>' : ""}${ice}</span></li>`;
       }).join("")}
-    </ul>
-    <h3>Steps</h3>
-    <ol class="steps">${recipe.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+    </ul></details>
+    <details class="fold-details" open><summary><h3>Steps</h3></summary>
+    <ol class="steps">${recipe.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></details>
     <div class="row end">
       ${recipe.custom ? `<button class="btn danger" data-act="delete">Delete</button>` : ""}
       ${isIdea ? `<button class="btn" data-act="keep">Save to my recipes</button>` : ""}
@@ -1270,6 +1410,7 @@ const settingsDlg = $("#settings-dialog");
 
 $("#open-settings").addEventListener("click", () => {
   $("#set-staples").checked = state.settings.assumeStaples;
+  $("#set-name").value = state.settings.name || "";
   $("#set-apikey").value = state.settings.apiKey;
   $("#set-useclaude").checked = state.settings.useClaude;
   settingsDlg.showModal();
@@ -1277,6 +1418,8 @@ $("#open-settings").addEventListener("click", () => {
 
 settingsDlg.addEventListener("close", () => {
   state.settings.assumeStaples = $("#set-staples").checked;
+  state.settings.name = $("#set-name").value.trim().slice(0, 40);
+  state.settings.nameAsked = true;
   state.settings.apiKey = $("#set-apikey").value.trim();
   state.settings.useClaude = $("#set-useclaude").checked && Boolean(state.settings.apiKey);
   commit();
@@ -1324,7 +1467,10 @@ $("#reset-data").addEventListener("click", () => {
 function switchTab(tab) {
   ui.tab = tab;
   $$(".view").forEach((v) => (v.hidden = v.dataset.view !== tab));
-  $$(".tabbar button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+  // The list view lives inside the Fridge tab.
+  const tabFor = tab === "kitchen" ? "fridge" : tab;
+  $$(".tabbar button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tabFor));
+  $$("[data-view-mode]").forEach((b) => b.classList.toggle("on", b.dataset.viewMode === tab));
   render();
   window.scrollTo({ top: 0 });
 }
@@ -1337,6 +1483,7 @@ $(".tabbar").addEventListener("click", (e) => {
 function render() {
   renderShopping();
   updateScanEngine();
+  if (ui.tab === "home") renderHome();
   if (ui.tab === "fridge") renderFridge();
   if (ui.tab === "kitchen") renderKitchen();
   if (ui.tab === "recipes") renderRecipes();
@@ -1346,17 +1493,22 @@ function render() {
 // ---------- Saved copy on claude.ai ----------
 
 const SYNC_TEXT = {
-  connecting: "Loading your kitchen...",
-  saving: "Saving...",
-  saved: "Saved",
-  offline: "Not saved to your account yet",
-  local: "Saved on this device only",
+  connecting: ["Loading", "Loading your kitchen from your account"],
+  saving: ["Saving", "Saving to your account"],
+  saved: ["Saved", "Everything is saved to your account"],
+  offline: ["Offline", "Not saved to your account yet; it will save when the connection is back"],
+  local: ["This device", "Saved on this device only"],
 };
+let syncStatus = "";
 
 function setSyncStatus(status) {
   const el = $("#sync-status");
-  el.textContent = SYNC_TEXT[status] || "";
+  const [short, long] = SYNC_TEXT[status] || ["", ""];
+  el.textContent = short;
+  el.title = long;
+  el.setAttribute("aria-label", long);
   el.dataset.status = status;
+  syncStatus = status;
 }
 
 connectCloud({
@@ -1374,6 +1526,7 @@ connectCloud({
       state.ideas ||= { key: "", recipes: [] };
     }
     saveState(state);
+    if ((state.settings.name || state.settings.nameAsked) && $("#name-dialog").open) $("#name-dialog").close();
     render();
   },
 }).then((c) => (cloud = c)).catch((err) => {
@@ -1409,7 +1562,10 @@ document.addEventListener("visibilitychange", () => document.visibilityState ===
     if (gone) return;
     gone = true;
     el.classList.add("leaving");
-    setTimeout(() => el.remove(), reduced ? 0 : 500);
+    setTimeout(() => {
+      el.remove();
+      maybeAskName();
+    }, reduced ? 0 : 500);
   };
   el.addEventListener("click", leave);
   setTimeout(leave, reduced ? 900 : 3300);

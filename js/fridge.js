@@ -76,51 +76,69 @@ function shelf(items, emptyText) {
   return `<div class="shelf-items">${items.map(tile).join("")}</div>`;
 }
 
-/** HTML for the fridge (with freezer) and the pantry. */
-export function renderAppliances(inventory) {
+/** A section header you can tap to fold the section away. */
+function foldHeader(id, label, n, collapsed, extra = "") {
+  const shut = collapsed.has(id);
+  return `<div class="zone-label">
+      <button class="fold" data-fold="${id}" aria-expanded="${!shut}">
+        <span class="chev" aria-hidden="true"></span>${label} <span class="count">${n}</span>
+      </button>${extra}
+    </div>`;
+}
+
+/**
+ * HTML for the fridge (with freezer), the pantry and the spice rack.
+ * `collapsed` is a Set of section ids ("freezer", "fridge", "pantry", "rack") that are folded away.
+ */
+export function renderAppliances(inventory, collapsed = new Set()) {
   delay = 0;
   const z = groupByZone(inventory);
   const count = (ids) => ids.reduce((n, id) => n + (z[id]?.length || 0), 0);
+  const shut = (id) => (collapsed.has(id) ? " collapsed" : "");
 
   const fridge = `
     <section class="appliance fridge" aria-label="Fridge">
       <div class="handle" aria-hidden="true"></div>
-      <div class="compartment freezer">
-        <div class="zone-label">Freezer <span class="count">${count(["freezer"])}</span></div>
-        ${shelf(z.freezer, "Nothing frozen yet")}
+      <div class="compartment freezer${shut("freezer")}">
+        ${foldHeader("freezer", "Freezer", count(["freezer"]), collapsed)}
+        <div class="fold-body">${shelf(z.freezer, "Nothing frozen yet")}</div>
       </div>
-      <div class="fridge-body">
-        <div class="compartment main">
-          <div class="zone-label">Fridge <span class="count">${count(["top", "middle", "bottom", "crisper", "door"])}</span></div>
-          ${["top", "middle", "bottom"].map((id) => `
-            <div class="shelf" data-zone="${id}">
-              <div class="shelf-label">${FRIDGE_ZONES.find((x) => x.id === id).label}</div>
-              ${shelf(z[id], "Empty shelf")}
-            </div>`).join("")}
-          <div class="drawer">
-            <div class="shelf-label">Crisper drawer</div>
-            ${shelf(z.crisper, "No fruit or veg")}
+      <div class="fridge-section${shut("fridge")}">
+        <div class="fridge-head">${foldHeader("fridge", "Fridge", count(["top", "middle", "bottom", "crisper", "door"]), collapsed)}</div>
+        <div class="fold-body fridge-body">
+          <div class="compartment main">
+            ${["top", "middle", "bottom"].map((id) => `
+              <div class="shelf" data-zone="${id}">
+                <div class="shelf-label">${FRIDGE_ZONES.find((x) => x.id === id).label}</div>
+                ${shelf(z[id], "Empty shelf")}
+              </div>`).join("")}
+            <div class="drawer">
+              <div class="shelf-label">Crisper drawer</div>
+              ${shelf(z.crisper, "No fruit or veg")}
+            </div>
           </div>
-        </div>
-        <div class="compartment door">
-          <div class="shelf-label">Door</div>
-          ${shelf(z.door, "Sauces go here")}
+          <div class="compartment door">
+            <div class="shelf-label">Door</div>
+            ${shelf(z.door, "Sauces go here")}
+          </div>
         </div>
       </div>
     </section>`;
 
   const pantry = `
-    <section class="appliance pantry" aria-label="Pantry">
+    <section class="appliance pantry${shut("pantry")}" aria-label="Pantry">
       <div class="pantry-top" aria-hidden="true"></div>
-      <div class="zone-label">Pantry <span class="count">${count(PANTRY_ZONES.map((p) => p.id))}</span></div>
-      ${["grains", "cans", "sauces"].map((id) => `
-        <div class="shelf wood" data-zone="${id}">
-          <div class="shelf-label">${PANTRY_ZONES.find((x) => x.id === id).label}</div>
-          ${shelf(z[id], "Empty shelf")}
-        </div>`).join("")}
-      <div class="pantry-bins">
-        <div class="bin bread-box"><div class="shelf-label">Bread box</div>${shelf(z.bread, "No bread")}</div>
-        <div class="bin basket"><div class="shelf-label">Produce basket</div>${shelf(z.basket, "Onions, potatoes...")}</div>
+      ${foldHeader("pantry", "Pantry", count(PANTRY_ZONES.map((p) => p.id)), collapsed)}
+      <div class="fold-body">
+        ${["grains", "cans", "sauces"].map((id) => `
+          <div class="shelf wood" data-zone="${id}">
+            <div class="shelf-label">${PANTRY_ZONES.find((x) => x.id === id).label}</div>
+            ${shelf(z[id], "Empty shelf")}
+          </div>`).join("")}
+        <div class="pantry-bins">
+          <div class="bin bread-box"><div class="shelf-label">Bread box</div>${shelf(z.bread, "No bread")}</div>
+          <div class="bin basket"><div class="shelf-label">Produce basket</div>${shelf(z.basket, "Onions, potatoes...")}</div>
+        </div>
       </div>
     </section>`;
 
@@ -130,13 +148,14 @@ export function renderAppliances(inventory) {
   const rows = [];
   for (let i = 0; i < jars.length; i += 4) rows.push(jars.slice(i, i + 4));
   const rack = `
-    <section class="appliance rack" aria-label="Spice rack">
+    <section class="appliance rack${shut("rack")}" aria-label="Spice rack">
       <div class="rack-pegs" aria-hidden="true"><span></span><span></span></div>
-      <div class="zone-label">Spice rack <span class="count">${jars.length}</span>
-        <button class="btn small rack-stock" data-act="stock-rack">Stock the rack</button></div>
+      ${foldHeader("rack", "Spice rack", jars.length, collapsed, `<button class="btn small rack-stock" data-act="stock-rack">Stock the rack</button>`)}
+      <div class="fold-body">
       ${rows.length
         ? rows.map((row) => `<div class="shelf ledge"><div class="shelf-items">${row.map((it) => tile(it, { showQty: it.qty > 1 })).join("")}</div></div>`).join("")
         : `<div class="shelf ledge"><div class="shelf-items empty-shelf">No seasonings yet. Tap Stock the rack to add the ones you have.</div></div>`}
+      </div>
     </section>`;
 
   return { fridge, pantry, rack };

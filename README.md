@@ -6,7 +6,13 @@ what is actually in your kitchen, starting with food that is about to go off.
 
 ## What it does
 
-**Fridge** (the home tab)
+**Home**
+- Your fridge assistant waves hello by name and sums up the day: today's breakfast, lunch and
+  dinner with calories, anything to defrost, food to use soon, and what you could cook right now
+- It asks your name once on first use (saved to your account, never asked again; change it in
+  Settings)
+
+**Fridge**
 - A drawing of your fridge, freezer and pantry with every item as a little illustrated bubble,
   sorted onto shelves: dairy on top, meat and fish in the middle, fruit and veg in the crisper,
   sauces in the door; grains, cans, sauces, a bread box and a produce basket in the pantry
@@ -21,7 +27,7 @@ what is actually in your kitchen, starting with food that is about to go off.
   "Stock the rack" to tick the ones you own, or add your own. Any seasoning counts for recipes
   that just call for spices, and the List tab has its own Seasonings group
 
-**List**
+**List** (the List switch on the Fridge tab)
 - Fridge, freezer and pantry inventory with quantities and units
 - Typing "eggs" or "2% milk" files the item in the right place and estimates a use-by date
 - A "Use these soon" panel for anything expiring within 3 days
@@ -111,7 +117,8 @@ js/plan.js            meal plan dates and totals
 js/nutrition.js       calorie estimates
 js/data/keywords.js   recipe keywords
 js/fridge.js          the fridge and pantry drawing: which shelf each item goes on
-js/icons.js           food icons (inline SVG)
+js/icons.js           food icons (inline SVG, flat illustration style)
+js/mascot.js          the fridge assistant
 js/data/foods.js      food catalog: names, receipt aliases, storage location, shelf life
 js/data/recipes.js    built-in recipes
 js/normalize.js       turns free text into catalog foods
