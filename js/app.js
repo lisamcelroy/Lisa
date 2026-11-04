@@ -264,7 +264,10 @@ function greeting() {
 
 function renderHome() {
   const name = (state.settings.name || "").trim();
-  $("#hello").textContent = name ? `Hi, ${name}!` : "Hi there!";
+  $("#hello").textContent = name ? `Hi, ${name}` : "Hi there";
+  const now = new Date();
+  $("#badge-day").textContent = String(now.getDate()).padStart(2, "0");
+  $("#badge-month").textContent = now.toLocaleDateString(undefined, { month: "short" });
 
   const today = isoDay(new Date());
   const day = state.plan[today] || {};
@@ -1128,7 +1131,7 @@ window.claude?.use?.("sample").then(async (fn) => {
 
 // ---------- Meal plan ----------
 
-const planUi = { week: 0, slot: null, recipe: null, meal: "dinner" };
+const planUi = { week: 0, slot: null, recipe: null, meal: "dinner", month: 0, selected: null };
 
 function kcalOf(recipe) {
   return estimateCalories(recipe).perServing;
@@ -1179,7 +1182,42 @@ function weekMissing(days) {
   return [...missing];
 }
 
+// Month calendar: dots show planned meals; tap a day to jump to it in the week below.
+function renderMonth() {
+  const base = new Date();
+  const first = new Date(base.getFullYear(), base.getMonth() + planUi.month, 1);
+  const today = isoDay(base);
+  $("#month-title").textContent = first.getFullYear();
+  $("#month-sub").textContent = first.toLocaleDateString(undefined, { month: "long" });
+  const lead = (first.getDay() + 6) % 7; // Monday first
+  const start = new Date(first.getFullYear(), first.getMonth(), 1 - lead);
+  const cells = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    if (i >= 35 && d.getMonth() !== first.getMonth()) break;
+    const iso = isoDay(d);
+    const day = state.plan[iso] || {};
+    const dots = MEALS.filter((m) => day[m]).map((m) => `<i class="mk ${m}"></i>`).join("");
+    const cls = [d.getMonth() !== first.getMonth() ? "out" : "", iso === today ? "today" : "", iso === planUi.selected ? "sel" : ""].join(" ");
+    cells.push(`<button class="mday ${cls}" data-day-jump="${iso}" aria-label="${d.toDateString()}${dots ? ", meals planned" : ""}"><span>${d.getDate()}</span><em>${dots}</em></button>`);
+  }
+  $("#month-grid").innerHTML = ["M", "T", "W", "T", "F", "S", "S"].map((w) => `<b>${w}</b>`).join("") + cells.join("");
+}
+
+$("#month-prev").addEventListener("click", () => { planUi.month--; renderMonth(); });
+$("#month-next").addEventListener("click", () => { planUi.month++; renderMonth(); });
+$("#month-grid").addEventListener("click", (e) => {
+  const iso = e.target.closest("[data-day-jump]")?.dataset.dayJump;
+  if (!iso) return;
+  const monday = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+  planUi.week = Math.round((monday(fromIsoDay(iso)) - monday(new Date())) / (7 * 864e5));
+  planUi.selected = iso;
+  renderPlan();
+  document.querySelector(`[data-day-card="${iso}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
 function renderPlan() {
+  renderMonth();
   const days = weekDays(planUi.week);
   const today = isoDay(new Date());
   $("#plan-title").textContent =
@@ -1207,7 +1245,7 @@ function renderPlan() {
     const iso = isoDay(d);
     const day = state.plan[iso] || {};
     const c = dayCalories(day);
-    return `<div class="plan-day ${iso === today ? "today" : ""} ${iso < today ? "past" : ""}">
+    return `<div class="plan-day ${iso === today ? "today" : ""} ${iso < today ? "past" : ""} ${iso === planUi.selected ? "picked" : ""}" data-day-card="${iso}">
       <div class="plan-day-head">
         <div><b>${d.toLocaleDateString(undefined, { weekday: "long" })}</b> <span class="muted small">${dayMonth(d)}${iso === today ? " &middot; today" : ""}</span></div>
         ${c.meals ? `<span class="day-kcal">${c.known ? "" : "at least "}~${c.total} kcal</span>` : ""}

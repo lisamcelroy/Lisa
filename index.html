@@ -76,7 +76,14 @@
   <main>
     <!-- Home -->
     <section id="view-home" class="view" data-view="home">
-      <div class="home-hero">
+      <div class="home-head">
+        <div>
+          <h2 class="hero-title" id="hello">Hi there</h2>
+          <p class="muted small">For today</p>
+        </div>
+        <div class="date-badge" aria-hidden="true"><b id="badge-day"></b><span id="badge-month"></span></div>
+      </div>
+      <div class="card assistant-card">
         <div class="mascot-wrap"><svg class="mascot big wave" viewBox="0 0 64 68" aria-hidden="true" focusable="false">
   <g class="arm-l"><path d="M17 40C11 39 7.5 35 6.6 30.6" fill="none" stroke="#4a2414" stroke-width="3" stroke-linecap="round"/>
     <circle cx="6.3" cy="28.8" r="2.7" fill="#fff8e3" stroke="#4a2414" stroke-width="2.4"/></g>
@@ -95,10 +102,8 @@
   <path d="M28.4 41.4Q32 45.2 35.6 41.4" stroke="#4a2414" stroke-width="2.2" fill="none" stroke-linecap="round"/>
   
 </svg></div>
-        <div class="speech" role="status" aria-live="polite">
-          <b id="hello">Hi there!</b>
-          <span id="hello-sub"></span>
-        </div>
+        <p id="hello-sub" role="status" aria-live="polite"></p>
+      </div>
       </div>
       <div id="home-today"></div>
       <div id="home-defrost"></div>
@@ -110,7 +115,7 @@
     <section id="view-fridge" class="view" data-view="fridge" hidden>
       <div class="fridge-hero">
         <div>
-          <h2 class="hero-title">What's in my kitchen</h2>
+          <h2 class="hero-title">My kitchen</h2>
           <p class="muted small" id="fridge-summary"></p>
         </div>
         <button class="btn primary" id="fridge-add">+ Add food</button>
@@ -256,6 +261,17 @@
           <p class="muted small" id="plan-range"></p>
         </div>
         <button class="icon-btn" id="plan-next" aria-label="Next week"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="card month-card">
+        <div class="month-head">
+          <div><h2 id="month-title"></h2><p class="muted small" id="month-sub"></p></div>
+          <div class="month-nav">
+            <button class="round-btn" id="month-prev" aria-label="Previous month"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="round-btn" id="month-next" aria-label="Next month"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+        </div>
+        <div class="month-grid" id="month-grid"></div>
+        <div class="month-key"><span class="mk breakfast"></span>Breakfast <span class="mk lunch"></span>Lunch <span class="mk dinner"></span>Dinner</div>
       </div>
       <div class="card plan-summary" id="plan-summary"></div>
       <div class="plan-days" id="plan-days"></div>

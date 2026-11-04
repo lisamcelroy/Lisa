@@ -837,3 +837,155 @@ button.group-title { width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+
+/* =====================================================================
+   Sleek pass: hairline borders, soft shadows, flat pills, more air.
+   Same palette, icons and fonts; overrides the earlier, chunkier styling.
+   ===================================================================== */
+:root {
+  --hair: rgb(74 36 20 / 9%);
+  --radius: 28px;
+  --shadow: 0 1px 2px rgb(74 36 20 / 4%), 0 14px 34px -22px rgb(74 36 20 / 30%);
+  --press: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --hair: rgb(255 236 174 / 10%); --shadow: 0 14px 34px -20px rgb(0 0 0 / 70%); }
+}
+:root[data-theme="dark"] { --hair: rgb(255 236 174 / 10%); --shadow: 0 14px 34px -20px rgb(0 0 0 / 70%); }
+
+body { letter-spacing: -.005em; }
+main { padding-top: 14px; }
+h1, h2, h3, .hero-title { letter-spacing: -.03em; }
+.hero-title { font-size: 2.1rem; font-weight: 800; }
+h2 { font-size: 1.22rem; }
+.muted.small, .small { font-size: .82rem; }
+
+/* quieter background so content leads */
+.bg-art::before { opacity: .14; }
+.bg-art::after { opacity: .3; }
+.fridge-hero, .plan-head, .ideas-hint, .plan-note, .section-title, .group-title, .empty, .toolbar + p { text-shadow: none; }
+
+/* surfaces */
+.card, .item, .stat, .shop-item, .plan-day, .recipe, .speech, .appliance, dialog, .view-toggle, .sync, .icon-btn {
+  border: 1px solid var(--hair);
+}
+.card, .item, .stat, .shop-item, .plan-day, .recipe { box-shadow: var(--shadow); }
+.card { padding: 20px; }
+.item, .shop-item { border-radius: 20px; }
+
+/* buttons, chips, inputs: flat pills */
+.btn { box-shadow: none; border: 1px solid var(--hair); background: var(--surface); font-weight: 700; padding: 10px 18px; }
+.btn:hover { filter: none; background: var(--surface-2); }
+.btn:active { transform: scale(.97); box-shadow: none; }
+.btn.primary { background: var(--accent); border-color: transparent; color: #fff; }
+.btn.primary:hover { background: var(--accent-deep); }
+.btn.small { padding: 6px 14px; font-size: .82rem; }
+.btn.danger { background: transparent; border-color: color-mix(in srgb, var(--danger) 30%, transparent); }
+.chip { box-shadow: none; border: 1px solid var(--hair); background: var(--surface); font-weight: 600; padding: 7px 15px; }
+.chip.active { background: var(--accent); border-color: transparent; color: #fff; }
+input, select, textarea { background: var(--surface); border: 1px solid var(--hair); border-radius: 14px; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent); }
+.toolbar input[type=search] { box-shadow: none; }
+.step { background: var(--surface-2); color: var(--text); width: 34px; height: 34px; font-weight: 600; }
+.icon-btn { box-shadow: none; }
+.x { background: transparent; }
+
+/* header and tab bar: frosted glass */
+.topbar { background: color-mix(in srgb, var(--bg) 72%, transparent); backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3); }
+.tabbar {
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--hair); box-shadow: 0 18px 40px -20px rgb(74 36 20 / 40%);
+}
+.tabbar button { font-weight: 700; }
+.tabbar button.active { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-deep); }
+.tab-icon svg { stroke-width: 1.7; }
+.badge { background: var(--accent); }
+
+/* small details */
+.stat b { font-size: 1.9rem; font-weight: 800; }
+.stat span { font-weight: 600; }
+.group-title { font-size: .72rem; letter-spacing: .1em; font-weight: 700; }
+.shelf-label, .slot-label { font-weight: 700; letter-spacing: .09em; }
+.meter { height: 5px; background: var(--surface-2); }
+.meter div, .progress div { background: var(--accent); }
+.kw { background: transparent; border: 1px solid color-mix(in srgb, var(--kw) 40%, transparent); font-weight: 700; }
+.kw-chip { border-width: 1px; background: var(--surface); font-weight: 600; }
+.recipe:hover { transform: translateY(-2px); }
+.pill { border: 1px solid var(--hair); font-weight: 600; }
+.soon { background: var(--surface); border-left: 4px solid var(--warn); }
+.ideas { background: var(--surface); border-top: 4px solid var(--accent); }
+dialog { box-shadow: 0 40px 90px -30px rgb(40 20 10 / 45%); }
+dialog::backdrop { background: rgb(40 20 10 / 30%); backdrop-filter: blur(6px); }
+
+/* meal slots */
+.slot.filled { background: color-mix(in srgb, var(--meal) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--meal) 22%, transparent); }
+.slot.empty { border: 1.5px dashed color-mix(in srgb, var(--meal) 35%, var(--hair)); }
+.plan-day.today { outline: 2px solid var(--accent); outline-offset: -2px; }
+.plan-day.picked { outline: 2px solid var(--text); outline-offset: -2px; }
+
+/* appliances: slimmer outlines, thinner shelves */
+.fridge { border-width: 1.5px; background: var(--surface); box-shadow: var(--shadow); }
+.compartment.main, .compartment.door, .compartment.freezer { box-shadow: none; border: 1px solid var(--hair); }
+.compartment.door { border-style: dashed; }
+.fridge .handle { width: 8px; right: -6px; box-shadow: none; }
+.fridge .shelf::after, .shelf.wood::after, .shelf.ledge::after { height: 4px; box-shadow: none; }
+.drawer { box-shadow: none; border: 1px solid var(--hair); }
+.drawer::before { height: 6px; top: -4px; }
+.pantry { border-width: 1.5px; box-shadow: var(--shadow); background: var(--surface); }
+.pantry-top { height: 10px; top: -6px; box-shadow: none; }
+.bin { box-shadow: none; border: 1px solid var(--hair); }
+.rack { border-width: 1.5px; background: var(--surface); box-shadow: var(--shadow); }
+.rack-pegs span { width: 10px; height: 10px; box-shadow: none; }
+.food-bubble { box-shadow: none; border: 1px solid color-mix(in srgb, var(--food) 22%, transparent); }
+.zone-label .count, .count { border: 1px solid var(--hair); }
+
+/* Home: greeting, date badge and assistant card */
+.home-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin: 6px 2px 16px; }
+.home-head p { margin: 2px 0 0; }
+.date-badge {
+  position: relative; flex: none; width: 58px; height: 58px; border-radius: 18px; background: var(--surface);
+  border: 1px solid var(--hair); box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1;
+}
+.date-badge b { font-family: "Funnel Sans", system-ui, sans-serif; font-size: 1.35rem; font-weight: 800; letter-spacing: -.02em; }
+.date-badge span { font-size: .68rem; color: var(--muted); font-weight: 600; margin-top: 3px; }
+.date-badge::after { content: ""; position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+.assistant-card { display: flex; align-items: center; gap: 14px; padding: 14px 18px 14px 12px; }
+.assistant-card .mascot-wrap { width: 72px; }
+.assistant-card p { margin: 0; font-size: .95rem; line-height: 1.45; }
+
+/* Plan: month calendar */
+.month-card { padding: 18px 16px 14px; }
+.month-head { display: flex; justify-content: space-between; align-items: flex-start; margin: 0 4px 12px; }
+.month-head h2 { font-size: 1.9rem; font-weight: 800; margin: 0; }
+.month-head p { margin: 0; }
+.month-nav { display: flex; gap: 6px; }
+.round-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--hair); background: var(--surface); color: var(--text); display: grid; place-items: center; cursor: pointer; }
+.round-btn:active { transform: scale(.94); }
+.month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.month-grid > b { font-size: .7rem; font-weight: 700; color: var(--muted); padding: 4px 0 8px; }
+.mday {
+  font: inherit; color: inherit; background: none; border: 0; cursor: pointer; height: 46px; border-radius: 16px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: .9rem; font-weight: 600;
+}
+.mday em { display: flex; gap: 2px; height: 6px; }
+.mday.out { opacity: .35; }
+.mday:hover { background: var(--surface-2); }
+.mday.today span { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--accent); margin: -4px 0 -2px; }
+.mday.sel { background: var(--text); color: var(--bg); }
+.mday.sel.today span { border-color: var(--bg); }
+.mk { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
+.mk.breakfast { background: var(--sun); }
+.mk.lunch { background: var(--accent); }
+.mk.dinner { background: var(--raspberry); }
+.month-key { display: flex; justify-content: center; align-items: center; gap: 6px; font-size: .72rem; color: var(--muted); margin-top: 10px; }
+.month-key .mk { margin-left: 8px; }
+.hero-title { font-size: 1.85rem; }
+.fridge-hero .hero-title { font-size: 1.7rem; }
+.plan-heading .hero-title { font-size: 1.45rem; }
+.plan-head .icon-btn { width: 38px; height: 38px; }
+.bg-art::after { opacity: .24; }
+.defrost-card { background: var(--surface); border-left: 4px solid #5b8fd6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .defrost-card { background: var(--surface); } }
+:root[data-theme="dark"] .defrost-card { background: var(--surface); }
