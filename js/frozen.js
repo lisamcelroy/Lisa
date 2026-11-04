@@ -31,6 +31,31 @@ export function needsDefrost(item) {
   return item?.location === "freezer" && !cooksFromFrozen(item.name);
 }
 
+// Roughly how many hours food takes to defrost in the fridge (the safe way).
+const DEFROST_HOURS_BY_NAME = {
+  chicken: 48, turkey: 48, "pork": 24, lamb: 24, steak: 24, "ground beef": 24, "ground turkey": 24, "ground pork": 24,
+  "chicken breast": 24, "chicken thigh": 24, "chicken wing": 24, "chicken drumstick": 24, "pork chop": 24,
+  sausage: 12, bacon: 12, "hot dogs": 12, ham: 12, shrimp: 8, scallops: 8, salmon: 12, "white fish": 12,
+  bread: 2, buns: 2, bagel: 2, tortilla: 1, "frozen berries": 4,
+};
+const DEFROST_HOURS_BY_CATEGORY = { meat: 24, seafood: 12, protein: 12, dairy: 12, bakery: 2, produce: 6 };
+
+/** Hours an item needs to defrost before it can be cooked. */
+export function defrostHours(item) {
+  const c = item.category || FOOD_BY_NAME.get(item.name)?.category;
+  return DEFROST_HOURS_BY_NAME[item.name] ?? DEFROST_HOURS_BY_CATEGORY[c] ?? 6;
+}
+
+/**
+ * When to take something out so it's ready for a meal starting at `mealAt`:
+ * { by: Date, late: true when there isn't enough time left }.
+ */
+export function takeOutBy(items, mealAt, now = new Date()) {
+  const hours = Math.max(...items.map(defrostHours), 1);
+  const by = new Date(mealAt.getTime() - hours * 3600e3);
+  return { by, hours, late: by < now };
+}
+
 /** Plain-language advice for defrosting an item. */
 export function defrostHint(item) {
   const c = item.category || FOOD_BY_NAME.get(item.name)?.category;

@@ -59,6 +59,7 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 | `js/nutrition.js` | Calorie estimates per serving from ingredients (optional extras skipped) |
 | `js/family.js` | Family food preferences (allergic, hates, tolerates, loves) and what they mean for a recipe |
 | `js/cooktime.js` | Time to cook today: time limits, quick prep and hands-off checks |
+| `js/mealtimes.js` | Meal time windows: weekdays, weekends and single-day changes (`settings.mealTimes`); meal start times and the current meal |
 | `js/plan.js` | Meal plan dates (weeks start Monday), totals, pruning |
 | `js/fridge.js` | Fridge, pantry and spice rack drawing with foldable sections, sorted like grocery aisles (fridge: Dairy and eggs; Meat, fish and tofu; Other only when used; Vegetables and Fruit drawers; Condiments and sauces door. Pantry: Pasta, rice and grains; Baking; Canned and jarred; Oils and sauces; Bread and bakery; Fruit and veg) |
 | `js/icons.js`, `js/mascot.js` | Flat food icons and the fridge assistant |
@@ -131,5 +132,9 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   fixes items saved as "other" on load. Foods in `VARIETY_GROUPS` keep the typed variety as
   `item.label` ("oat milk", "cod") while matching recipes as the group (plant milk, white fish).
 - Seasonings live on a spice rack and count for recipes that just say "spices".
-- Anything in the freezer must be defrosted before use; recipes and the plan remind you.
+- Anything in the freezer must be defrosted before use. Reminders are timed: "Take out by 6 PM today"
+  from the meal's start time (Settings, Meal times) minus how long the food takes to thaw
+  (`defrostHours` in `js/frozen.js`: chicken 24h, shrimp 8h, bread 2h...). Each reminder has a tick:
+  ticking moves the food to the fridge, unticking puts it back (`state.defrostLog`, synced).
+- Days out are set in a calendar dialog (next five weeks); tap a day to mark it, tap again to undo.
 - Calories are estimates; say so in the UI.

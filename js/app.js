@@ -7,7 +7,8 @@ import { recommend, cookRecipe, daysLeft, SOON_DAYS } from "./recommend.js";
 import { loadState, saveState, makeItem, addToInventory, newId, toSynced, adoptRemote, mergeOnLoad } from "./store.js";
 import { connectCloud } from "./cloud.js";
 import { renderAppliances } from "./fridge.js";
-import { needsDefrost, defrostHint, defrostTo, moveItem } from "./frozen.js";
+import { needsDefrost, defrostHint, defrostTo, moveItem, takeOutBy } from "./frozen.js";
+import { MEAL_ORDER, DAY_NAMES, mealSchedule, timesFor, mealStart, currentMeal, windowLabel } from "./mealtimes.js";
 import { foodIcon } from "./icons.js";
 import { estimateCalories } from "./nutrition.js";
 import { KEYWORDS, KEYWORD_IDS, KEYWORD_LABEL, keywordsFor } from "./data/keywords.js";
@@ -205,26 +206,45 @@ function frozenNames(ingredients) {
   return [...new Set(ingredients.map((n) => frozenItemFor(n)?.name || n))];
 }
 
-/** Defrost one frozen item for each ingredient name. */
-function defrostFor(ingredients) {
+/** Defrost one frozen item for each ingredient name. Returns the moved item ids. */
+function defrostFor(ingredients, { quiet = false } = {}) {
   const done = [];
   for (const ing of ingredients) {
     const item = frozenItemFor(ing);
     if (!item) continue;
     replaceItem(moveItem(item, defrostTo(item)));
-    done.push(item.name);
+    done.push(item);
   }
-  if (done.length) {
+  if (done.length && !quiet) {
     commit();
-    toast(`Defrosting: ${done.join(", ")}`);
+    toast(`Defrosting: ${done.map((it) => it.label || it.name).join(", ")}`);
   }
+  return done;
 }
 
-/** Planned meals today and tomorrow that need something taken out of the freezer. */
+// "6 pm today", "9 am tomorrow", "Fri 6 pm"
+function whenLabel(date) {
+  const now = new Date();
+  const time = date.toLocaleTimeString(undefined, { hour: "numeric", minute: date.getMinutes() ? "2-digit" : undefined });
+  const days = Math.round((new Date(date).setHours(0, 0, 0, 0) - new Date(now).setHours(0, 0, 0, 0)) / 864e5);
+  if (days === 0) return `${time} today`;
+  if (days === 1) return `${time} tomorrow`;
+  if (days === -1) return `${time} yesterday`;
+  return `${date.toLocaleDateString(undefined, { weekday: "short" })} ${time}`;
+}
+
+/**
+ * Planned meals in the next few days that need something from the freezer, with
+ * when to take it out (from your meal times and how long each food takes to thaw).
+ * Ones you've already ticked off stay listed, ticked, until the meal.
+ */
 function defrostReminders() {
+  const now = new Date();
   const out = [];
-  for (const offset of [0, 1]) {
-    const d = new Date();
+  const endOfToday = new Date(now).setHours(23, 59, 59, 999);
+  const log = state.defrostLog || {};
+  for (let offset = 0; offset < 3; offset++) {
+    const d = new Date(now);
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() + offset);
     const iso = isoDay(d);
@@ -232,21 +252,41 @@ function defrostReminders() {
       const id = state.plan[iso]?.[meal]?.recipeId;
       const recipe = id && findRecipe(id);
       if (!recipe) continue;
+      const at = mealStart(state.settings.mealTimes, iso, meal);
+      if (at.getTime() + 2 * 3600e3 < now.getTime()) continue; // that meal is over
+      const key = `${iso}|${meal}`;
+      const base = { key, iso, meal, at, title: recipe.title };
       const [r] = recommend([recipe], state.inventory, { assumeStaples: state.settings.assumeStaples });
-      if (r.frozen.length) out.push({ iso, when: offset ? "tomorrow" : "today", meal, title: recipe.title, frozen: r.frozen });
+      if (r.frozen.length) {
+        const items = r.frozen.map(frozenItemFor).filter(Boolean);
+        const t = takeOutBy(items.length ? items : [{ name: r.frozen[0] }], at, now);
+        if (t.by.getTime() - now.getTime() > 36 * 3600e3) continue; // too early to bother
+        out.push({ ...base, frozen: r.frozen, names: frozenNames(r.frozen), by: t.by, hours: t.hours, late: t.late, when: t.by <= endOfToday ? "today" : "tomorrow", done: false });
+      } else if (log[key]) {
+        out.push({ ...base, frozen: [], names: log[key].names, done: true, when: "today" });
+      }
     }
   }
-  return out;
+  return out.sort((a, b) => a.done - b.done || (a.by || a.at) - (b.by || b.at));
+}
+
+function defrostRowHtml(x) {
+  const meal = `${x.iso === isoDay(new Date()) ? "today's" : x.at.getDate() === new Date(Date.now() + 864e5).getDate() ? "tomorrow's" : x.at.toLocaleDateString(undefined, { weekday: "long" }) + "'s"} ${MEAL_LABEL[x.meal].toLowerCase()}`;
+  const timing = x.done
+    ? `<span class="defrost-when ok">Defrosted</span>`
+    : x.late
+      ? `<span class="defrost-when late">Take out now. It needs about ${x.hours} hours, so thaw it in cold water if you're short on time.</span>`
+      : `<span class="defrost-when">Take out by <b>${esc(whenLabel(x.by))}</b> (about ${x.hours} hours to thaw)</span>`;
+  return `<label class="defrost-row${x.done ? " done" : ""}${x.late && !x.done ? " late" : ""}">
+    <input type="checkbox" data-defrost-check="${esc(x.key)}" data-frozen="${esc((x.frozen || []).join("|"))}" ${x.done ? "checked" : ""} aria-label="${esc(x.names.join(", "))} defrosted" />
+    <span class="defrost-tick" aria-hidden="true"></span>
+    <span class="defrost-text"><b>${esc(x.names.join(", "))}</b> for ${esc(meal)} (${esc(x.title)})${timing}</span>
+  </label>`;
 }
 
 function defrostNote(iso) {
   const due = defrostReminders().filter((x) => x.iso === iso);
-  if (!due.length) return "";
-  const names = [...new Set(due.flatMap((x) => x.frozen))];
-  const shown = frozenNames(names);
-  const when = due[0].when === "today" ? "now" : "tonight";
-  return `<div class="defrost-reminder"><span>Defrost ${when}: <b>${esc(shown.join(", "))}</b></span>
-    <button class="btn small" data-defrost="${esc(names.join("|"))}">Defrost</button></div>`;
+  return due.length ? `<div class="defrost-reminder">${due.map(defrostRowHtml).join("")}</div>` : "";
 }
 
 function renderDefrostBanner() {
@@ -258,10 +298,40 @@ function defrostCardHtml() {
   return due.length
     ? `<div class="card defrost-card">
         <h2>Take out of the freezer</h2>
-        ${due.map((x) => `<div class="defrost-row"><span><b>${esc(frozenNames(x.frozen).join(", "))}</b> for ${x.when}'s ${esc(MEAL_LABEL[x.meal].toLowerCase())} (${esc(x.title)})</span>
-          <button class="btn small" data-defrost="${esc(x.frozen.join("|"))}">Defrost</button></div>`).join("")}
+        <p class="muted small">Tick each one once it's out of the freezer.</p>
+        ${due.map(defrostRowHtml).join("")}
       </div>`
     : "";
+}
+
+// Ticking moves the food to the fridge to thaw; unticking (plans changed) puts it back in the freezer.
+document.addEventListener("change", (e) => {
+  const box = e.target.closest("[data-defrost-check]");
+  if (!box) return;
+  const key = box.dataset.defrostCheck;
+  state.defrostLog = { ...(state.defrostLog || {}) };
+  if (box.checked) {
+    const moved = defrostFor(box.dataset.frozen.split("|").filter(Boolean), { quiet: true });
+    state.defrostLog[key] = { ids: moved.map((it) => it.id), names: moved.map((it) => it.label || it.name), at: Date.now() };
+    commit();
+    toast(`Thawing in the fridge: ${state.defrostLog[key].names.join(", ")}`);
+  } else {
+    const entry = state.defrostLog[key];
+    for (const id of entry?.ids || []) {
+      const it = state.inventory.find((x) => x.id === id);
+      if (it) replaceItem(moveItem(it, "freezer"));
+    }
+    delete state.defrostLog[key];
+    commit();
+    toast("Back in the freezer");
+  }
+});
+
+// Forget ticks for meals that are over.
+function pruneDefrostLog() {
+  const today = isoDay(new Date());
+  const log = state.defrostLog || {};
+  for (const key of Object.keys(log)) if (key.split("|")[0] < today) delete log[key];
 }
 
 document.addEventListener("click", (e) => {
@@ -292,17 +362,17 @@ function renderHome() {
   const today = isoDay(new Date());
   const day = state.plan[today] || {};
   const c = dayCalories(day);
-  const due = defrostReminders().filter((x) => x.when === "today");
+  const due = defrostReminders().filter((x) => !x.done && x.when === "today");
   const soon = state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS && !needsDefrost(it));
   const ranked = recommend(allRecipes(), state.inventory, { assumeStaples: state.settings.assumeStaples });
-  const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length && !isBlocked(r) && mealsFor(r.recipe).includes(mealNow()));
+  const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length && !isBlocked(r) && mealsFor(r.recipe).includes(currentMeal(state.settings.mealTimes)));
 
   // What the assistant says.
   const lines = [];
   if (!state.inventory.length) lines.push("Your fridge is empty. Scan a receipt or add some food and I'll get to work.");
   else if (c.meals === 3) lines.push(`All three meals are planned today${c.total ? `, about ${c.total} kcal` : ""}.`);
   else if (c.meals) lines.push(`You have ${c.meals} of 3 meals planned today${c.total ? `, about ${c.total} kcal so far` : ""}.`);
-  else lines.push(`Nothing is planned for today yet.${ready.length ? ` You could make ${ready[0].recipe.title} for ${mealNow()} right now.` : ""}`);
+  else lines.push(`Nothing is planned for today yet.${ready.length ? ` You could make ${ready[0].recipe.title} for ${currentMeal(state.settings.mealTimes)} right now.` : ""}`);
   if (due.length) lines.push(`Don't forget to defrost the ${frozenNames(due.flatMap((x) => x.frozen)).join(" and ")}.`);
   else if (soon.length) lines.push(`Use up the ${soon.slice(0, 2).map((it) => it.name).join(" and ")} soon.`);
   $("#hello-sub").textContent = lines.join(" ");
@@ -1749,7 +1819,71 @@ $("#shop-bought").addEventListener("click", () => {
 
 const settingsDlg = $("#settings-dialog");
 
+// Meal times editor: weekdays, weekends, or one day of the week.
+const mtUi = { sel: "weekday" };
+
+function renderMealTimes() {
+  const sched = mealSchedule(state.settings.mealTimes);
+  const sel = mtUi.sel;
+  const dow = /^\d$/.test(sel) ? Number(sel) : null;
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  $("#mt-days").innerHTML = [["weekday", "Weekdays"], ["weekend", "Weekends"]].map(([id, label]) =>
+    `<button type="button" class="chip ${sel === id ? "active" : ""}" data-mt="${id}">${label}</button>`).join("") +
+    `<span class="mt-sep"></span>` + order.map((d) =>
+    `<button type="button" class="chip day-chip ${sel === String(d) ? "active" : ""} ${sched.days[d] ? "custom" : ""}" data-mt="${d}" aria-label="${DAY_NAMES[d]}${sched.days[d] ? ", its own times" : ""}">${DAY_NAMES[d]}</button>`).join("");
+  const times = dow === null ? sched[sel] : timesFor(state.settings.mealTimes, dateForDow(dow));
+  const inherits = dow === null ? "" : (dow === 0 || dow === 6 ? "weekend" : "weekday");
+  $("#mt-rows").innerHTML = MEAL_ORDER.map((m) => `<div class="mt-row">
+      <span class="mt-meal meal-tag meal-${m}">${MEAL_LABEL[m]}</span>
+      <input type="time" data-mt-meal="${m}" data-mt-end="0" value="${times[m][0]}" aria-label="${MEAL_LABEL[m]} from" />
+      <span class="muted small">to</span>
+      <input type="time" data-mt-meal="${m}" data-mt-end="1" value="${times[m][1]}" aria-label="${MEAL_LABEL[m]} until" />
+    </div>`).join("") + (dow === null ? "" : `<p class="muted small mt-note">${sched.days[dow]
+      ? `${DAY_NAMES[dow]} has its own times. <button type="button" class="btn small" data-mt-reset="${dow}">Use ${inherits} times</button>`
+      : `${DAY_NAMES[dow]} uses your ${inherits} times. Change any time to give it its own.`}</p>`);
+}
+
+function dateForDow(dow) {
+  const d = new Date();
+  d.setDate(d.getDate() + ((dow - d.getDay() + 7) % 7));
+  return d;
+}
+
+$("#mt-days").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-mt]");
+  if (b) { mtUi.sel = b.dataset.mt; renderMealTimes(); }
+});
+$("#mt-rows").addEventListener("change", (e) => {
+  const input = e.target.closest("[data-mt-meal]");
+  if (!input || !input.value) return;
+  const sched = mealSchedule(state.settings.mealTimes);
+  const meal = input.dataset.mtMeal, i = Number(input.dataset.mtEnd);
+  const sel = mtUi.sel;
+  if (/^\d$/.test(sel)) {
+    const day = { ...(sched.days[sel] || {}) };
+    const cur = day[meal] || timesFor(sched, dateForDow(Number(sel)))[meal];
+    day[meal] = i ? [cur[0], input.value] : [input.value, cur[1]];
+    sched.days[sel] = day;
+  } else {
+    const cur = sched[sel][meal];
+    sched[sel] = { ...sched[sel], [meal]: i ? [cur[0], input.value] : [input.value, cur[1]] };
+  }
+  state.settings.mealTimes = sched;
+  persist();
+  renderMealTimes();
+});
+$("#mt-rows").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-mt-reset]");
+  if (!b) return;
+  const sched = mealSchedule(state.settings.mealTimes);
+  delete sched.days[b.dataset.mtReset];
+  state.settings.mealTimes = sched;
+  persist();
+  renderMealTimes();
+});
+
 $("#open-settings").addEventListener("click", () => {
+  renderMealTimes();
   $("#set-staples").checked = state.settings.assumeStaples;
   $("#set-name").value = state.settings.name || "";
   $("#set-apikey").value = state.settings.apiKey;
@@ -1838,7 +1972,7 @@ function renderFamily() {
       <div class="away-row">
         <span class="pref-level">Out on</span>
         ${later.map((d) => `<span class="pref-chip away-chip">${esc(shortDate(fromIsoDay(d)))}<button aria-label="${esc(m.name)} is home on ${esc(shortDate(fromIsoDay(d)))}" data-fam="del-away" data-member="${m.id}" data-day="${d}">&times;</button></span>`).join("")}
-        <label class="btn small away-add">+ A day out<input type="date" min="${today}" data-fam-away="${m.id}" aria-label="Add a day ${esc(m.name)} is out" /></label>
+        <button type="button" class="btn small" data-fam="away" data-member="${m.id}">${later.length ? "Change days out" : "+ A day out"}</button>
       </div>
       <form class="pref-form" data-member="${m.id}">
         <input name="food" list="food-names" placeholder="A food, e.g. mushrooms" required aria-label="Food" />
@@ -1876,15 +2010,6 @@ $("#family-list").addEventListener("submit", (e) => {
   toast(`Saved: ${m.name} ${said} ${food}`);
 });
 
-$("#family-list").addEventListener("change", (e) => {
-  const input = e.target.closest("[data-fam-away]");
-  const m = input && state.family.find((x) => x.id === input.dataset.famAway);
-  if (!m || !input.value) return;
-  m.away = pruneAway([...new Set([...(m.away || []), input.value])], todayIso());
-  commit();
-  toast(`${m.name} is out on ${shortDate(fromIsoDay(input.value))}`);
-});
-
 $("#family-list").addEventListener("click", (e) => {
   const b = e.target.closest("[data-fam]");
   if (!b) return;
@@ -1897,7 +2022,8 @@ $("#family-list").addEventListener("click", (e) => {
     commit();
     toast(isOut(m, today) ? `${m.name} is out today. Recipes are for everyone else.` : `${m.name} is eating at home today`);
   }
-  if (act === "del-away" && m) { m.away = m.away.filter((d) => d !== b.dataset.day); commit(); }
+  if (act === "del-away" && m) { m.away = m.away.filter((d) => d !== b.dataset.day); commit(); toast(`${m.name} is home on ${shortDate(fromIsoDay(b.dataset.day))}`); }
+  if (act === "away" && m) openAwayPicker(m.id);
   if (act === "del-pref" && m) { m.prefs = m.prefs.filter((p) => p.food !== b.dataset.food); commit(); }
   if (act === "del-member" && m && confirm(`Remove ${m.name} and their preferences?`)) {
     state.family = state.family.filter((x) => x !== m);
@@ -1908,6 +2034,49 @@ $("#family-list").addEventListener("click", (e) => {
 // Tap the logo to go back to the top.
 $("#logo-top").addEventListener("click", () => window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
 $("#logo-top").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#logo-top").click(); } });
+
+// Days out: a small calendar of the next five weeks. Tap a day to mark it,
+// tap it again if plans change. Lives in its own dialog so nothing redraws under it.
+function openAwayPicker(memberId) {
+  const dlg = $("#away-dialog");
+  const draw = () => {
+    const m = state.family.find((x) => x.id === memberId);
+    if (!m) return dlg.close();
+    const today = todayIso();
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // this week's Monday
+    const cells = [];
+    for (let i = 0; i < 35; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const iso = isoDay(d);
+      const out = isOut(m, iso);
+      const past = iso < today;
+      cells.push(`<button type="button" class="away-day${out ? " on" : ""}${iso === today ? " today" : ""}" ${past ? "disabled" : ""} data-away-day="${iso}" aria-pressed="${out}" aria-label="${esc(shortDate(d))}${out ? ", out" : ""}">
+        ${d.getDate() === 1 || i === 0 ? `<small>${d.toLocaleDateString(undefined, { month: "short" })}</small>` : ""}${d.getDate()}</button>`);
+    }
+    const days = (m.away || []).filter((d) => d >= today);
+    $("#away-detail").innerHTML = `
+      <h2>Days ${esc(m.name)} is out</h2>
+      <p class="muted small">Tap a day to mark ${esc(m.name)} as out. Tap it again if plans change.</p>
+      <div class="away-head">${["M", "T", "W", "T", "F", "S", "S"].map((x) => `<span>${x}</span>`).join("")}</div>
+      <div class="away-grid">${cells.join("")}</div>
+      <p class="small away-summary">${days.length ? `Out on ${days.map((d) => esc(shortDate(fromIsoDay(d)))).join(", ")}` : "Home every day"}</p>
+      <div class="row end">${days.length ? `<button type="button" class="btn" data-away-clear>Clear all</button>` : ""}<button type="button" class="btn primary" data-away-done>Done</button></div>`;
+  };
+  dlg.onclick = (e) => {
+    if (e.target === dlg || e.target.closest("[data-away-done]")) return dlg.close();
+    const m = state.family.find((x) => x.id === memberId);
+    if (!m) return;
+    if (e.target.closest("[data-away-clear]")) m.away = [];
+    const day = e.target.closest("[data-away-day]")?.dataset.awayDay;
+    if (day) m.away = isOut(m, day) ? m.away.filter((d) => d !== day) : pruneAway([...(m.away || []), day], todayIso());
+    if (day || e.target.closest("[data-away-clear]")) { commit(); draw(); }
+  };
+  draw();
+  if (!dlg.open) dlg.showModal();
+}
 
 // ---------- Tabs and boot ----------
 
@@ -1928,6 +2097,7 @@ $(".tabbar").addEventListener("click", (e) => {
 });
 
 function render() {
+  pruneDefrostLog();
   renderShopping();
   updateScanEngine();
   if (ui.tab === "home") renderHome();
