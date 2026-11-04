@@ -174,7 +174,7 @@ p { margin: 0 0 10px; }
 .logo { display: flex; align-items: center; gap: 8px; }
 .logo > div { display: flex; flex-direction: column; align-items: flex-start; }
 .logo-mark { width: 40px; height: 40px; color: var(--text); flex: none; }
-.wordmark { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 1.75rem; letter-spacing: -.01em; }
+.wordmark { font-family: "Climate Crisis", "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 1.32rem; letter-spacing: 0; font-variation-settings: "YEAR" 1979; }
 .wordmark span:nth-child(6n+1) { color: var(--olive); }
 .wordmark span:nth-child(6n+2) { color: var(--raspberry); }
 .wordmark span:nth-child(6n+3) { color: var(--sun); }
@@ -576,8 +576,9 @@ ol.steps li { margin-bottom: 8px; }
 .splash-fridge .m1 { animation-delay: .55s; }
 .splash-fridge .m2 { animation-delay: .7s; }
 .splash-fridge .sparkle { animation: sparkle .9s ease-out .8s both; }
-.splash-word { font-size: clamp(2.6rem, 11vw, 4rem); margin-top: 10px; line-height: 1; }
-.splash-word span { display: inline-block; animation: letter-in .5s cubic-bezier(.3, 1.7, .5, 1) both; }
+.splash-word { font-size: clamp(1.4rem, 6vw, 2.6rem); margin-top: 14px; line-height: 1.1; }
+/* Letters pop in melted, then freeze solid (the font's YEAR axis: 2025 = melted, 1979 = solid). */
+.splash-word span { display: inline-block; animation: letter-in .5s cubic-bezier(.3, 1.7, .5, 1) both, freeze 1.4s ease-out both; }
 .splash-word span:nth-child(1) { animation-delay: .35s; } .splash-word span:nth-child(2) { animation-delay: .4s; }
 .splash-word span:nth-child(3) { animation-delay: .45s; } .splash-word span:nth-child(4) { animation-delay: .5s; }
 .splash-word span:nth-child(5) { animation-delay: .55s; } .splash-word span:nth-child(6) { animation-delay: .6s; }
@@ -600,11 +601,13 @@ ol.steps li { margin-bottom: 8px; }
 @keyframes magnet-pop { from { transform: scale(0); } }
 @keyframes sparkle { from { opacity: 0; transform: scale(.6); } 60% { opacity: 1; } to { opacity: 1; } }
 @keyframes letter-in { from { transform: translateY(24px) scale(.6); opacity: 0; } }
+@keyframes freeze { from { font-variation-settings: "YEAR" 2025; } to { font-variation-settings: "YEAR" 1979; } }
 @keyframes rise { from { transform: translateY(10px); opacity: 0; } }
 @keyframes food-pop { from { transform: scale(0) rotate(-30deg); opacity: 0; } }
 @keyframes bob { 50% { translate: 0 -8px; } }
 @keyframes ring-spin { to { rotate: 360deg; } }
 @media (max-width: 420px) { .splash-food { width: 52px; height: 52px; left: -26px; top: -26px; } }
+@media (max-width: 380px) { .splash-word { font-size: 5vw; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
