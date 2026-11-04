@@ -17,7 +17,7 @@ export const FRIDGE_ZONES = [
 export const PANTRY_ZONES = [
   { id: "grains", label: "Grains and baking" },
   { id: "cans", label: "Cans and jars" },
-  { id: "sauces", label: "Sauces and spices" },
+  { id: "sauces", label: "Sauces and oils" },
   { id: "bread", label: "Bread box" },
   { id: "basket", label: "Produce basket" },
 ];
@@ -25,10 +25,11 @@ export const PANTRY_ZONES = [
 /** Which shelf an item belongs on, from where it lives and what it is. */
 export function zoneFor(item) {
   const c = item.category;
+  if (c === "spices") return "rack"; // seasonings live on the spice rack wherever they're kept
   if (item.location === "freezer") return "freezer";
   if (item.location === "pantry") {
     if (c === "grains" || c === "baking") return "grains";
-    if (c === "condiments" || c === "spices" || c === "staples") return "sauces";
+    if (c === "condiments" || c === "staples") return "sauces";
     if (c === "bakery") return "bread";
     if (c === "produce") return "basket";
     return "cans";
@@ -55,7 +56,7 @@ function freshness(item) {
 }
 
 let delay = 0;
-function tile(item) {
+function tile(item, { showQty = true } = {}) {
   const { svg, color } = foodIcon(item.name, item.category);
   const f = freshness(item);
   const d = daysLeft(item);
@@ -63,7 +64,7 @@ function tile(item) {
   const qty = formatQty(item.qty, item.unit);
   const style = `--food:${color};--i:${delay++}`;
   return `<button class="food ${f}" data-id="${esc(item.id)}" style="${style}" aria-label="${esc(item.name)}, ${esc(qty)}${note ? ", " + note : ""}">
-    <span class="food-bubble">${svg}<span class="food-qty">${esc(qty)}</span></span>
+    <span class="food-bubble">${svg}${showQty ? `<span class="food-qty">${esc(qty)}</span>` : ""}</span>
     <span class="food-name">${esc(item.name)}</span>
   </button>`;
 }
@@ -121,5 +122,20 @@ export function renderAppliances(inventory) {
       </div>
     </section>`;
 
-  return { fridge, pantry };
+  // Spice rack: jars in rows of four on little wooden ledges. Amounts are hidden
+  // unless there's more than one jar, since seasonings are mostly "have it or not".
+  const jars = z.rack || [];
+  const rows = [];
+  for (let i = 0; i < jars.length; i += 4) rows.push(jars.slice(i, i + 4));
+  const rack = `
+    <section class="appliance rack" aria-label="Spice rack">
+      <div class="rack-pegs" aria-hidden="true"><span></span><span></span></div>
+      <div class="zone-label">Spice rack <span class="count">${jars.length}</span>
+        <button class="btn small rack-stock" data-act="stock-rack">Stock the rack</button></div>
+      ${rows.length
+        ? rows.map((row) => `<div class="shelf ledge"><div class="shelf-items">${row.map((it) => tile(it, { showQty: it.qty > 1 })).join("")}</div></div>`).join("")
+        : `<div class="shelf ledge"><div class="shelf-items empty-shelf">No seasonings yet. Tap Stock the rack to add the ones you have.</div></div>`}
+    </section>`;
+
+  return { fridge, pantry, rack };
 }

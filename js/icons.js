@@ -58,6 +58,7 @@ const FOOD_ICONS = {
   salsa: ["jar", "#ff6b3d"], mayonnaise: ["jar", "#fff1c9"], mustard: ["bottle", "#ffcd1f"], "curry paste": ["jar", "#ff9a3c"],
   vinegar: ["bottle", "#d8c08a"], salt: ["shaker", "#f4f4f4"], "black pepper": ["shaker", "#6d6878"], oil: ["bottle", "#e8c547"],
   spices: ["shaker", "#e07a3a"], water: ["bottle", "#9fd8ff"],
+  "cumin": ["shaker", "#b5803a"], "paprika": ["shaker", "#e0452b"], "chili powder": ["shaker", "#c8382a"], "cayenne": ["shaker", "#e8502e"], "chili flakes": ["shaker", "#d9432b"], "oregano": ["shaker", "#6f8f3a"], "thyme": ["shaker", "#7c9a55"], "rosemary": ["shaker", "#5f8a5a"], "dried basil": ["shaker", "#5f9a4f"], "italian seasoning": ["shaker", "#7aa04a"], "bay leaves": ["leaf", "#7a9a4a"], "cinnamon": ["shaker", "#a0582d"], "nutmeg": ["shaker", "#9a6a3d"], "turmeric": ["shaker", "#f2b01e"], "curry powder": ["shaker", "#e8a21e"], "garlic powder": ["shaker", "#efe3cf"], "onion powder": ["shaker", "#ead9b8"], "ground ginger": ["shaker", "#e0b06a"], "vanilla": ["bottle", "#5a3b2e"],
 };
 
 const CATEGORY_ICONS = {

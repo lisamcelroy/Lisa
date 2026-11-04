@@ -264,13 +264,14 @@ input[type=checkbox] { accent-color: var(--accent); }
 
 /* ---------- List view ---------- */
 
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
 .stat { background: var(--surface); border-radius: 22px; padding: 12px 8px; text-align: center; box-shadow: var(--shadow); }
 .stat b { display: block; font-family: "Funnel Sans", "Zalando Sans", system-ui, sans-serif; font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; }
 .stat span { font-size: .78rem; font-weight: 700; color: var(--muted); }
 .stat:nth-child(1) b { color: var(--fridge); }
 .stat:nth-child(2) b { color: var(--freezer); }
 .stat:nth-child(3) b { color: var(--pantry); }
+.stat:nth-child(4) b { color: var(--coral); }
 .stat.warn b { color: var(--warn); }
 
 .soon { background: var(--warn-soft); }
@@ -283,6 +284,7 @@ input[type=checkbox] { accent-color: var(--accent); }
 .dot.fridge { background: var(--fridge); }
 .dot.freezer { background: var(--freezer); }
 .dot.pantry { background: var(--pantry); }
+.dot.seasonings { background: var(--coral); }
 
 .item {
   display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center;
@@ -514,6 +516,41 @@ ol.steps li { margin-bottom: 8px; }
     var(--bin);
 }
 
+/* the spice rack */
+.rack {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--coral) 9%, var(--surface)), color-mix(in srgb, var(--coral) 16%, var(--surface)));
+  border: 5px solid color-mix(in srgb, var(--coral) 55%, var(--wood));
+  box-shadow: var(--shadow); padding-top: 16px;
+}
+.rack .zone-label { color: var(--coral); flex-wrap: wrap; }
+.rack-stock { margin-left: auto; }
+.rack-pegs { position: absolute; top: -9px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 22%; }
+.rack-pegs span { width: 14px; height: 14px; border-radius: 50%; background: color-mix(in srgb, var(--coral) 70%, var(--text)); box-shadow: 0 2px 0 rgb(0 0 0 / 15%); }
+.shelf.ledge { padding: 6px 4px 14px; margin-bottom: 6px; }
+.shelf.ledge::after {
+  content: ""; position: absolute; left: -2px; right: -2px; bottom: 0; height: 9px; border-radius: 6px;
+  background: color-mix(in srgb, var(--coral) 45%, var(--wood)); box-shadow: 0 4px 0 color-mix(in srgb, var(--coral) 30%, transparent);
+}
+.rack .shelf-items { justify-content: flex-start; }
+.rack .food-bubble { border-radius: 18px 18px 22px 22px; }
+
+.rack-dialog { width: min(560px, calc(100% - 24px)); }
+.stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; max-height: 50vh; overflow-y: auto; padding: 4px 2px; margin-bottom: 12px; }
+.stock-item {
+  font: inherit; font-size: .75rem; font-weight: 700; color: inherit; text-transform: capitalize; line-height: 1.15;
+  background: var(--surface-2); border: 2px solid transparent; border-radius: 20px; padding: 8px 4px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; opacity: .7; transition: transform .12s, opacity .15s;
+}
+.stock-item .food-bubble { width: 46px; height: 46px; box-shadow: none; filter: grayscale(.7); }
+.stock-item .food-bubble svg { width: 30px; height: 30px; }
+.stock-item:active { transform: scale(.94); }
+.stock-item.on { opacity: 1; border-color: var(--accent); background: var(--accent-soft); }
+.stock-item.on .food-bubble { filter: none; }
+.stock-item.on::after {
+  content: "\2713"; position: absolute; top: 4px; right: 6px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); font-size: .7rem; display: grid; place-items: center;
+}
+
 /* food bubbles */
 .shelf-items { display: flex; flex-wrap: wrap; gap: 6px 4px; min-height: 30px; }
 .empty-shelf { align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; color: var(--muted); opacity: .7; padding: 8px 0; }
@@ -551,7 +588,9 @@ ol.steps li { margin-bottom: 8px; }
 /* ---------- Small screens ---------- */
 
 @media (max-width: 520px) {
-  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stats { gap: 6px; }
+  .stat { padding: 10px 2px; }
+  .stat span { font-size: .66rem; }
   .hero-title { font-size: 1.3rem; }
   .food { width: 68px; }
   .food-name { max-width: 68px; }

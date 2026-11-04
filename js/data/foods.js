@@ -101,7 +101,7 @@ export const FOODS = [
   { name: "salsa", aliases: [], category: "condiments", location: "fridge", shelfLife: 14 },
   { name: "mayonnaise", aliases: ["mayo"], category: "condiments", location: "fridge", shelfLife: 60 },
   { name: "mustard", aliases: ["dijon"], category: "condiments", location: "fridge", shelfLife: 365 },
-  { name: "curry paste", aliases: ["red curry paste", "green curry paste", "curry powder"], category: "condiments", location: "pantry", shelfLife: 365 },
+  { name: "curry paste", aliases: ["red curry paste", "green curry paste"], category: "condiments", location: "pantry", shelfLife: 365 },
   { name: "vinegar", aliases: ["white vinegar", "balsamic", "rice vinegar", "apple cider vinegar"], category: "condiments", location: "pantry", shelfLife: 1000, staple: true },
 
   // Staples (assumed on hand unless turned off in settings)
@@ -109,7 +109,28 @@ export const FOODS = [
   { name: "black pepper", aliases: ["pepper", "peppercorns", "ground pepper"], category: "spices", location: "pantry", shelfLife: 1000, staple: true },
   { name: "oil", aliases: ["olive oil", "vegetable oil", "canola oil", "evoo", "sesame oil"], category: "condiments", location: "pantry", shelfLife: 365, staple: true },
   { name: "water", aliases: [], category: "staples", location: "pantry", shelfLife: 3650, staple: true },
-  { name: "spices", aliases: ["cumin", "paprika", "chili powder", "oregano", "italian seasoning", "thyme", "cinnamon", "chili flakes"], category: "spices", location: "pantry", shelfLife: 730, staple: true },
+  { name: "spices", aliases: ["mixed spices", "spice blend", "seasoning", "seasonings"], category: "spices", location: "pantry", shelfLife: 730, staple: true },
+
+  // Seasonings for the spice rack. Each one counts as "spices" for recipes that just say spices.
+  { name: "cumin", aliases: ["ground cumin", "cumin seed", "cumin seeds"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "paprika", aliases: ["smoked paprika", "sweet paprika"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "chili powder", aliases: ["chilli powder"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "cayenne", aliases: ["cayenne pepper"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "chili flakes", aliases: ["red pepper flakes", "crushed red pepper", "chilli flakes"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "oregano", aliases: ["dried oregano"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "thyme", aliases: ["dried thyme"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "rosemary", aliases: ["dried rosemary"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "dried basil", aliases: [], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "italian seasoning", aliases: ["italian herbs", "herbes de provence", "mixed herbs"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "bay leaves", aliases: ["bay leaf"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "cinnamon", aliases: ["ground cinnamon", "cinnamon stick", "cinnamon sticks"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "nutmeg", aliases: ["ground nutmeg"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "turmeric", aliases: ["ground turmeric"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "curry powder", aliases: ["garam masala"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "garlic powder", aliases: ["granulated garlic"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "onion powder", aliases: [], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "ground ginger", aliases: ["ginger powder"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "vanilla", aliases: ["vanilla extract"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
 ];
 
 export const FOOD_BY_NAME = new Map(FOODS.map((f) => [f.name, f]));

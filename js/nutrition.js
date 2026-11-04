@@ -49,6 +49,8 @@ const N = {
   salt: { kcal: 0, each: 2 }, "black pepper": { kcal: 0, each: 1 }, water: { kcal: 0, density: 1 },
   // A recipe that just says "oil" uses about a tablespoon; "spices" a couple of grams.
   oil: { kcal: 884, each: 14, density: 0.92 }, spices: { kcal: 300, each: 2 },
+  "cumin": { kcal: 300, each: 2, density: 0.5 }, "paprika": { kcal: 300, each: 2, density: 0.5 }, "chili powder": { kcal: 300, each: 2, density: 0.5 }, "cayenne": { kcal: 300, each: 2, density: 0.5 }, "chili flakes": { kcal: 300, each: 2, density: 0.5 }, "oregano": { kcal: 300, each: 2, density: 0.5 }, "thyme": { kcal: 300, each: 2, density: 0.5 }, "rosemary": { kcal: 300, each: 2, density: 0.5 }, "dried basil": { kcal: 300, each: 2, density: 0.5 }, "italian seasoning": { kcal: 300, each: 2, density: 0.5 }, "bay leaves": { kcal: 300, each: 2, density: 0.5 }, "cinnamon": { kcal: 300, each: 2, density: 0.5 }, "nutmeg": { kcal: 300, each: 2, density: 0.5 }, "turmeric": { kcal: 300, each: 2, density: 0.5 }, "curry powder": { kcal: 300, each: 2, density: 0.5 }, "garlic powder": { kcal: 300, each: 2, density: 0.5 }, "onion powder": { kcal: 300, each: 2, density: 0.5 }, "ground ginger": { kcal: 300, each: 2, density: 0.5 },
+  vanilla: { kcal: 288, each: 5, density: 0.9 },
 };
 
 const UNKNOWN = { kcal: 150, each: 100 }; // fallback for foods not in the table

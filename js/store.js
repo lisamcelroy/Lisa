@@ -55,8 +55,9 @@ export function newId() {
  * Build an inventory item from loose input. Fills in location, category and
  * an estimated expiry date from the food catalog when the caller doesn't.
  */
-export function makeItem({ name, qty = 1, unit = "count", location, category, expiresAt, shelfLife }, now = Date.now()) {
-  const canonical = canonicalName(name);
+export function makeItem({ name, qty = 1, unit = "count", location, category, expiresAt, shelfLife, keepName = false }, now = Date.now()) {
+  // keepName: use the name exactly as given (e.g. a seasoning the catalog doesn't know, like "za'atar").
+  const canonical = keepName ? String(name).trim() : canonicalName(name);
   const info = foodInfo(canonical);
   const days = shelfLife ?? info?.shelfLife;
   return {

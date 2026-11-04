@@ -12,6 +12,9 @@ what is actually in your kitchen, starting with food that is about to go off.
   sauces in the door; grains, cans, sauces, a bread box and a produce basket in the pantry
 - Items that need using soon wobble with an orange ring; expired ones get a red ring
 - Tap an item to change the amount, move it, mark it used up, or see recipes that use it
+- A spice rack for seasonings (cumin, paprika, oregano, cinnamon, chili flakes and more). Tap
+  "Stock the rack" to tick the ones you own, or add your own. Any seasoning counts for recipes
+  that just call for spices, and the List tab has its own Seasonings group
 
 **List**
 - Fridge, freezer and pantry inventory with quantities and units

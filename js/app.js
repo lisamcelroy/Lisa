@@ -1,6 +1,6 @@
 import { FOODS, LOCATIONS } from "./data/foods.js";
 import { RECIPES } from "./data/recipes.js";
-import { canonicalName, titleCase, foodInfo } from "./normalize.js";
+import { canonicalName, titleCase, foodInfo, matchFood } from "./normalize.js";
 import { parseReceipt } from "./receipt.js";
 import { parseRecipeText } from "./recipeImport.js";
 import { recommend, cookRecipe, daysLeft, SOON_DAYS } from "./recommend.js";
@@ -69,14 +69,17 @@ function renderFridge() {
   const inv = state.inventory;
   const n = (loc) => inv.filter((it) => it.location === loc).length;
   const soon = inv.filter((it) => daysLeft(it) <= SOON_DAYS).length;
+  const spices = inv.filter((it) => it.category === "spices").length;
+  const nonSpice = (loc) => inv.filter((it) => it.location === loc && it.category !== "spices").length;
   $("#fridge-summary").textContent = inv.length
-    ? `${n("fridge")} in the fridge, ${n("freezer")} in the freezer, ${n("pantry")} in the pantry` + (soon ? `. ${soon} to use soon.` : ".")
+    ? `${nonSpice("fridge")} in the fridge, ${nonSpice("freezer")} in the freezer, ${nonSpice("pantry")} in the pantry, ${spices} seasoning${spices === 1 ? "" : "s"}` + (soon ? `. ${soon} to use soon.` : ".")
     : "Empty for now. Add food or scan a receipt to stock it up.";
   $$("#appliance-filter .chip").forEach((c) => c.classList.toggle("active", c.dataset.show === ui.show));
-  const { fridge, pantry } = renderAppliances(inv);
+  const { fridge, pantry, rack } = renderAppliances(inv);
   const box = $("#appliances");
   box.classList.toggle("both", ui.show === "both");
-  box.innerHTML = (ui.show !== "pantry" ? fridge : "") + (ui.show !== "fridge" ? pantry : "");
+  const show = (part) => ui.show === "both" || ui.show === part;
+  box.innerHTML = (show("fridge") ? fridge : "") + (show("pantry") ? pantry : "") + (show("rack") ? rack : "");
 }
 
 $("#appliance-filter").addEventListener("click", (e) => {
@@ -87,6 +90,7 @@ $("#appliance-filter").addEventListener("click", (e) => {
 });
 
 $("#appliances").addEventListener("click", (e) => {
+  if (e.target.closest("[data-act=stock-rack]")) return openRack();
   const food = e.target.closest(".food");
   if (food) openItem(food.dataset.id);
 });
@@ -157,17 +161,77 @@ $("#item-dialog").addEventListener("click", (e) => {
   }
 });
 
+// ---------- Spice rack ----------
+// Seasonings are mostly "have it or not", so the rack is stocked by tapping jars on and off.
+
+const SEASONING_FOODS = FOODS.filter((f) => f.category === "spices" && f.name !== "spices");
+const hasItem = (name) => state.inventory.some((it) => it.name === name);
+
+function renderRack() {
+  const custom = state.inventory.filter((it) => it.category === "spices" && !SEASONING_FOODS.some((f) => f.name === it.name));
+  const tileFor = (name, category = "spices") => {
+    const { svg, color } = foodIcon(name, category);
+    const on = hasItem(name);
+    return `<button class="stock-item ${on ? "on" : ""}" data-season="${esc(name)}" aria-pressed="${on}">
+      <span class="food-bubble" style="--food:${color}">${svg}</span><span>${esc(name)}</span></button>`;
+  };
+  const owned = SEASONING_FOODS.filter((f) => hasItem(f.name)).length + custom.length;
+  $("#rack-detail").innerHTML = `
+    <h2>Stock your spice rack</h2>
+    <p class="muted small">Tap the seasonings you have. ${owned} on the rack.</p>
+    <div class="stock-grid">${SEASONING_FOODS.map((f) => tileFor(f.name)).join("")}${custom.map((it) => tileFor(it.name)).join("")}</div>
+    <form class="row" id="rack-add" autocomplete="off">
+      <input id="rack-name" placeholder="Another seasoning, like za'atar" aria-label="Another seasoning" />
+      <button class="btn" type="submit">Add</button>
+    </form>
+    <div class="row end"><button class="btn primary" data-act="close">Done</button></div>`;
+}
+
+function openRack() {
+  renderRack();
+  const dlg = $("#rack-dialog");
+  if (!dlg.open) dlg.showModal();
+}
+
+$("#rack-dialog").addEventListener("click", (e) => {
+  const dlg = $("#rack-dialog");
+  if (e.target === dlg || e.target.closest("[data-act=close]")) return dlg.close();
+  const name = e.target.closest("[data-season]")?.dataset.season;
+  if (!name) return;
+  if (hasItem(name)) state.inventory = state.inventory.filter((it) => it.name !== name);
+  else state.inventory = addToInventory(state.inventory, [makeItem({ name, location: "pantry", category: "spices" })]);
+  commit();
+  renderRack();
+});
+
+$("#rack-dialog").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const raw = $("#rack-name").value.trim();
+  if (!raw) return;
+  // Known seasonings use their catalog name; anything else keeps the person's own spelling.
+  const name = matchFood(raw)?.category === "spices" ? matchFood(raw).name : raw.toLowerCase().replace(/\s+/g, " ");
+  if (!hasItem(name)) state.inventory = addToInventory(state.inventory, [makeItem({ name, location: "pantry", category: "spices", shelfLife: 1000, keepName: true })]);
+  commit();
+  renderRack();
+  $("#rack-name").focus();
+});
+
 // ---------- Kitchen ----------
+
+// The List tab groups seasonings on their own, wherever they're kept.
+const GROUPS = ["fridge", "freezer", "pantry", "seasonings"];
+const groupOf = (it) => (it.category === "spices" ? "seasonings" : it.location);
 
 function renderKitchen() {
   const inv = state.inventory;
   const soon = inv.filter((it) => daysLeft(it) <= SOON_DAYS).sort((a, b) => daysLeft(a) - daysLeft(b));
-  const count = (loc) => inv.filter((it) => it.location === loc).length;
+  const count = (group) => inv.filter((it) => groupOf(it) === group).length;
 
   $("#stats").innerHTML = `
     <div class="stat"><b>${count("fridge")}</b><span>Fridge</span></div>
     <div class="stat"><b>${count("freezer")}</b><span>Freezer</span></div>
     <div class="stat"><b>${count("pantry")}</b><span>Pantry</span></div>
+    <div class="stat"><b>${count("seasonings")}</b><span>Seasonings</span></div>
     <div class="stat ${soon.length ? "warn" : ""}"><b>${soon.length}</b><span>Use soon</span></div>`;
 
   $("#use-soon").innerHTML = soon.length
@@ -180,7 +244,7 @@ function renderKitchen() {
 
   const q = ui.search.toLowerCase();
   const visible = inv
-    .filter((it) => ui.loc === "all" || it.location === ui.loc)
+    .filter((it) => ui.loc === "all" || groupOf(it) === ui.loc)
     .filter((it) => !q || it.name.includes(q) || it.category.includes(q));
 
   if (!inv.length) {
@@ -192,8 +256,8 @@ function renderKitchen() {
     return;
   }
 
-  $("#inventory").innerHTML = LOCATIONS.map((loc) => {
-    const items = visible.filter((it) => it.location === loc).sort((a, b) => daysLeft(a) - daysLeft(b) || a.name.localeCompare(b.name));
+  $("#inventory").innerHTML = GROUPS.map((loc) => {
+    const items = visible.filter((it) => groupOf(it) === loc).sort((a, b) => daysLeft(a) - daysLeft(b) || a.name.localeCompare(b.name));
     if (!items.length) return "";
     return `<div class="group-title"><span class="dot ${loc}"></span>${loc} (${items.length})</div>
       ${items.map((it) => `
