@@ -13,6 +13,7 @@ import { estimateCalories } from "./nutrition.js";
 import { KEYWORDS, KEYWORD_IDS, KEYWORD_LABEL, keywordsFor } from "./data/keywords.js";
 import { MEALS, MEAL_LABEL, isoDay, fromIsoDay, weekDays, dayCalories, prunePlan, plannedRecipeIds } from "./plan.js";
 import { UNIT_CHOICES, formatQty, normalizeUnit } from "./units.js";
+import { LEVELS, LEVEL_LABEL, familyCheck, familyNotes, familyRequest, eating } from "./family.js";
 import { TIME_OPTIONS, PREP_OPTIONS, fitsTime, todaysChoice, timeRequest } from "./cooktime.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -282,7 +283,7 @@ function renderHome() {
   const due = defrostReminders().filter((x) => x.when === "today");
   const soon = state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS && !needsDefrost(it));
   const ranked = recommend(allRecipes(), state.inventory, { assumeStaples: state.settings.assumeStaples });
-  const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length);
+  const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length && !isBlocked(r));
 
   // What the assistant says.
   const lines = [];
@@ -857,6 +858,7 @@ function recipeCard(r) {
     ${r.usesSoon.length ? `<div class="rescue">Uses up: ${esc(r.usesSoon.join(", "))}</div>` : ""}
     ${r.frozen.length ? `<div class="defrost">Defrost first: ${esc(frozenNames(r.frozen).join(", "))}</div>` : ""}
     <div class="missing">${r.missing.length ? `Need: <b>${esc(r.missing.join(", "))}</b>` : "You have everything"}</div>
+    ${familyLines(r.recipe)}
   </button>`;
 }
 
@@ -907,6 +909,7 @@ $("#time-card").addEventListener("click", (e) => {
 
 $("#recipes").addEventListener("click", (e) => {
   if (e.target.closest('[data-act="time-clear"]')) { e.stopPropagation(); ui.timeOpen = true; setCookTime({ time: "any", prep: [] }); }
+  if (e.target.closest('[data-act="toggle-blocked"]')) { e.stopPropagation(); ui.showBlocked = !ui.showBlocked; renderRecipes(); }
 }, true);
 
 function renderRecipes() {
@@ -921,6 +924,8 @@ function renderRecipes() {
   if (ui.keywords.size) list = list.filter((r) => { const ks = keywordsFor(r.recipe); return [...ui.keywords].every((k) => ks.includes(k)); });
   const time = cookTime();
   if (time) list = list.filter((r) => fitsTime(r.recipe, time));
+  const blockedCount = list.filter(isBlocked).length;
+  if (!ui.showBlocked) list = list.filter((r) => !isBlocked(r));
 
   const f = ui.recipeFilter;
   if (f === "ready") list = list.filter((r) => r.missing.length === 0 && r.have.length);
@@ -947,10 +952,25 @@ function renderRecipes() {
       rescue: "Nothing is about to expire.",
       all: "No recipes match.",
     }[f];
-    $("#recipes").innerHTML = `<div class="empty">${hint}</div>`;
+    $("#recipes").innerHTML = blockedNote(blockedCount) + `<div class="empty">${hint}</div>`;
     return;
   }
-  $("#recipes").innerHTML = list.map(recipeCard).join("");
+  $("#recipes").innerHTML = blockedNote(blockedCount) + list.map(recipeCard).join("");
+}
+
+// Family preferences on the Recipes tab.
+const isBlocked = (r) => familyCheck(r.recipe, state.family).blocked.length > 0;
+
+function blockedNote(n) {
+  if (!n) return "";
+  const who = eating(state.family).map((m) => m.name);
+  return `<div class="family-hidden">${ui.showBlocked ? `Showing ${n} recipe${n > 1 ? "s" : ""} someone won't eat.` : `Hiding ${n} recipe${n > 1 ? "s" : ""} ${esc(who.length > 1 ? "someone at the table" : who[0] || "someone")} won't eat.`}
+    <button class="btn small" data-act="toggle-blocked">${ui.showBlocked ? "Hide them" : "Show them"}</button></div>`;
+}
+
+function familyLines(recipe) {
+  return familyNotes(familyCheck(recipe, state.family))
+    .map((n) => `<div class="fam-note fam-${n.kind}">${esc(n.text)}</div>`).join("");
 }
 
 // Scenario keywords: pick any number; a recipe has to match all of them.
@@ -1017,6 +1037,7 @@ function openRecipe(id) {
     <h2>${esc(recipe.title)}</h2>
     <p class="muted">${recipe.minutes} min &middot; serves ${recipe.servings}${kcalText(recipe) ? ` &middot; <span class="kcal" title="Estimated per serving from the ingredients, without optional extras">${kcalText(recipe)} per serving</span>` : ""}${r.usesSoon.length ? ` &middot; <span class="rescue">uses up ${esc(r.usesSoon.join(", "))}</span>` : ""}</p>
     ${kwPills(recipe)}
+    ${familyLines(recipe)}
     ${r.frozen.length ? `<p class="defrost-note">Defrost first: ${r.frozen.map((n) => `${esc(frozenItemFor(n)?.name || n)} (${esc(defrostHint(frozenItemFor(n) || { name: n }))})`).join(", ")}.</p>` : ""}
     <details class="fold-details" open><summary><h3>Ingredients</h3></summary>
     <ul class="ing-list">
@@ -1087,7 +1108,8 @@ const HIDE_CODES = ["not_granted", "sampling_disabled", "not_declared", "capabil
 
 const kitchenKey = () => {
   const t = cookTime();
-  return [...new Set(state.inventory.map((it) => it.name))].sort().join("|") + (t ? `@${t.time}:${t.prep.join(",")}` : "");
+  return [...new Set(state.inventory.map((it) => it.name))].sort().join("|") + (t ? `@${t.time}:${t.prep.join(",")}` : "") +
+    (familyRequest(state.family) ? "#" + familyRequest(state.family) : "");
 };
 
 function ideaSource() {
@@ -1117,7 +1139,8 @@ function renderIdeas() {
   } else if (recipes.length) {
     const ranked = recommend(recipes, state.inventory, { assumeStaples: state.settings.assumeStaples })
       .filter((r) => !ui.keywords.size || [...ui.keywords].every((k) => keywordsFor(r.recipe).includes(k)))
-      .filter((r) => !cookTime() || fitsTime(r.recipe, cookTime()));
+      .filter((r) => !cookTime() || fitsTime(r.recipe, cookTime()))
+      .filter((r) => !isBlocked(r));
     $("#ideas-list").innerHTML = ranked.length
       ? ranked.map(recipeCard).join("")
       : `<div class="empty">None of these ideas match ${[...[...ui.keywords].map((k) => `"${KEYWORD_LABEL[k]}"`), ...(cookTime() ? [esc(timeSummary(cookTime()))] : [])].join(" + ")}. Tap More ideas for new ones.</div>`;
@@ -1143,7 +1166,7 @@ async function fetchIdeas({ fresh = false, more = false } = {}) {
 
   const opts = {
     soon: state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS).map((it) => it.name),
-    request: [$("#ai-request").value.trim(), timeRequest(cookTime())].filter(Boolean).join(". "),
+    request: [$("#ai-request").value.trim(), timeRequest(cookTime()), familyRequest(state.family)].filter(Boolean).join(". "),
     exclude: more ? state.ideas.recipes.map((r) => r.title) : [],
   };
   try {
@@ -1362,11 +1385,11 @@ function pickList() {
   const pool = [...allRecipes(), ...state.ideas.recipes];
   const ranked = recommend(pool, state.inventory, { assumeStaples: state.settings.assumeStaples })
     .filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.ingredients.some((i) => i.name.includes(q)))
-    .sort((a, b) => (fits.some((t) => b.recipe.tags?.includes(t)) - fits.some((t) => a.recipe.tags?.includes(t))) || b.score - a.score)
+    .sort((a, b) => (isBlocked(a) - isBlocked(b)) || (fits.some((t) => b.recipe.tags?.includes(t)) - fits.some((t) => a.recipe.tags?.includes(t))) || b.score - a.score)
     .slice(0, 40);
   return ranked.length
     ? ranked.map((r) => `<button class="pick" data-recipe="${esc(r.recipe.id)}"><b>${esc(r.recipe.title)}</b>
-        <span>${r.recipe.minutes} min${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""} &middot; ${r.missing.length ? `need ${r.missing.length}` : "you have everything"}${r.recipe.idea ? " &middot; idea" : ""}</span></button>`).join("")
+        <span>${r.recipe.minutes} min${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""} &middot; ${r.missing.length ? `need ${r.missing.length}` : "you have everything"}${r.recipe.idea ? " &middot; idea" : ""}${isBlocked(r) ? " &middot; someone won't eat this" : ""}</span></button>`).join("")
     : `<div class="empty">No recipes match.</div>`;
 }
 
@@ -1567,6 +1590,85 @@ $("#reset-data").addEventListener("click", () => {
   settingsDlg.close();
 });
 
+// ---------- Family ----------
+// Each person: a name, whether they're eating at home, and food preferences
+// (allergic, hates, tolerates, loves). Saved with the kitchen and synced.
+
+const AVATAR = ["#d96c81", "#f4af30", "#9f4a5c", "#f0a9b6"];
+
+function renderFamily() {
+  const fam = state.family;
+  const me = (state.settings.name || "").trim();
+  const suggest = me && !fam.some((m) => m.name.toLowerCase() === me.toLowerCase())
+    ? `<button class="btn small" data-fam="add-me">Add ${esc(me)}</button>` : "";
+  if (!fam.length) {
+    $("#family-list").innerHTML = `<div class="empty">Add the people you cook for, then what each of them loves, tolerates, hates or is allergic to. ${suggest}</div>`;
+    return;
+  }
+  $("#family-list").innerHTML = fam.map((m, i) => {
+    const byLevel = LEVELS.map((l) => {
+      const prefs = (m.prefs || []).filter((p) => p.level === l.id);
+      return prefs.length ? `<div class="pref-group"><span class="pref-level lvl-${l.id}">${l.label}</span>${prefs.map((p) =>
+        `<span class="pref-chip lvl-${l.id}">${esc(p.food)}<button aria-label="Remove ${esc(p.food)}" data-fam="del-pref" data-member="${m.id}" data-food="${esc(p.food)}">&times;</button></span>`).join("")}</div>` : "";
+    }).join("");
+    return `<div class="card member${m.home === false ? " away" : ""}">
+      <div class="member-head">
+        <span class="avatar" style="background:${AVATAR[i % AVATAR.length]}">${esc((m.name[0] || "?").toUpperCase())}</span>
+        <h3>${esc(m.name)}</h3>
+        <button class="eat-toggle ${m.home === false ? "" : "on"}" data-fam="home" data-member="${m.id}" aria-pressed="${m.home !== false}">${m.home === false ? "Not eating" : "Eating"}</button>
+        <button class="icon-btn small" data-fam="del-member" data-member="${m.id}" aria-label="Remove ${esc(m.name)}">&times;</button>
+      </div>
+      ${byLevel || `<p class="muted small">No preferences yet.</p>`}
+      <form class="pref-form" data-member="${m.id}">
+        <input name="food" list="food-names" placeholder="A food, e.g. mushrooms" required aria-label="Food" />
+        <select name="level" aria-label="How they feel">${LEVELS.map((l) => `<option value="${l.id}"${l.id === "hates" ? " selected" : ""}>${l.label}</option>`).join("")}</select>
+        <button class="btn primary" type="submit">Add</button>
+      </form>
+    </div>`;
+  }).join("") + (suggest ? `<p class="center">${suggest}</p>` : "");
+}
+
+function addMember(name) {
+  name = name.trim();
+  if (!name) return;
+  state.family.push({ id: newId(), name: titleCase(name), home: true, prefs: [] });
+  commit();
+}
+
+$("#member-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  addMember($("#member-name").value);
+  $("#member-name").value = "";
+});
+
+$("#family-list").addEventListener("submit", (e) => {
+  const form = e.target.closest(".pref-form");
+  if (!form) return;
+  e.preventDefault();
+  const m = state.family.find((x) => x.id === form.dataset.member);
+  const food = canonicalName(form.food.value);
+  if (!m || !food) return;
+  m.prefs = (m.prefs || []).filter((p) => p.food !== food);
+  m.prefs.push({ food, level: form.level.value });
+  commit();
+  const said = { allergic: "is allergic to", hates: "hates", tolerates: "tolerates", loves: "loves" }[form.level.value];
+  toast(`Saved: ${m.name} ${said} ${food}`);
+});
+
+$("#family-list").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-fam]");
+  if (!b) return;
+  const m = state.family.find((x) => x.id === b.dataset.member);
+  const act = b.dataset.fam;
+  if (act === "add-me") addMember(state.settings.name || "");
+  if (act === "home" && m) { m.home = m.home === false; commit(); }
+  if (act === "del-pref" && m) { m.prefs = m.prefs.filter((p) => p.food !== b.dataset.food); commit(); }
+  if (act === "del-member" && m && confirm(`Remove ${m.name} and their preferences?`)) {
+    state.family = state.family.filter((x) => x !== m);
+    commit();
+  }
+});
+
 // ---------- Tabs and boot ----------
 
 function switchTab(tab) {
@@ -1593,6 +1695,7 @@ function render() {
   if (ui.tab === "kitchen") renderKitchen();
   if (ui.tab === "recipes") renderRecipes();
   if (ui.tab === "plan") renderPlan();
+  if (ui.tab === "family") renderFamily();
 }
 
 // ---------- Saved copy on claude.ai ----------

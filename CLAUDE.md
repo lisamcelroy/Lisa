@@ -55,6 +55,7 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 | `js/recommend.js` | Rank recipes by what's on hand, expiring food, frozen items; cooking deductions |
 | `js/frozen.js` | Freezer rules: "frozen" text goes to the freezer; freezer food needs defrosting unless it cooks from frozen |
 | `js/nutrition.js` | Calorie estimates per serving from ingredients (optional extras skipped) |
+| `js/family.js` | Family food preferences (allergic, hates, tolerates, loves) and what they mean for a recipe |
 | `js/cooktime.js` | Time to cook today: time limits, quick prep and hands-off checks |
 | `js/plan.js` | Meal plan dates (weeks start Monday), totals, pruning |
 | `js/fridge.js` | Fridge, pantry and spice rack drawing with foldable sections |
@@ -86,7 +87,7 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   frosted header and tab bar, generous spacing. Respect `prefers-reduced-motion`.
 - Header: small centred logo; settings on the right; save status on the left
   (a dot on phones).
-- Tabs: Home, Fridge (Picture/List switch), Scan, Recipes, Plan, Shopping.
+- Tabs: Home, Fridge (Picture/List switch), Scan, Recipes, Plan, Family, Shopping.
 
 ## App behaviour to preserve
 
@@ -99,6 +100,11 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   plus optional Quick prep (at most 3 ingredients to handle, 3 steps) and Hands-off (oven, pot or
   fridge does the work). Logic in `js/cooktime.js`. The answer lasts for the day, folds into a
   one-line summary, filters the library and Claude's ideas, and is sent to Claude with the request.
+- Family tab: each person has a name, an Eating/Not eating switch and food preferences. For people
+  eating: a required ingredient someone hates or is allergic to hides the recipe (with a "Show them"
+  option); an optional one becomes "Leave out the X for Y"; tolerated foods get "Keep the X small or on
+  the side"; loved foods get a note. Disliking a group (cheese) covers its members (cheddar). Claude's
+  ideas get the same rules in the request. Stored in synced `state.family`.
 - Seasonings live on a spice rack and count for recipes that just say "spices".
 - Anything in the freezer must be defrosted before use; recipes and the plan remind you.
 - Calories are estimates; say so in the UI.

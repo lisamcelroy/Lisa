@@ -1058,3 +1058,39 @@ body { background: var(--bg); }
 .time-summary { display: flex; align-items: center; gap: 10px; font-size: .92rem; }
 .time-summary #time-summary-text { flex: 1; }
 .time-clock { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #f4af30; color: #fdf6ea; flex: none; }
+
+/* Seven tabs (Family added): tighter labels so they fit a phone. */
+.tabbar { grid-template-columns: repeat(7, 1fr); padding: 5px; }
+.tabbar button { font-size: .62rem; letter-spacing: -.01em; }
+@media (max-width: 400px) { .tabbar button { font-size: .56rem; } .tab-icon svg { width: 21px; height: 21px; } }
+
+/* Family tab */
+.member { padding: 16px; margin-bottom: 12px; }
+.member.away { opacity: .62; }
+.member-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.member-head h3 { flex: 1; margin: 0; font-size: 1.12rem; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fdf6ea; font: 800 1rem "Funnel Sans", sans-serif; flex: none; }
+.eat-toggle { font: inherit; font-size: .78rem; font-weight: 700; border-radius: 999px; padding: 5px 12px; border: 1px solid var(--hair); background: transparent; color: var(--muted); cursor: pointer; }
+.eat-toggle.on { background: color-mix(in srgb, #f4af30 22%, var(--surface)); color: var(--text); border-color: color-mix(in srgb, #f4af30 50%, transparent); }
+.icon-btn.small { width: 32px; height: 32px; font-size: 1.2rem; line-height: 1; color: var(--muted); }
+.pref-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0; }
+.pref-level { font-size: .68rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; min-width: 78px; }
+.pref-chip { display: inline-flex; align-items: center; gap: 2px; font-size: .86rem; font-weight: 700; border-radius: 999px; padding: 4px 4px 4px 12px; }
+.pref-chip button { border: 0; background: transparent; color: inherit; font-size: 1.05rem; line-height: 1; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; opacity: .75; }
+.pref-level.lvl-allergic { color: #9f4a5c; } .pref-chip.lvl-allergic { background: #9f4a5c; color: #fdf6ea; }
+.pref-level.lvl-hates { color: #d96c81; } .pref-chip.lvl-hates { background: #d96c81; color: #fdf6ea; }
+.pref-level.lvl-tolerates { color: var(--muted); } .pref-chip.lvl-tolerates { background: color-mix(in srgb, #f0a9b6 45%, var(--surface)); color: var(--text); }
+.pref-level.lvl-loves { color: #c98a12; } .pref-chip.lvl-loves { background: color-mix(in srgb, #f4af30 35%, var(--surface)); color: var(--text); }
+.pref-form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pref-form input { flex: 1 1 100%; min-width: 0; }
+.pref-form select { flex: 1; min-width: 0; }
+.center { text-align: center; }
+
+/* Family notes on recipes */
+.fam-note { font-size: .82rem; font-weight: 600; margin-top: 4px; padding-left: 14px; position: relative; }
+.fam-note::before { content: ""; position: absolute; left: 0; top: .45em; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.fam-blocked { color: #9f4a5c; } .fam-leave { color: #d96c81; } .fam-tolerate { color: var(--muted); } .fam-loves { color: #c98a12; }
+.family-hidden { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .88rem; color: var(--muted); padding: 4px 4px 10px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fam-blocked { color: #f0a9b6; } :root:not([data-theme="light"]) .fam-loves { color: #f4af30; } }
+:root[data-theme="dark"] .fam-blocked { color: #f0a9b6; }
+:root[data-theme="dark"] .fam-loves { color: #f4af30; }

@@ -13,6 +13,7 @@ const DEFAULT_STATE = {
   customRecipes: [],
   plan: {},
   favorites: [],
+  family: [],
   settings: { assumeStaples: true, apiKey: "", useClaude: false },
 };
 
@@ -94,7 +95,7 @@ export function addToInventory(inventory, items) {
 
 // ---------- Account sync helpers ----------
 
-const SYNCED_KEYS = ["inventory", "shopping", "customRecipes", "favorites", "ideas", "plan"];
+const SYNCED_KEYS = ["inventory", "shopping", "customRecipes", "favorites", "ideas", "plan", "family"];
 
 /** The part of the state saved to the person's account. The API key never leaves this device. */
 export function toSynced(state) {
