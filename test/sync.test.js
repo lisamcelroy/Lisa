@@ -33,3 +33,28 @@ test("first load restores the saved kitchen and keeps only items added since ope
   const merged = mergeOnLoad(local, remote, 1000);
   assert.deepEqual(merged.inventory.map((i) => i.id), ["r1", "new"]);
 });
+
+import { toKitchen, adoptKitchen, toPersonal, adoptSettings, newHouseholdCode, cleanCode, showCode } from "../js/store.js";
+
+test("a shared kitchen shares the kitchen but each person keeps their own name", () => {
+  const lisa = { updatedAt: 5, inventory: [{ name: "milk", category: "dairy" }], plan: { "2026-11-04": {} }, family: [{ name: "Lisa" }], settings: { name: "Lisa", nameAsked: true, apiKey: "secret", mealTimes: { weekday: {} }, assumeStaples: true } };
+  const kitchen = toKitchen(lisa);
+  assert.equal(kitchen.settings, undefined, "no personal settings in the shared copy");
+  assert.deepEqual(kitchen.shared, { mealTimes: { weekday: {} }, assumeStaples: true });
+  const andrey = { updatedAt: 1, inventory: [], settings: { name: "Andrey", nameAsked: true, apiKey: "" } };
+  const joined = adoptKitchen(andrey, kitchen);
+  assert.equal(joined.settings.name, "Andrey");
+  assert.equal(joined.inventory[0].name, "milk");
+  assert.deepEqual(joined.settings.mealTimes, { weekday: {} });
+  const mine = toPersonal(lisa);
+  assert.equal(mine.inventory, undefined);
+  assert.equal(mine.settings.apiKey, undefined, "API key never leaves the device");
+  assert.equal(adoptSettings(andrey, { settings: { name: "Andy" } }).settings.name, "Andy");
+});
+
+test("share codes are easy to read and type", () => {
+  const code = newHouseholdCode();
+  assert.match(code, /^[A-HJ-NP-Z2-9]{8}$/);
+  assert.equal(cleanCode("k7qm - 2xpd"), "K7QM2XPD");
+  assert.equal(showCode("K7QM2XPD"), "K7QM-2XPD");
+});

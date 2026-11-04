@@ -139,6 +139,51 @@ export function toSynced(state) {
   return out;
 }
 
+// Sharing a kitchen: the kitchen itself is shared; each person keeps their own
+// name and personal settings. Meal times and the staples switch are shared too,
+// since the household eats together.
+const SHARED_SETTINGS = ["mealTimes", "assumeStaples"];
+
+/** The shared kitchen document. */
+export function toKitchen(state) {
+  const out = { updatedAt: state.updatedAt || 0 };
+  for (const k of SYNCED_KEYS) if (state[k] !== undefined) out[k] = state[k];
+  out.shared = Object.fromEntries(SHARED_SETTINGS.filter((k) => state.settings?.[k] !== undefined).map((k) => [k, state.settings[k]]));
+  return out;
+}
+
+/** Take the kitchen from a shared copy, keeping this person's own settings. */
+export function adoptKitchen(local, remote) {
+  const next = { ...local, settings: { ...local.settings, ...(remote.shared || {}) } };
+  for (const k of SYNCED_KEYS) next[k] = remote[k] !== undefined ? remote[k] : next[k];
+  next.inventory = recategorize(next.inventory || []);
+  next.updatedAt = remote.updatedAt || 0;
+  return next;
+}
+
+/** The private document while sharing a kitchen: just this person's settings. */
+export function toPersonal(state) {
+  const { apiKey, ...settings } = state.settings || {};
+  return { updatedAt: state.updatedAt || 0, settings };
+}
+
+/** Take only the settings from a private copy (the kitchen comes from the shared one). */
+export function adoptSettings(local, remote) {
+  return { ...local, settings: { ...local.settings, ...(remote.settings || {}), apiKey: local.settings?.apiKey || "" } };
+}
+
+/** A friendly share code like "K7QM-2XPD" (no 0/O or 1/I to mix up). */
+export function newHouseholdCode(random = Math.random) {
+  const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) code += abc[Math.floor(random() * abc.length)];
+  return code;
+}
+
+/** "k7qm 2xpd" -> "K7QM2XPD" */
+export const cleanCode = (text) => String(text || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+export const showCode = (code) => `${code.slice(0, 4)}-${code.slice(4)}`;
+
 /** Replace the synced part of `local` with `remote`, keeping device-only settings. */
 export function adoptRemote(local, remote) {
   const next = { ...local };

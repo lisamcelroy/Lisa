@@ -4,7 +4,7 @@ import { canonicalName, titleCase, foodInfo, matchFood, satisfies, searchText, t
 import { parseReceipt } from "./receipt.js";
 import { parseRecipeText } from "./recipeImport.js";
 import { recommend, cookRecipe, daysLeft, SOON_DAYS } from "./recommend.js";
-import { loadState, saveState, makeItem, addToInventory, newId, toSynced, adoptRemote, mergeOnLoad } from "./store.js";
+import { loadState, saveState, makeItem, addToInventory, newId, toSynced, adoptRemote, mergeOnLoad, toKitchen, adoptKitchen, toPersonal, adoptSettings, newHouseholdCode, cleanCode, showCode } from "./store.js";
 import { connectCloud } from "./cloud.js";
 import { renderAppliances } from "./fridge.js";
 import { needsDefrost, defrostHint, defrostTo, moveItem, takeOutBy } from "./frozen.js";
@@ -38,7 +38,7 @@ let cloud = null;
 function persist() {
   state.updatedAt = Date.now();
   saveState(state);
-  cloud?.save(toSynced(state));
+  cloud?.save();
 }
 
 function commit() {
@@ -2037,8 +2037,107 @@ $("#mt-rows").addEventListener("click", (e) => {
   renderMealTimes();
 });
 
+// ---------- Share the kitchen with family ----------
+
+async function renderShareSection() {
+  const el = $("#share-section");
+  if (!el) return;
+  const id = state.settings.householdId;
+  if (!cloud) {
+    el.innerHTML = `<p class="muted small">Sharing works when the app is opened on claude.ai. Here your kitchen is saved on this device only.</p>`;
+    return;
+  }
+  if (id) {
+    const write = await cloud.canWrite();
+    el.innerHTML = `
+      <div class="share-on">
+        <span class="share-dot" aria-hidden="true"></span>
+        <div><b>You're sharing this kitchen</b><span class="muted small">Everyone with the code sees the same fridge, plan, shopping list and family.</span></div>
+      </div>
+      <div class="share-code-row"><span class="share-code" aria-label="Share code">${showCode(id)}</span><button type="button" class="btn small" data-share="copy">Copy code</button></div>
+      ${write === false || syncStatus === "readonly" ? `<p class="small share-warn">You can see this kitchen but not change it. Ask whoever shared it to give you edit access in the Share menu.</p>` : ""}
+      <ol class="share-steps small">
+        <li>Open the <b>Share</b> menu for this app on claude.ai and invite your family member. Let them <b>edit</b>, so they can add food and plan meals.</li>
+        <li>They open the app, go to <b>Settings</b>, and enter the code <b>${showCode(id)}</b> under "Join a shared kitchen".</li>
+      </ol>
+      <button type="button" class="btn small" data-share="leave">Stop sharing on my account</button>`;
+    return;
+  }
+  el.innerHTML = `
+    <p class="muted small">Share your kitchen with your partner or family so you all see the same fridge, meal plan and shopping list. Each person keeps their own name and settings.</p>
+    <button type="button" class="btn primary" data-share="create">Share my kitchen</button>
+    <div class="share-join">
+      <label class="small" for="share-join-code">Join a shared kitchen</label>
+      <div class="row"><input id="share-join-code" placeholder="Code, e.g. K7QM-2XPD" autocomplete="off" autocapitalize="characters" /><button type="button" class="btn" data-share="join">Join</button></div>
+    </div>`;
+}
+
+$("#share-section").addEventListener("click", async (e) => {
+  const act = e.target.closest("[data-share]")?.dataset.share;
+  if (!act || !cloud) return;
+  const btn = e.target.closest("button");
+  if (act === "create") {
+    btn.disabled = true;
+    const id = newHouseholdCode();
+    try {
+      state.updatedAt = Date.now();
+      await cloud.createHousehold(id, toKitchen(state));
+    } catch (err) {
+      console.error(err);
+      btn.disabled = false;
+      return toast(err?.code === "invalid_argument" ? "You need edit access to share this kitchen" : "Couldn't share just now. Try again in a moment.");
+    }
+    state.settings.householdId = id;
+    commit();
+    cloud.openHousehold(id);
+    toast(`Your kitchen is shared. Code: ${showCode(id)}`);
+    return renderShareSection();
+  }
+  if (act === "copy") {
+    try {
+      await navigator.clipboard.writeText(showCode(state.settings.householdId));
+      toast("Code copied");
+    } catch {
+      toast(`Your code is ${showCode(state.settings.householdId)}`);
+    }
+    return;
+  }
+  if (act === "join") {
+    const id = cleanCode($("#share-join-code").value);
+    if (id.length !== 8) return toast("Codes have 8 letters and numbers, like K7QM-2XPD");
+    btn.disabled = true;
+    let remote = null;
+    try {
+      remote = await cloud.readHousehold(id);
+    } catch (err) {
+      console.error(err);
+    }
+    btn.disabled = false;
+    if (!remote) return toast("No shared kitchen with that code. Check it and try again.");
+    if (state.inventory.length && !confirm("Joining shows the shared kitchen instead of the one on your account. Your own stays saved, and you can go back to it by leaving. Join?")) return;
+    state = adoptKitchen(state, remote);
+    state.ideas ||= { key: "", recipes: [] };
+    state.settings.householdId = id;
+    saveState(state);
+    cloud.save();
+    cloud.openHousehold(id);
+    render();
+    toast("You've joined the shared kitchen");
+    return renderShareSection();
+  }
+  if (act === "leave") {
+    if (!confirm("Stop sharing on your account? You'll keep a copy of the kitchen as it is now. Others keep the shared one.")) return;
+    cloud.closeHousehold();
+    delete state.settings.householdId;
+    commit();
+    toast("You're back to your own kitchen");
+    return renderShareSection();
+  }
+});
+
 $("#open-settings").addEventListener("click", () => {
   renderMealTimes();
+  renderShareSection();
   $("#set-staples").checked = state.settings.assumeStaples;
   $("#set-name").value = state.settings.name || "";
   $("#set-apikey").value = state.settings.apiKey;
@@ -2297,6 +2396,7 @@ const SYNC_TEXT = {
   saved: ["Saved", "Everything is saved to your account"],
   offline: ["Offline", "Not saved to your account yet; it will save when the connection is back"],
   local: ["This device", "Saved on this device only"],
+  readonly: ["View only", "You can see this shared kitchen but not change it"],
 };
 let syncStatus = "";
 
@@ -2310,10 +2410,36 @@ function setSyncStatus(status) {
   syncStatus = status;
 }
 
+const sharing = () => Boolean(state.settings.householdId);
+
 connectCloud({
-  getState: () => toSynced(state),
-  onStatus: setSyncStatus,
-  onRemote(remote, first) {
+  householdId: state.settings.householdId,
+  getPersonal: () => (sharing() ? toPersonal(state) : toSynced(state)),
+  getShared: () => toKitchen(state),
+  onShared(remote) {
+    state = adoptKitchen(state, remote);
+    state.ideas ||= { key: "", recipes: [] };
+    saveState(state);
+    render();
+  },
+  onStatus(status) {
+    setSyncStatus(status);
+    if ($("#settings-dialog").open) renderShareSection();
+  },
+  onPersonal(remote, first) {
+    // Joined a shared kitchen on another device: follow it here too.
+    if (remote.settings?.householdId && remote.settings.householdId !== state.settings.householdId) {
+      state = adoptSettings(state, remote);
+      saveState(state);
+      cloud?.openHousehold(state.settings.householdId);
+      return render();
+    }
+    if (sharing()) {
+      state = adoptSettings(state, remote);
+      saveState(state);
+      if ((state.settings.name || state.settings.nameAsked) && $("#name-dialog").open) $("#name-dialog").close();
+      return render();
+    }
     if (first) {
       const merged = mergeOnLoad(state, remote, sessionStart);
       const addedHere = ["inventory", "shopping", "customRecipes"].some((k) => (merged[k] || []).length !== (remote[k] || []).length);
@@ -2328,7 +2454,10 @@ connectCloud({
     if ((state.settings.name || state.settings.nameAsked) && $("#name-dialog").open) $("#name-dialog").close();
     render();
   },
-}).then((c) => (cloud = c)).catch((err) => {
+}).then((c) => {
+  cloud = c;
+  if ($("#settings-dialog").open) renderShareSection();
+}).catch((err) => {
   console.error(err);
   setSyncStatus("local");
 });

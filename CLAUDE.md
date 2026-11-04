@@ -38,6 +38,13 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   on-device OCR (Tesseract.js).
 - `db` + `user`: the whole kitchen is saved to a private per-person doc at
   `data/users/<id>/kitchen` (`js/cloud.js`). Browser storage is only a fast local cache.
+- Sharing (Settings, Share with family): "Share my kitchen" creates `households/<CODE>` (8 easy
+  characters, shown as XXXX-XXXX) and sets `settings.householdId`. While sharing, the kitchen
+  (`toKitchen`: inventory, shopping, plan, family, recipes, ratings, defrost ticks, plus shared
+  meal times and staples) syncs to the household doc, and the private doc keeps only that person's
+  settings (`toPersonal`), so each person keeps their own name. Others join by typing the code;
+  they need edit (Contributor) access to the artifact from the claude.ai Share menu to write.
+  Writes are last-writer-wins on the whole doc. "Stop sharing" keeps a personal copy.
 - Keep the storage key `fridgemate:v1` (from the app's first name) so existing kitchens load.
 
 ## Files
