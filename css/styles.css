@@ -1111,3 +1111,44 @@ body { background: var(--bg); }
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border: 0; box-shadow: none;
 }
+
+/* No save-status dot in the header (it read as a stray orange dot). */
+.sync, .sync:not(:empty) { display: none !important; }
+
+/* Logo: tap to go back to the top. */
+#logo-top { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#logo-top:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
+
+/* Home date badge opens the planner. */
+button.date-badge { font: inherit; color: inherit; border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button.date-badge:active { transform: scale(.95); }
+
+/* Remove buttons on planned meals (Home and Plan). */
+.slot.filled { display: flex; align-items: center; gap: 4px; }
+.slot.filled .x { flex: none; width: 30px; height: 30px; color: var(--muted); }
+.slot.filled .x:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--text); }
+
+/* Toast with an Undo button. */
+.toast.has-action { pointer-events: auto; display: flex; align-items: center; gap: 12px; }
+.toast-action { font: inherit; font-weight: 800; color: #f4af30; background: none; border: 0; padding: 2px 4px; cursor: pointer; }
+
+/* Shopping: how much each recipe needs. */
+.shop-name { display: flex; flex-direction: column; }
+.shop-need { font-size: .76rem; font-weight: 500; color: var(--muted); margin-top: 2px; }
+
+/* Family: days out. */
+.away-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 2px; }
+.away-row .pref-level { color: var(--muted); }
+.away-chip { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--text); }
+.away-add { position: relative; overflow: hidden; }
+.away-add input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; padding: 0; border: 0; }
+
+/* Recipes page: foldable sections. */
+.rec-fold { margin-top: 6px; }
+.rec-fold > .fold { width: 100%; margin: 10px 0 8px; }
+.rec-fold.collapsed > .fold-body, .ideas.collapsed > .fold-body { display: none; }
+.ideas .ideas-head .fold h2 { margin: 0; }
+.ideas.collapsed .ideas-head { margin-bottom: 0; }
+.filter-count { font-size: .72rem; font-weight: 800; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 2px 8px; margin-left: 4px; }
+.filter-count:empty { display: none; }
+.shop-need { text-transform: none; }

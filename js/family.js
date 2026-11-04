@@ -16,8 +16,14 @@ export function prefHits(food, ing) {
   return FOOD_BY_NAME.get(ing)?.parent === food;
 }
 
-/** Members who are eating (everyone unless switched off). */
-export const eating = (family = []) => family.filter((m) => m.home !== false);
+/** Is this person out on `day` (an ISO date like "2026-11-06")? */
+export const isOut = (m, day) => Boolean(day && (m.away || []).includes(day));
+
+/** Members eating at home on `day` (everyone who hasn't said they're out that day). */
+export const eating = (family = [], day) => family.filter((m) => !isOut(m, day));
+
+/** Forget days out that are already over. */
+export const pruneAway = (away = [], today) => away.filter((d) => d >= today).sort();
 
 /**
  * What the people eating think of a recipe.
@@ -26,9 +32,9 @@ export const eating = (family = []) => family.filter((m) => m.home !== false);
  * tolerate: someone tolerates it; keep it small or on the side.
  * loves: someone loves an ingredient in it.
  */
-export function familyCheck(recipe, family = []) {
+export function familyCheck(recipe, family = [], day) {
   const out = { blocked: [], leaveOut: [], tolerate: [], loves: [] };
-  for (const m of eating(family)) {
+  for (const m of eating(family, day)) {
     for (const p of m.prefs || []) {
       for (const ing of recipe.ingredients || []) {
         if (!prefHits(p.food, ing.name)) continue;
@@ -60,8 +66,8 @@ export function familyNotes(check) {
 }
 
 /** A line for Claude so fresh ideas respect everyone at the table. */
-export function familyRequest(family = []) {
-  const at = eating(family).filter((m) => m.name);
+export function familyRequest(family = [], day) {
+  const at = eating(family, day).filter((m) => m.name);
   if (!at.length) return "";
   const group = (level) => {
     const out = [];

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { familyCheck, familyNotes, familyRequest, prefHits } from "../js/family.js";
+import { familyCheck, familyNotes, familyRequest, prefHits, pruneAway } from "../js/family.js";
 import { RECIPES } from "../js/data/recipes.js";
 
 const family = [
@@ -27,9 +27,15 @@ test("an optional hated ingredient just gets left out", () => {
   assert.equal(familyNotes(c)[0].text, "Leave out the mushroom for Lisa");
 });
 
-test("someone not eating today doesn't count", () => {
-  const away = [{ ...family[0], home: false }, family[1]];
-  assert.equal(familyCheck(byTitle("Creamy Mushroom Pasta"), away).blocked.length, 0);
+test("someone out that day doesn't count, but only that day", () => {
+  const away = [{ ...family[0], away: ["2026-11-06"] }, family[1]];
+  assert.equal(familyCheck(byTitle("Creamy Mushroom Pasta"), away, "2026-11-06").blocked.length, 0);
+  assert.equal(familyCheck(byTitle("Creamy Mushroom Pasta"), away, "2026-11-07").blocked.length, 1);
+  assert.doesNotMatch(familyRequest(away, "2026-11-06"), /Lisa/);
+});
+
+test("past days out are forgotten", () => {
+  assert.deepEqual(pruneAway(["2026-11-01", "2026-11-09", "2026-11-04"], "2026-11-04"), ["2026-11-04", "2026-11-09"]);
 });
 
 test("disliking a group covers its members", () => {

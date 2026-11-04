@@ -86,8 +86,8 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   Zalando Sans for body.
 - Style: clean and sleek. Hairline borders (`--hair`), soft shadows, flat pill buttons and chips,
   frosted header and tab bar, generous spacing. Respect `prefers-reduced-motion`.
-- Header: small centred logo on a see-through bar (no tint, soft blur only); settings on the right; save status on the left
-  (a dot on phones).
+- Header: small centred logo on a see-through bar (no tint, soft blur only); settings on the right. Tapping the logo
+  scrolls back to the top. No save-status dot (the owner asked for it gone).
 - Tabs: Home, Fridge (Picture/List switch), Scan, Recipes, Plan, Family, Shopping.
 
 ## App behaviour to preserve
@@ -101,14 +101,20 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   plus optional Quick prep (at most 3 ingredients to handle, 3 steps) and Hands-off (oven, pot or
   fridge does the work). Logic in `js/cooktime.js`. The answer lasts for the day, folds into a
   one-line summary, filters the library and Claude's ideas, and is sent to Claude with the request.
-- Family tab: each person has a name, an Eating/Not eating switch and food preferences. For people
-  eating: a required ingredient someone hates or is allergic to hides the recipe (with a "Show them"
+- Family tab: each person has a name, food preferences, an "Eating today / Out today" switch and
+  "Out on" days (`m.away`, ISO dates, past days pruned). Being out only counts for that day; the planner
+  uses the slot's day. For people eating: a required ingredient someone hates or is allergic to hides the recipe (with a "Show them"
   option); an optional one becomes "Leave out the X for Y"; tolerated foods get "Keep the X small or on
   the side"; loved foods get a note. Disliking a group (cheese) covers its members (cheddar). Claude's
   ideas get the same rules in the request. Stored in synced `state.family`.
 - Every recipe shows "Suggested for" meal tags, with a meal filter row on Recipes. Home only suggests
   a recipe that suits the meal for the time of day (breakfast until 11, lunch until 4pm, then dinner);
   the planner lists recipes that suit the slot first. Never suggest a heavy dinner for breakfast.
+- Planned meals can be removed from Home and Plan (x on each slot, or Remove in the slot picker),
+  with an Undo toast. The Home date badge opens the planner.
+- Shopping items added from a recipe or the week's plan show how much each recipe needs
+  ("Need 2 for Banana Pancakes", stored as `item.needs`).
+- Recipes page sections fold: Fresh ideas, Filters (shows how many are on) and From the recipe book.
 - Seasonings live on a spice rack and count for recipes that just say "spices".
 - Anything in the freezer must be defrosted before use; recipes and the plan remind you.
 - Calories are estimates; say so in the UI.

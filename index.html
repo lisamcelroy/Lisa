@@ -24,7 +24,7 @@
   <header class="topbar">
     <div class="logo">
       <div>
-        <h1 class="logomark" aria-label="Inside my Kitchen"><span aria-hidden="true" class="lm-top">Inside my</span><span aria-hidden="true" class="lm-main">Kitchen</span><span aria-hidden="true" class="lm-tag">let's make cooking fun again</span></h1>
+        <h1 class="logomark" id="logo-top" role="button" tabindex="0" aria-label="Inside my Kitchen, back to top"><span aria-hidden="true" class="lm-top">Inside my</span><span aria-hidden="true" class="lm-main">Kitchen</span><span aria-hidden="true" class="lm-tag">let's make cooking fun again</span></h1>
       </div>
     </div>
     <span class="sync" id="sync-status" role="status" aria-live="polite"></span>
@@ -43,7 +43,7 @@
           <h2 class="hero-title" id="hello">Hi there</h2>
           <p class="muted small">For today</p>
         </div>
-        <div class="date-badge" aria-hidden="true"><b id="badge-day"></b><span id="badge-month"></span></div>
+        <button class="date-badge" data-go="plan" aria-label="Open the meal planner"><b id="badge-day"></b><span id="badge-month"></span></button>
       </div>
       <div class="card assistant-card">
         <div class="mascot-wrap"><svg class="mascot big" viewBox="0 0 64 68" aria-hidden="true" focusable="false">
@@ -196,17 +196,22 @@
       </div>
       <div class="card ideas" id="ideas" hidden>
         <div class="ideas-head">
-          <h2>Fresh ideas for your kitchen</h2>
+          <button class="fold" data-fold="rec-ideas" aria-expanded="true"><span class="chev" aria-hidden="true"></span><h2>Fresh ideas for your kitchen</h2></button>
           <span class="muted small" id="ideas-status" role="status" aria-live="polite"></span>
         </div>
-        <div id="ideas-list" class="recipe-grid"></div>
-        <div class="row ideas-actions">
-          <input id="ai-request" placeholder="In the mood for... (optional)" aria-label="What are you in the mood for" />
-          <button class="btn primary" id="ai-suggest">More ideas</button>
-          <button class="btn" id="ideas-stop" hidden>Stop</button>
+        <div class="fold-body">
+          <div id="ideas-list" class="recipe-grid"></div>
+          <div class="row ideas-actions">
+            <input id="ai-request" placeholder="In the mood for... (optional)" aria-label="What are you in the mood for" />
+            <button class="btn primary" id="ai-suggest">More ideas</button>
+            <button class="btn" id="ideas-stop" hidden>Stop</button>
+          </div>
         </div>
       </div>
       <p class="muted small ideas-hint" id="ideas-hint" hidden>Want recipe ideas made from your exact ingredients? Add a Claude API key in Settings.</p>
+      <div class="rec-fold" id="rec-filters">
+      <button class="fold section-title" data-fold="rec-filters" aria-expanded="true"><span class="chev" aria-hidden="true"></span><span>Filters</span><span class="filter-count" id="filter-count"></span></button>
+      <div class="fold-body">
       <div class="toolbar">
         <div class="chips" id="recipe-filter">
           <button class="chip active" data-filter="ready">Ready to cook</button>
@@ -218,8 +223,12 @@
       </div>
       <div class="meal-row" id="meal-filter" role="group" aria-label="Suggested for"></div>
       <div class="kw-row" id="keyword-filter" role="group" aria-label="Filter by occasion"></div>
-      <h2 class="section-title" id="library-title">From the recipe book</h2>
-      <div id="recipes" class="recipe-grid"></div>
+      </div>
+      </div>
+      <div class="rec-fold" id="rec-book">
+        <button class="fold section-title" data-fold="rec-book" aria-expanded="true"><span class="chev" aria-hidden="true"></span><span id="library-title">From the recipe book</span></button>
+        <div class="fold-body"><div id="recipes" class="recipe-grid"></div></div>
+      </div>
     </section>
 
     <!-- Meal plan -->

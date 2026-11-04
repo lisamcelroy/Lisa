@@ -13,7 +13,7 @@ import { estimateCalories } from "./nutrition.js";
 import { KEYWORDS, KEYWORD_IDS, KEYWORD_LABEL, keywordsFor } from "./data/keywords.js";
 import { MEALS, MEAL_LABEL, isoDay, fromIsoDay, weekDays, dayCalories, prunePlan, plannedRecipeIds } from "./plan.js";
 import { UNIT_CHOICES, formatQty, normalizeUnit } from "./units.js";
-import { LEVELS, LEVEL_LABEL, familyCheck, familyNotes, familyRequest, eating } from "./family.js";
+import { LEVELS, LEVEL_LABEL, familyCheck, familyNotes, familyRequest, eating, isOut, pruneAway } from "./family.js";
 import { MEAL_TYPES, MEAL_TYPE_LABEL, mealsFor, mealNow } from "./data/meals.js";
 import { TIME_OPTIONS, PREP_OPTIONS, fitsTime, todaysChoice, timeRequest } from "./cooktime.js";
 
@@ -44,12 +44,20 @@ function commit() {
   render();
 }
 
-function toast(msg) {
+function toast(msg, { action, onAction } = {}) {
   const el = $("#toast");
   el.textContent = msg;
+  if (action) {
+    const b = document.createElement("button");
+    b.className = "toast-action";
+    b.textContent = action;
+    b.onclick = () => { el.classList.remove("show"); onAction(); };
+    el.append(" ", b);
+  }
+  el.classList.toggle("has-action", Boolean(action));
   el.classList.add("show");
   clearTimeout(toast.t);
-  toast.t = setTimeout(() => el.classList.remove("show"), 2600);
+  toast.t = setTimeout(() => el.classList.remove("show"), action ? 5000 : 2600);
 }
 
 const claudeOn = () => Boolean(state.settings.useClaude && state.settings.apiKey);
@@ -308,7 +316,10 @@ function renderHome() {
           const e = day[m];
           const ref = `${today}|${m}`;
           if (!e) return `<button class="slot empty meal-${m}" data-home-pick="${ref}"><span class="slot-label">${MEAL_LABEL[m]}</span><span class="slot-add">+ Add</span></button>`;
-          return `<button class="slot filled meal-${m} slot-main" data-home-open="${ref}"><span class="slot-label">${MEAL_LABEL[m]}</span><span class="slot-title">${esc(e.title || e.text)}</span>${Number.isFinite(e.kcal) && e.kcal > 0 ? `<span class="slot-kcal">~${e.kcal} kcal</span>` : ""}</button>`;
+          return `<div class="slot filled meal-${m}">
+            <button class="slot-main" data-home-open="${ref}"><span class="slot-label">${MEAL_LABEL[m]}</span><span class="slot-title">${esc(e.title || e.text)}</span>${Number.isFinite(e.kcal) && e.kcal > 0 ? `<span class="slot-kcal">~${e.kcal} kcal</span>` : ""}</button>
+            <button class="x" data-home-clear="${ref}" aria-label="Remove ${esc(e.title || e.text)} from ${m}">&times;</button>
+          </div>`;
         }).join("")}
       </div>
       <div class="today-foot">
@@ -341,6 +352,8 @@ $("#view-home").addEventListener("click", (e) => {
     ui.recipeFilter = "rescue";
     return switchTab("recipes");
   }
+  const clear = e.target.closest("[data-home-clear]")?.dataset.homeClear;
+  if (clear) return removePlanned(...clear.split("|"));
   const pick = e.target.closest("[data-home-pick]")?.dataset.homePick;
   if (pick) return openSlotPicker(...pick.split("|"));
   const open = e.target.closest("[data-home-open]")?.dataset.homeOpen;
@@ -914,7 +927,18 @@ $("#recipes").addEventListener("click", (e) => {
   if (e.target.closest('[data-act="toggle-blocked"]')) { e.stopPropagation(); ui.showBlocked = !ui.showBlocked; renderRecipes(); }
 }, true);
 
+function renderRecipeFolds() {
+  const shut = folded();
+  for (const [el, id] of [["#ideas", "rec-ideas"], ["#rec-filters", "rec-filters"], ["#rec-book", "rec-book"]]) {
+    $(el).classList.toggle("collapsed", shut.has(id));
+    $(`[data-fold="${id}"]`).setAttribute("aria-expanded", String(!shut.has(id)));
+  }
+  const n = (ui.recipeFilter !== "all" ? 1 : 0) + (ui.meal !== "any" ? 1 : 0) + ui.keywords.size + (ui.recipeSearch ? 1 : 0);
+  $("#filter-count").textContent = n ? `${n} on` : "";
+}
+
 function renderRecipes() {
+  renderRecipeFolds();
   renderTimeCard();
   renderMealFilter();
   renderIdeas();
@@ -980,18 +1004,19 @@ $("#meal-filter").addEventListener("click", (e) => {
   renderRecipes();
 });
 
-// Family preferences on the Recipes tab.
-const isBlocked = (r) => familyCheck(r.recipe, state.family).blocked.length > 0;
+// Family preferences on the Recipes tab (for whoever is eating that day; today unless given).
+const todayIso = () => isoDay(new Date());
+const isBlocked = (r, day = todayIso()) => familyCheck(r.recipe, state.family, day).blocked.length > 0;
 
 function blockedNote(n) {
   if (!n) return "";
-  const who = eating(state.family).map((m) => m.name);
+  const who = eating(state.family, todayIso()).map((m) => m.name);
   return `<div class="family-hidden">${ui.showBlocked ? `Showing ${n} recipe${n > 1 ? "s" : ""} someone won't eat.` : `Hiding ${n} recipe${n > 1 ? "s" : ""} ${esc(who.length > 1 ? "someone at the table" : who[0] || "someone")} won't eat.`}
     <button class="btn small" data-act="toggle-blocked">${ui.showBlocked ? "Hide them" : "Show them"}</button></div>`;
 }
 
 function familyLines(recipe) {
-  return familyNotes(familyCheck(recipe, state.family))
+  return familyNotes(familyCheck(recipe, state.family, todayIso()))
     .map((n) => `<div class="fam-note fam-${n.kind}">${esc(n.text)}</div>`).join("");
 }
 
@@ -1089,7 +1114,7 @@ function openRecipe(id) {
     if (!act) return;
     if (act === "close") dlg.close();
     if (act === "shop") {
-      addToShopping(r.missing);
+      addToShopping(r.missing, [recipe]);
       toast(`Added ${r.missing.length} to your shopping list`);
       dlg.close();
     }
@@ -1132,7 +1157,7 @@ const HIDE_CODES = ["not_granted", "sampling_disabled", "not_declared", "capabil
 const kitchenKey = () => {
   const t = cookTime();
   return [...new Set(state.inventory.map((it) => it.name))].sort().join("|") + (t ? `@${t.time}:${t.prep.join(",")}` : "") +
-    (familyRequest(state.family) ? "#" + familyRequest(state.family) : "") + (ui.meal !== "any" ? "~" + ui.meal : "");
+    (familyRequest(state.family, todayIso()) ? "#" + familyRequest(state.family, todayIso()) : "") + (ui.meal !== "any" ? "~" + ui.meal : "");
 };
 
 function ideaSource() {
@@ -1146,7 +1171,6 @@ function renderIdeas() {
   const show = Boolean(src) && state.inventory.length > 0 && ui.recipeFilter !== "mine";
   $("#ideas").hidden = !show;
   $("#ideas-hint").hidden = Boolean(src) || !state.inventory.length || Boolean(window.claude);
-  $("#library-title").hidden = !show;
   if (!show) return;
 
   const key = kitchenKey();
@@ -1190,7 +1214,7 @@ async function fetchIdeas({ fresh = false, more = false } = {}) {
 
   const opts = {
     soon: state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS).map((it) => it.name),
-    request: [$("#ai-request").value.trim(), timeRequest(cookTime()), familyRequest(state.family), ui.meal !== "any" ? `These are for ${ui.meal}, so every recipe must suit ${ui.meal}` : ""].filter(Boolean).join(". "),
+    request: [$("#ai-request").value.trim(), timeRequest(cookTime()), familyRequest(state.family, todayIso()), ui.meal !== "any" ? `These are for ${ui.meal}, so every recipe must suit ${ui.meal}` : ""].filter(Boolean).join(". "),
     exclude: more ? state.ideas.recipes.map((r) => r.title) : [],
   };
   try {
@@ -1275,6 +1299,14 @@ function setPlan(day, meal, entry) {
   else delete plan[day][meal];
   state.plan = prunePlan(plan);
   commit();
+}
+
+// Take a meal off the plan, with a quick way to put it back.
+function removePlanned(day, meal) {
+  const was = state.plan[day]?.[meal];
+  if (!was) return;
+  setPlan(day, meal, null);
+  toast(`Removed ${was.title || was.text} from ${meal}`, { action: "Undo", onAction: () => setPlan(day, meal, was) });
 }
 
 function defaultMeal(recipe) {
@@ -1384,8 +1416,9 @@ $("#plan-prev").addEventListener("click", () => { planUi.week--; renderPlan(); }
 $("#plan-next").addEventListener("click", () => { planUi.week++; renderPlan(); });
 $("#plan-summary").addEventListener("click", (e) => {
   if (!e.target.closest("[data-act=plan-shop]")) return;
-  const missing = weekMissing(weekDays(planUi.week));
-  addToShopping(missing);
+  const days = weekDays(planUi.week);
+  const missing = weekMissing(days);
+  addToShopping(missing, plannedRecipeIds(state.plan, days, isoDay(new Date())).map(findRecipe).filter(Boolean));
   toast(`Added ${missing.length} to your shopping list`);
 });
 $("#plan-days").addEventListener("click", (e) => {
@@ -1393,7 +1426,7 @@ $("#plan-days").addEventListener("click", (e) => {
   const clear = e.target.closest("[data-clear]")?.dataset.clear;
   const open = e.target.closest("[data-open]")?.dataset.open;
   if (pick) return openSlotPicker(...pick.split("|"));
-  if (clear) return setPlan(...clear.split("|"), null);
+  if (clear) return removePlanned(...clear.split("|"));
   if (open) {
     const [day, meal] = open.split("|");
     const id = state.plan[day]?.[meal]?.recipeId;
@@ -1409,11 +1442,11 @@ function pickList() {
   const pool = [...allRecipes(), ...state.ideas.recipes];
   const ranked = recommend(pool, state.inventory, { assumeStaples: state.settings.assumeStaples })
     .filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.ingredients.some((i) => i.name.includes(q)))
-    .sort((a, b) => (isBlocked(a) - isBlocked(b)) || (suits(b) - suits(a)) || b.score - a.score)
+    .sort((a, b) => (isBlocked(a, planUi.slot.day) - isBlocked(b, planUi.slot.day)) || (suits(b) - suits(a)) || b.score - a.score)
     .slice(0, 40);
   return ranked.length
     ? ranked.map((r) => `<button class="pick" data-recipe="${esc(r.recipe.id)}"><b>${esc(r.recipe.title)}</b>
-        <span>${r.recipe.minutes} min${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""} &middot; ${r.missing.length ? `need ${r.missing.length}` : "you have everything"}${r.recipe.idea ? " &middot; idea" : ""}${isBlocked(r) ? " &middot; someone won't eat this" : ""}${suits(r) ? "" : ` &middot; usually ${mealsFor(r.recipe).map((m) => MEAL_TYPE_LABEL[m].toLowerCase()).join(" or ")}`}</span></button>`).join("")
+        <span>${r.recipe.minutes} min${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""} &middot; ${r.missing.length ? `need ${r.missing.length}` : "you have everything"}${r.recipe.idea ? " &middot; idea" : ""}${isBlocked(r, planUi.slot.day) ? " &middot; someone won't eat this" : ""}${suits(r) ? "" : ` &middot; usually ${mealsFor(r.recipe).map((m) => MEAL_TYPE_LABEL[m].toLowerCase()).join(" or ")}`}</span></button>`).join("")
     : `<div class="empty">No recipes match.</div>`;
 }
 
@@ -1431,7 +1464,7 @@ function openSlotPicker(day, meal) {
       <input id="plan-text-kcal" type="number" min="0" step="10" placeholder="kcal" aria-label="Calories (optional)" />
       <button class="btn" data-act="plan-text">Add</button>
     </div>
-    <div class="row end"><button class="btn" data-act="close">Close</button></div>`;
+    <div class="row end">${state.plan[day]?.[meal] ? `<button class="btn danger" data-act="unplan">Remove ${esc(state.plan[day][meal].title || state.plan[day][meal].text)}</button>` : ""}<button class="btn" data-act="close">Close</button></div>`;
   $("#plan-search").addEventListener("input", () => { $("#pick-list").innerHTML = pickList(); });
   const dlg = $("#plan-dialog");
   if (!dlg.open) dlg.showModal();
@@ -1467,6 +1500,10 @@ $("#plan-dialog").addEventListener("click", (e) => {
   if (e.target === dlg) return dlg.close();
   const act = e.target.closest("[data-act]")?.dataset.act;
   if (act === "close") return dlg.close();
+  if (act === "unplan" && planUi.slot) {
+    dlg.close();
+    return removePlanned(planUi.slot.day, planUi.slot.meal);
+  }
   const meal = e.target.closest("[data-meal]")?.dataset.meal;
   if (meal) {
     planUi.meal = meal;
@@ -1495,12 +1532,29 @@ $("#plan-dialog").addEventListener("click", (e) => {
 
 // ---------- Shopping ----------
 
-function addToShopping(names) {
+// names: what to buy. recipes: the recipes they're for, so each item can say how much
+// each recipe needs ("3 for Veggie Omelette").
+function addToShopping(names, recipes = []) {
   for (const raw of names) {
     const name = canonicalName(raw);
-    if (name && !state.shopping.some((s) => s.name === name)) state.shopping.push({ id: newId(), name, done: false, addedAt: Date.now() });
+    if (!name) continue;
+    let item = state.shopping.find((s) => s.name === name);
+    if (!item) {
+      item = { id: newId(), name, done: false, addedAt: Date.now() };
+      state.shopping.push(item);
+    }
+    for (const recipe of recipes) {
+      const ing = recipe.ingredients.find((i) => i.name === name);
+      if (!ing) continue;
+      item.needs = (item.needs || []).filter((n) => n.recipe !== recipe.title);
+      item.needs.push({ recipe: recipe.title, qty: ing.qty, unit: ing.unit });
+    }
   }
   commit();
+}
+
+function needsText(item) {
+  return (item.needs || []).map((n) => `Need ${formatQty(n.qty, n.unit)} for ${n.recipe}`).join(" &middot; ");
 }
 
 function renderShopping() {
@@ -1513,7 +1567,7 @@ function renderShopping() {
   $("#shopping").innerHTML = list.length
     ? list.map((s) => `
       <div class="shop-item" data-id="${s.id}">
-        <label><input type="checkbox" ${s.done ? "checked" : ""} /><span>${esc(s.name)}</span></label>
+        <label><input type="checkbox" ${s.done ? "checked" : ""} /><span class="shop-name">${esc(s.name)}${s.needs?.length ? `<small class="shop-need">${esc(needsText(s)).replace(/&amp;middot;/g, "&middot;")}</small>` : ""}</span></label>
         <button class="x" aria-label="Remove ${esc(s.name)}">&times;</button>
       </div>`).join("")
     : `<div class="empty">Your list is empty. Missing recipe ingredients can be added from any recipe.</div>`;
@@ -1621,6 +1675,8 @@ $("#reset-data").addEventListener("click", () => {
 const AVATAR = ["#d96c81", "#f4af30", "#9f4a5c", "#f0a9b6"];
 
 function renderFamily() {
+  const today = todayIso();
+  for (const m of state.family) { m.away = pruneAway(m.away, today); delete m.home; }
   const fam = state.family;
   const me = (state.settings.name || "").trim();
   const suggest = me && !fam.some((m) => m.name.toLowerCase() === me.toLowerCase())
@@ -1635,14 +1691,20 @@ function renderFamily() {
       return prefs.length ? `<div class="pref-group"><span class="pref-level lvl-${l.id}">${l.label}</span>${prefs.map((p) =>
         `<span class="pref-chip lvl-${l.id}">${esc(p.food)}<button aria-label="Remove ${esc(p.food)}" data-fam="del-pref" data-member="${m.id}" data-food="${esc(p.food)}">&times;</button></span>`).join("")}</div>` : "";
     }).join("");
-    return `<div class="card member${m.home === false ? " away" : ""}">
+    const later = (m.away || []).filter((d) => d > today);
+    return `<div class="card member${isOut(m, today) ? " away" : ""}">
       <div class="member-head">
         <span class="avatar" style="background:${AVATAR[i % AVATAR.length]}">${esc((m.name[0] || "?").toUpperCase())}</span>
         <h3>${esc(m.name)}</h3>
-        <button class="eat-toggle ${m.home === false ? "" : "on"}" data-fam="home" data-member="${m.id}" aria-pressed="${m.home !== false}">${m.home === false ? "Not eating" : "Eating"}</button>
+        <button class="eat-toggle ${isOut(m, today) ? "" : "on"}" data-fam="today" data-member="${m.id}" aria-pressed="${!isOut(m, today)}">${isOut(m, today) ? "Out today" : "Eating today"}</button>
         <button class="icon-btn small" data-fam="del-member" data-member="${m.id}" aria-label="Remove ${esc(m.name)}">&times;</button>
       </div>
       ${byLevel || `<p class="muted small">No preferences yet.</p>`}
+      <div class="away-row">
+        <span class="pref-level">Out on</span>
+        ${later.map((d) => `<span class="pref-chip away-chip">${esc(shortDate(fromIsoDay(d)))}<button aria-label="${esc(m.name)} is home on ${esc(shortDate(fromIsoDay(d)))}" data-fam="del-away" data-member="${m.id}" data-day="${d}">&times;</button></span>`).join("")}
+        <label class="btn small away-add">+ A day out<input type="date" min="${today}" data-fam-away="${m.id}" aria-label="Add a day ${esc(m.name)} is out" /></label>
+      </div>
       <form class="pref-form" data-member="${m.id}">
         <input name="food" list="food-names" placeholder="A food, e.g. mushrooms" required aria-label="Food" />
         <select name="level" aria-label="How they feel">${LEVELS.map((l) => `<option value="${l.id}"${l.id === "hates" ? " selected" : ""}>${l.label}</option>`).join("")}</select>
@@ -1679,19 +1741,38 @@ $("#family-list").addEventListener("submit", (e) => {
   toast(`Saved: ${m.name} ${said} ${food}`);
 });
 
+$("#family-list").addEventListener("change", (e) => {
+  const input = e.target.closest("[data-fam-away]");
+  const m = input && state.family.find((x) => x.id === input.dataset.famAway);
+  if (!m || !input.value) return;
+  m.away = pruneAway([...new Set([...(m.away || []), input.value])], todayIso());
+  commit();
+  toast(`${m.name} is out on ${shortDate(fromIsoDay(input.value))}`);
+});
+
 $("#family-list").addEventListener("click", (e) => {
   const b = e.target.closest("[data-fam]");
   if (!b) return;
   const m = state.family.find((x) => x.id === b.dataset.member);
   const act = b.dataset.fam;
   if (act === "add-me") addMember(state.settings.name || "");
-  if (act === "home" && m) { m.home = m.home === false; commit(); }
+  if (act === "today" && m) {
+    const today = todayIso();
+    m.away = isOut(m, today) ? m.away.filter((d) => d !== today) : [...(m.away || []), today];
+    commit();
+    toast(isOut(m, today) ? `${m.name} is out today. Recipes are for everyone else.` : `${m.name} is eating at home today`);
+  }
+  if (act === "del-away" && m) { m.away = m.away.filter((d) => d !== b.dataset.day); commit(); }
   if (act === "del-pref" && m) { m.prefs = m.prefs.filter((p) => p.food !== b.dataset.food); commit(); }
   if (act === "del-member" && m && confirm(`Remove ${m.name} and their preferences?`)) {
     state.family = state.family.filter((x) => x !== m);
     commit();
   }
 });
+
+// Tap the logo to go back to the top.
+$("#logo-top").addEventListener("click", () => window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
+$("#logo-top").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#logo-top").click(); } });
 
 // ---------- Tabs and boot ----------
 
