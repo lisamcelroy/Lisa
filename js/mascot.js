@@ -1,24 +1,20 @@
-// The Inside my Kitchen assistant: a little fridge with a face that waves and blinks.
-// Used in the header, on the Home page, in the opening splash and when it asks your name.
+// The Inside my Kitchen assistant: a soft rose fridge with its door just open and a warm
+// gold light spilling out. Used on the Home page and when it asks your name.
+// Each copy gets its own gradient ids so several can sit on one page.
 
-export function mascotSvg(cls = "mascot", { sparkle = false } = {}) {
-  const ink = "#9f4a5c";
+let n = 0;
+
+export function mascotSvg(cls = "mascot", { id = `m${++n}` } = {}) {
   return `<svg class="${cls}" viewBox="0 0 64 68" aria-hidden="true" focusable="false">
-  <g class="arm-l"><path d="M17 40C11 39 7.5 35 6.6 30.6" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="6.3" cy="28.8" r="2.7" fill="#fdf6ea" stroke="${ink}" stroke-width="2.4"/></g>
-  <g class="arm-r"><path d="M47 40C53 38 56.6 33.6 57 28.6" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="57.2" cy="26.8" r="2.7" fill="#fdf6ea" stroke="${ink}" stroke-width="2.4"/></g>
-  <path d="M22 59.5v4.2M42 59.5v4.2" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>
-  <rect x="16" y="5" width="32" height="54.5" rx="10" fill="#fdf6ea" stroke="${ink}" stroke-width="3"/>
-  <path d="M16 22.5H48" stroke="${ink}" stroke-width="3"/>
-  <path d="M21.6 10.6v6" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>
-  <circle class="magnet m1" cx="41" cy="12" r="2.8" fill="#d96c81"/>
-  <circle class="magnet m2" cx="34.4" cy="15.4" r="2.1" fill="#d96c81"/>
-  <g class="eyes"><circle cx="26.5" cy="36" r="2.8" fill="${ink}"/><circle cx="37.5" cy="36" r="2.8" fill="${ink}"/>
-    <circle cx="27.5" cy="35" r=".95" fill="#fff"/><circle cx="38.5" cy="35" r=".95" fill="#fff"/></g>
-  <ellipse cx="22.4" cy="41.6" rx="2.8" ry="1.7" fill="#d96c81" opacity=".85"/>
-  <ellipse cx="41.6" cy="41.6" rx="2.8" ry="1.7" fill="#d96c81" opacity=".85"/>
-  <path d="M28.4 41.4Q32 45.2 35.6 41.4" stroke="${ink}" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-  ${sparkle ? `<g class="sparkle" fill="none" stroke="#d96c81" stroke-width="2.4" stroke-linecap="round"><path d="M6 12l3 3M4 21h4M58 9l-3 3M60 18h-4"/></g>` : ""}
+  <defs>
+    <linearGradient id="${id}-body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0a9b6"/><stop offset="1" stop-color="#d96c81"/></linearGradient>
+    <radialGradient id="${id}-glow" cx=".1" cy=".5" r=".9"><stop offset="0" stop-color="#f4af30" stop-opacity=".9"/><stop offset="1" stop-color="#f4af30" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse class="glow" cx="44" cy="40" rx="17" ry="22" fill="url(#${id}-glow)"/>
+  <path class="door" d="M46 7l6 3v50l-6 3z" fill="#f4af30"/>
+  <rect x="12" y="5" width="34" height="58" rx="10" fill="url(#${id}-body)"/>
+  <path d="M12 23.5H46" stroke="#fdf6ea" stroke-opacity=".7" stroke-width="1.5"/>
+  <rect x="17" y="28" width="2.6" height="10" rx="1.3" fill="#fdf6ea" opacity=".85"/>
+  <path class="eyes" d="M24.5 37.5q2-2.4 4 0M32 37.5q2-2.4 4 0" fill="none" stroke="#fdf6ea" stroke-width="2.2" stroke-linecap="round"/>
 </svg>`;
 }

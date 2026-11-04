@@ -67,6 +67,10 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   Sorbet Light `#F0A9B6`, Rose Sorbet Dark `#9F4A5C` (all text). Cards are a lighter vanilla
   `#fbf5e8`. Dark mode: deep rose-brown `#3b1e26` (cards `#4a2631`) with Vanilla text. The owner
   dislikes navy and dull colours: never bring navy back. Food illustrations keep their own colours.
+- Assistant ("Glow", `js/mascot.js`): a rose gradient fridge with its door ajar and gold light
+  spilling out, closed happy eyes, no arms or legs. Modern, not childish. Motion is a slow glow
+  breathe and door sway (no waving). Also used for the app icon. Inline copies in `index.html`
+  are generated from `mascotSvg()`; each copy needs its own gradient id.
 - Older token names are kept and remapped: `--coral`/`--pink`/`--raspberry`/`--accent` Rose Sorbet,
   `--olive`/`--sun` Sunflower Gold, `--lilac` Rose Light, `--accent-deep` Rose Dark.
 - Meaning colours: breakfast Gold, lunch Rose Sorbet, dinner Rose Dark; fridge Rose Sorbet, freezer

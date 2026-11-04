@@ -1037,3 +1037,12 @@ body { background: var(--bg); }
 .mk.breakfast { background: #f4af30; }
 .mk.lunch { background: #d96c81; }
 .mk.dinner { background: var(--accent-deep); }
+
+/* Glow assistant: the light breathes and the door sways a touch. No waving or blinking. */
+.mascot .eyes { animation: none; }
+.mascot .glow { transform-box: fill-box; transform-origin: left center; animation: glow-breathe 3.6s ease-in-out infinite; }
+.mascot .door { transform-box: fill-box; transform-origin: left center; animation: door-sway 3.6s ease-in-out infinite; }
+@keyframes glow-breathe { 0%, 100% { opacity: .75; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.04); } }
+@keyframes door-sway { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.25); } }
+.mascot.big { filter: drop-shadow(0 10px 14px rgb(159 74 92 / 18%)); }
+@media (prefers-reduced-motion: reduce) { .mascot .glow, .mascot .door { animation: none; } }
