@@ -13,6 +13,7 @@ import { estimateCalories } from "./nutrition.js";
 import { KEYWORDS, KEYWORD_IDS, KEYWORD_LABEL, keywordsFor } from "./data/keywords.js";
 import { MEALS, MEAL_LABEL, isoDay, fromIsoDay, weekDays, dayCalories, prunePlan, plannedRecipeIds } from "./plan.js";
 import { UNIT_CHOICES, formatQty, normalizeUnit } from "./units.js";
+import { TIME_OPTIONS, PREP_OPTIONS, fitsTime, todaysChoice, timeRequest } from "./cooktime.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -859,7 +860,57 @@ function recipeCard(r) {
   </button>`;
 }
 
+// ---------- Time to cook today ----------
+// Asked at the top of Recipes; the answer lasts for the day, then the question comes back.
+
+function cookTime() {
+  return todaysChoice(state.settings.cookTime, isoDay(new Date()));
+}
+
+function timeSummary(t) {
+  const prep = t.prep.map((id) => PREP_OPTIONS.find((o) => o.id === id).label.toLowerCase());
+  const time = Number.isFinite(t.max) ? `${t.label} or less` : "no time limit";
+  return [time, ...prep].join(", ");
+}
+
+function renderTimeCard() {
+  const t = cookTime();
+  const open = ui.timeOpen || !t;
+  $("#time-ask").hidden = !open;
+  $("#time-summary").hidden = open;
+  $("#time-card").classList.toggle("folded", !open);
+  $("#time-options").innerHTML = TIME_OPTIONS.map((o) =>
+    `<button class="chip ${t?.time === o.id ? "active" : ""}" data-time="${o.id}" aria-pressed="${t?.time === o.id}">${o.label}</button>`).join("");
+  $("#prep-options").innerHTML = PREP_OPTIONS.map((o) =>
+    `<button class="chip prep-chip ${t?.prep.includes(o.id) ? "active" : ""}" data-prep="${o.id}" aria-pressed="${Boolean(t?.prep.includes(o.id))}" title="${o.hint}">${o.label}<small>${o.hint}</small></button>`).join("");
+  if (t) $("#time-summary-text").innerHTML = `Cooking today: <b>${esc(timeSummary(t))}</b>`;
+}
+
+function setCookTime(change) {
+  const t = cookTime() || { time: "any", prep: [] };
+  const next = { day: isoDay(new Date()), time: t.time, prep: [...t.prep], ...change };
+  state.settings.cookTime = next;
+  persist();
+  renderRecipes();
+}
+
+$("#time-card").addEventListener("click", (e) => {
+  const time = e.target.closest("[data-time]");
+  const prep = e.target.closest("[data-prep]");
+  if (time) { ui.timeOpen = false; setCookTime({ time: time.dataset.time }); }
+  else if (prep) {
+    const p = new Set(cookTime()?.prep || []);
+    p.has(prep.dataset.prep) ? p.delete(prep.dataset.prep) : p.add(prep.dataset.prep);
+    ui.timeOpen = true; setCookTime({ prep: [...p] });
+  } else if (e.target.closest("#time-change")) { ui.timeOpen = true; renderTimeCard(); }
+});
+
+$("#recipes").addEventListener("click", (e) => {
+  if (e.target.closest('[data-act="time-clear"]')) { e.stopPropagation(); ui.timeOpen = true; setCookTime({ time: "any", prep: [] }); }
+}, true);
+
 function renderRecipes() {
+  renderTimeCard();
   renderIdeas();
   $$("#recipe-filter .chip").forEach((c) => c.classList.toggle("active", c.dataset.filter === ui.recipeFilter));
 
@@ -868,6 +919,8 @@ function renderRecipes() {
   renderKeywordFilter();
   let list = ranked.filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.tags.some((t) => t.includes(q)) || r.recipe.ingredients.some((i) => i.name.includes(q)) || keywordsFor(r.recipe).some((k) => KEYWORD_LABEL[k].toLowerCase().includes(q)));
   if (ui.keywords.size) list = list.filter((r) => { const ks = keywordsFor(r.recipe); return [...ui.keywords].every((k) => ks.includes(k)); });
+  const time = cookTime();
+  if (time) list = list.filter((r) => fitsTime(r.recipe, time));
 
   const f = ui.recipeFilter;
   if (f === "ready") list = list.filter((r) => r.missing.length === 0 && r.have.length);
@@ -878,6 +931,10 @@ function renderRecipes() {
   if (!list.length && ui.keywords.size) {
     const where = { ready: "Ready to cook", almost: "Almost there", mine: "Mine", rescue: "this list", all: "All" }[f];
     $("#recipes").innerHTML = `<div class="empty">Nothing in ${where} matches ${[...ui.keywords].map((k) => `"${KEYWORD_LABEL[k]}"`).join(" + ")}.${f !== "all" ? ` <button class="btn small" data-act="kw-all">Show All recipes</button>` : ""}</div>`;
+    return;
+  }
+  if (!list.length && time && (Number.isFinite(time.max) || time.prep.length)) {
+    $("#recipes").innerHTML = `<div class="empty">Nothing here fits ${esc(timeSummary(time))}. <button class="btn small" data-act="time-clear">Show any time</button></div>`;
     return;
   }
   if (!list.length) {
@@ -1028,7 +1085,10 @@ let sampleFn = null;
 const ideas = { loading: false, ctl: null, error: "", blocked: false, autoTried: new Set() };
 const HIDE_CODES = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
 
-const kitchenKey = () => [...new Set(state.inventory.map((it) => it.name))].sort().join("|");
+const kitchenKey = () => {
+  const t = cookTime();
+  return [...new Set(state.inventory.map((it) => it.name))].sort().join("|") + (t ? `@${t.time}:${t.prep.join(",")}` : "");
+};
 
 function ideaSource() {
   if (sampleFn && !ideas.blocked) return "sample";
@@ -1056,10 +1116,11 @@ function renderIdeas() {
     $("#ideas-list").innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
   } else if (recipes.length) {
     const ranked = recommend(recipes, state.inventory, { assumeStaples: state.settings.assumeStaples })
-      .filter((r) => !ui.keywords.size || [...ui.keywords].every((k) => keywordsFor(r.recipe).includes(k)));
+      .filter((r) => !ui.keywords.size || [...ui.keywords].every((k) => keywordsFor(r.recipe).includes(k)))
+      .filter((r) => !cookTime() || fitsTime(r.recipe, cookTime()));
     $("#ideas-list").innerHTML = ranked.length
       ? ranked.map(recipeCard).join("")
-      : `<div class="empty">None of these ideas match ${[...ui.keywords].map((k) => `"${KEYWORD_LABEL[k]}"`).join(" + ")}. Type what you're after below and tap Get ideas.</div>`;
+      : `<div class="empty">None of these ideas match ${[...[...ui.keywords].map((k) => `"${KEYWORD_LABEL[k]}"`), ...(cookTime() ? [esc(timeSummary(cookTime()))] : [])].join(" + ")}. Tap More ideas for new ones.</div>`;
   } else {
     $("#ideas-list").innerHTML = "";
   }
@@ -1082,7 +1143,7 @@ async function fetchIdeas({ fresh = false, more = false } = {}) {
 
   const opts = {
     soon: state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS).map((it) => it.name),
-    request: $("#ai-request").value.trim(),
+    request: [$("#ai-request").value.trim(), timeRequest(cookTime())].filter(Boolean).join(". "),
     exclude: more ? state.ideas.recipes.map((r) => r.title) : [],
   };
   try {

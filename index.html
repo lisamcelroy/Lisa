@@ -181,6 +181,19 @@
 
     <!-- Recipes -->
     <section id="view-recipes" class="view" data-view="recipes" hidden>
+      <div class="card time-card" id="time-card">
+        <div class="time-ask" id="time-ask">
+          <h2>How much time do you have to cook today?</h2>
+          <div class="chips time-chips" id="time-options" role="group" aria-label="Time to cook"></div>
+          <p class="muted small time-sub">Need it to be easy too?</p>
+          <div class="chips time-chips" id="prep-options" role="group" aria-label="Prep style"></div>
+        </div>
+        <div class="time-summary" id="time-summary" hidden>
+          <span class="time-clock" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <span id="time-summary-text"></span>
+          <button class="btn small" id="time-change">Change</button>
+        </div>
+      </div>
       <div class="card ideas" id="ideas" hidden>
         <div class="ideas-head">
           <h2>Fresh ideas for your kitchen</h2>

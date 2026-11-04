@@ -55,6 +55,7 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 | `js/recommend.js` | Rank recipes by what's on hand, expiring food, frozen items; cooking deductions |
 | `js/frozen.js` | Freezer rules: "frozen" text goes to the freezer; freezer food needs defrosting unless it cooks from frozen |
 | `js/nutrition.js` | Calorie estimates per serving from ingredients (optional extras skipped) |
+| `js/cooktime.js` | Time to cook today: time limits, quick prep and hands-off checks |
 | `js/plan.js` | Meal plan dates (weeks start Monday), totals, pruning |
 | `js/fridge.js` | Fridge, pantry and spice rack drawing with foldable sections |
 | `js/icons.js`, `js/mascot.js` | Flat food icons and the fridge assistant |
@@ -94,6 +95,10 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   The name is asked once after the splash and never again (skipping counts); editable in Settings.
 - Recipes tab shows Claude's fresh ideas first; ideas refetch automatically when the set of
   ingredients changes.
+- Recipes opens with "How much time do you have to cook today?" (15/30/45 min, 1 hour, No rush)
+  plus optional Quick prep (at most 3 ingredients to handle, 3 steps) and Hands-off (oven, pot or
+  fridge does the work). Logic in `js/cooktime.js`. The answer lasts for the day, folds into a
+  one-line summary, filters the library and Claude's ideas, and is sent to Claude with the request.
 - Seasonings live on a spice rack and count for recipes that just say "spices".
 - Anything in the freezer must be defrosted before use; recipes and the plan remind you.
 - Calories are estimates; say so in the UI.

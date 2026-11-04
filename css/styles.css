@@ -1046,3 +1046,15 @@ body { background: var(--bg); }
 @keyframes door-sway { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.25); } }
 .mascot.big { filter: drop-shadow(0 10px 14px rgb(159 74 92 / 18%)); }
 @media (prefers-reduced-motion: reduce) { .mascot .glow, .mascot .door { animation: none; } }
+
+/* Time to cook today (top of Recipes) */
+.time-card { padding: 18px; margin-bottom: 14px; background: color-mix(in srgb, #f4af30 14%, var(--surface)); }
+.time-card h2 { font-size: 1.12rem; margin: 0 0 12px; }
+.time-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.time-sub { margin: 14px 0 8px; }
+.prep-chip { display: inline-flex; flex-direction: column; align-items: flex-start; text-align: left; line-height: 1.15; padding-top: 8px; padding-bottom: 8px; border-radius: 16px; }
+.prep-chip small { font-size: .7rem; font-weight: 500; opacity: .75; margin-top: 2px; }
+.time-card.folded { padding: 10px 10px 10px 16px; }
+.time-summary { display: flex; align-items: center; gap: 10px; font-size: .92rem; }
+.time-summary #time-summary-text { flex: 1; }
+.time-clock { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #f4af30; color: #fdf6ea; flex: none; }
