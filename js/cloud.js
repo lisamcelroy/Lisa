@@ -103,12 +103,13 @@ function channel(ref, { getBody, onRemote, onStatus }) {
  *   onShared(remote, first)     a newer shared copy arrived
  *   onStatus(status)            "connecting" | "saved" | "saving" | "offline" | "local" | "readonly"
  *   householdId                 shared kitchen to open straight away, if any
+ * @param {{db, user}} [backend]   storage to use instead of claude.ai's (the hosted site's accounts)
  */
-export async function connectCloud({ getPersonal, onPersonal, getShared, onShared, onStatus, householdId }) {
+export async function connectCloud({ getPersonal, onPersonal, getShared, onShared, onStatus, householdId }, backend) {
   const claude = globalThis.claude;
-  if (!claude?.use) return null;
+  if (!backend && !claude?.use) return null;
 
-  const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+  const [db, user] = backend ? [backend.db, backend.user] : await Promise.all([claude.use("db"), claude.use("user")]);
   const uid = user ? await user.id().catch(() => null) : null;
   if (!db || !uid) {
     onStatus("local");
@@ -145,7 +146,20 @@ export async function connectCloud({ getPersonal, onPersonal, getShared, onShare
       return snap.exists ? snap.data() : null;
     },
     async createHousehold(id, body) {
+      if (db.createHousehold) return db.createHousehold(id, body, uid);
       await householdRef(id).set(body);
+    },
+    /** Join with a code; resolves the shared kitchen, or null if there's none to join. */
+    async joinHousehold(id) {
+      if (db.joinHousehold) return db.joinHousehold(id, uid);
+      return api.readHousehold(id);
+    },
+    /** Stop saving (signed out). */
+    stop() {
+      personal.stop();
+      shared?.stop();
+      shared = null;
+      sharedId = null;
     },
     /** May this person write shared data? true, false, or null (not told). */
     async canWrite() {

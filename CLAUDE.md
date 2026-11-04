@@ -46,8 +46,11 @@ current ones: `sample` (with `images: true`), `db`, `user` and `downloads` (for 
   they need edit (Contributor) access to the artifact from the claude.ai Share menu to write.
   Writes are last-writer-wins on the whole doc. "Stop sharing" keeps a personal copy.
 - Also hosted on Netlify from this repo (`netlify.toml`: no build, runs `npm test` first, no-cache
-  headers). There the app has no `window.claude`, so it saves in the browser only, sharing is off,
-  and Claude needs an API key in Settings.
+  headers). There the app has no `window.claude`. Accounts come from Firebase (`js/firebase.js`,
+  config in `js/firebase-config.js`, rules in `firestore.rules`): sign in with Google or email,
+  then the same cloud.js saving and sharing run on Firestore (same paths: `data/users/<uid>/kitchen`,
+  `households/<CODE>` with a `members` list). Until the config is filled in it saves in the browser
+  only. Claude needs an API key in Settings there. On claude.ai the Firebase SDK never loads.
 - Keep the storage key `fridgemate:v1` (from the app's first name) so existing kitchens load.
 
 ## Files

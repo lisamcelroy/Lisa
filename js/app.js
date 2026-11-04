@@ -6,6 +6,7 @@ import { parseRecipeText } from "./recipeImport.js";
 import { recommend, cookRecipe, daysLeft, SOON_DAYS } from "./recommend.js";
 import { loadState, saveState, makeItem, addToInventory, newId, toSynced, adoptRemote, mergeOnLoad, toKitchen, adoptKitchen, toPersonal, adoptSettings, newHouseholdCode, cleanCode, showCode } from "./store.js";
 import { connectCloud } from "./cloud.js";
+import { accountsAvailable, startAccounts, backendFor, signInWithGoogle, signInWithEmail, createAccount, resetPassword, signOut } from "./firebase.js";
 import { renderAppliances } from "./fridge.js";
 import { needsDefrost, defrostHint, defrostTo, moveItem, takeOutBy } from "./frozen.js";
 import { MEAL_ORDER, DAY_NAMES, mealSchedule, timesFor, mealStart, currentMeal, windowLabel } from "./mealtimes.js";
@@ -34,6 +35,7 @@ const folded = () => new Set(state.settings.collapsed || []);
 // claude.ai, to the person's private saved copy (see cloud.js).
 const sessionStart = Date.now();
 let cloud = null;
+let account = null; // { uid, email, name } on the hosted site when signed in
 
 function persist() {
   state.updatedAt = Date.now();
@@ -375,6 +377,7 @@ setInterval(() => {
 }, 60000);
 
 function renderHome() {
+  renderHomeAccount();
   const name = (state.settings.name || "").trim();
   $("#hello").textContent = name ? `${greeting()}, ${name}` : greeting();
   renderSleepLine();
@@ -2037,6 +2040,85 @@ $("#mt-rows").addEventListener("click", (e) => {
   renderMealTimes();
 });
 
+// ---------- Account (hosted site only) ----------
+
+function renderAccountSection() {
+  const wrap = $("#account-wrap");
+  if (!wrap) return;
+  wrap.hidden = !accountsAvailable();
+  if (wrap.hidden) return;
+  const el = $("#account-section");
+  if (account) {
+    el.innerHTML = `
+      <div class="share-on">
+        <span class="share-dot" aria-hidden="true"></span>
+        <div><b>Signed in${account.email ? ` as ${esc(account.email)}` : ""}</b><span class="muted small">Your kitchen saves to your account and follows you to any device.</span></div>
+      </div>
+      <button type="button" class="btn small" data-acct="signout">Sign out</button>`;
+    return;
+  }
+  el.innerHTML = `
+    <p class="muted small">Sign in to save your kitchen to your account, use it on any device, and share it with your family.</p>
+    <button type="button" class="btn google-btn" data-acct="google">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.3-1.6 3.9-5.4 3.9-3.3 0-5.9-2.7-5.9-6s2.7-6 5.9-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.5 14.6 2.5 12 2.5 6.8 2.5 2.6 6.7 2.6 12s4.2 9.5 9.4 9.5c5.4 0 9-3.8 9-9.2 0-.6-.1-1.1-.2-1.6H12z"/></svg>
+      Continue with Google</button>
+    <p class="muted small acct-or">or use email</p>
+    <div class="acct-fields">
+      <input id="acct-email" type="email" autocomplete="email" placeholder="Email" aria-label="Email" />
+      <input id="acct-pass" type="password" autocomplete="current-password" placeholder="Password (6 or more characters)" aria-label="Password" />
+      <div class="row">
+        <button type="button" class="btn primary" data-acct="signin">Sign in</button>
+        <button type="button" class="btn" data-acct="create">Create account</button>
+      </div>
+      <button type="button" class="btn small link-btn" data-acct="reset">Forgot password?</button>
+    </div>
+    <p class="small acct-msg" id="acct-msg" role="status" aria-live="polite"></p>`;
+}
+
+$("#account-section").addEventListener("click", async (e) => {
+  const act = e.target.closest("[data-acct]")?.dataset.acct;
+  if (!act) return;
+  const msg = (text) => { const m = $("#acct-msg"); if (m) m.textContent = text; };
+  const email = $("#acct-email")?.value || "";
+  const pass = $("#acct-pass")?.value || "";
+  const btn = e.target.closest("button");
+  btn.disabled = true;
+  let err = "";
+  if (act === "google") err = await signInWithGoogle();
+  if (act === "signin") err = await signInWithEmail(email, pass);
+  if (act === "create") err = await createAccount(email, pass);
+  if (act === "reset") {
+    if (!email.trim()) err = "Type your email first, then tap Forgot password.";
+    else {
+      err = await resetPassword(email);
+      if (!err) msg("Check your email for a link to set a new password.");
+    }
+  }
+  if (act === "signout" && confirm("Sign out on this device? Your kitchen stays saved in your account.")) err = await signOut();
+  btn.disabled = false;
+  if (err) msg(err);
+  else if (act !== "reset" && act !== "signout") toast("Signed in. Your kitchen is saving to your account.");
+});
+
+// Home: a gentle nudge to sign in on the hosted site.
+function renderHomeAccount() {
+  const el = $("#home-account");
+  if (!el) return;
+  el.innerHTML = accountsAvailable() && !account
+    ? `<div class="card account-nudge">
+        <span class="supply-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="8.5" r="3.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <span class="supply-text"><b>Save your kitchen to an account</b><br><span class="muted small">Use it on any device and share it with your family.</span></span>
+        <button class="btn small primary" data-open-account>Sign in</button>
+      </div>`
+    : "";
+}
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("[data-open-account]")) return;
+  $("#open-settings").click();
+  setTimeout(() => $("#account-wrap")?.scrollIntoView({ block: "start", behavior: "smooth" }), 80);
+});
+
 // ---------- Share the kitchen with family ----------
 
 async function renderShareSection() {
@@ -2044,7 +2126,9 @@ async function renderShareSection() {
   if (!el) return;
   const id = state.settings.householdId;
   if (!cloud) {
-    el.innerHTML = `<p class="muted small">Sharing works when the app is opened on claude.ai. Here your kitchen is saved on this device only.</p>`;
+    el.innerHTML = accountsAvailable()
+      ? `<p class="muted small">Sign in above to share your kitchen with your family.</p>`
+      : `<p class="muted small">Sharing works when the app is opened on claude.ai. Here your kitchen is saved on this device only.</p>`;
     return;
   }
   if (id) {
@@ -2056,9 +2140,11 @@ async function renderShareSection() {
       </div>
       <div class="share-code-row"><span class="share-code" aria-label="Share code">${showCode(id)}</span><button type="button" class="btn small" data-share="copy">Copy code</button></div>
       ${write === false || syncStatus === "readonly" ? `<p class="small share-warn">You can see this kitchen but not change it. Ask whoever shared it to give you edit access in the Share menu.</p>` : ""}
-      <ol class="share-steps small">
+      <ol class="share-steps small">${account ? `
+        <li>Send your family member this site: <b>${esc(location.host)}</b></li>
+        <li>They sign in (their own account), go to <b>Settings</b>, and enter the code <b>${showCode(id)}</b> under "Join a shared kitchen".</li>` : `
         <li>Open the <b>Share</b> menu for this app on claude.ai and invite your family member. Let them <b>edit</b>, so they can add food and plan meals.</li>
-        <li>They open the app, go to <b>Settings</b>, and enter the code <b>${showCode(id)}</b> under "Join a shared kitchen".</li>
+        <li>They open the app, go to <b>Settings</b>, and enter the code <b>${showCode(id)}</b> under "Join a shared kitchen".</li>`}
       </ol>
       <button type="button" class="btn small" data-share="leave">Stop sharing on my account</button>`;
     return;
@@ -2108,7 +2194,7 @@ $("#share-section").addEventListener("click", async (e) => {
     btn.disabled = true;
     let remote = null;
     try {
-      remote = await cloud.readHousehold(id);
+      remote = await cloud.joinHousehold(id);
     } catch (err) {
       console.error(err);
     }
@@ -2137,6 +2223,7 @@ $("#share-section").addEventListener("click", async (e) => {
 
 $("#open-settings").addEventListener("click", () => {
   renderMealTimes();
+  renderAccountSection();
   renderShareSection();
   $("#set-staples").checked = state.settings.assumeStaples;
   $("#set-name").value = state.settings.name || "";
@@ -2484,8 +2571,8 @@ function setSyncStatus(status) {
 
 const sharing = () => Boolean(state.settings.householdId);
 
-connectCloud({
-  householdId: state.settings.householdId,
+const cloudHooks = {
+  get householdId() { return state.settings.householdId; },
   getPersonal: () => (sharing() ? toPersonal(state) : toSynced(state)),
   getShared: () => toKitchen(state),
   onShared(remote) {
@@ -2526,13 +2613,40 @@ connectCloud({
     if ((state.settings.name || state.settings.nameAsked) && $("#name-dialog").open) $("#name-dialog").close();
     render();
   },
-}).then((c) => {
-  cloud = c;
-  if ($("#settings-dialog").open) renderShareSection();
-}).catch((err) => {
-  console.error(err);
-  setSyncStatus("local");
-});
+};
+
+function startCloud(backend) {
+  return connectCloud(cloudHooks, backend).then((c) => {
+    cloud = c;
+    if ($("#settings-dialog").open) { renderShareSection(); renderAccountSection(); }
+    render();
+  }).catch((err) => {
+    console.error(err);
+    setSyncStatus("local");
+  });
+}
+
+// On claude.ai: its own storage. On the hosted site: the person's account, once signed in.
+if (accountsAvailable()) {
+  startAccounts((person) => {
+    const was = account?.uid;
+    account = person;
+    if (person && person.uid !== was) {
+      cloud?.stop();
+      cloud = null;
+      startCloud(backendFor(person));
+    }
+    if (!person && was) {
+      cloud?.stop();
+      cloud = null;
+      setSyncStatus("local");
+    }
+    if ($("#settings-dialog").open) { renderAccountSection(); renderShareSection(); }
+    render();
+  }).catch((err) => console.error("Accounts unavailable", err));
+} else {
+  startCloud();
+}
 
 // Save immediately when the page is hidden or closed.
 addEventListener("pagehide", () => cloud?.flush());

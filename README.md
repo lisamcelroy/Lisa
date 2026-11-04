@@ -142,6 +142,17 @@ The repo includes `netlify.toml`, so Netlify needs no settings: connect the GitH
 (Add new site, Import an existing project, GitHub, this repo) and deploy. Every push to the
 main branch then republishes the site automatically, after the tests pass.
 
-On the hosted site the kitchen is saved in each browser. Saving to an account and sharing a
-kitchen work on the claude.ai version; Claude recipe ideas and photo reading need an Anthropic
-API key in Settings.
+### Accounts and sharing on the hosted site (Firebase)
+
+The hosted site uses Firebase (free) for sign-in and saving. Until it is set up, the hosted site
+saves in the browser only.
+
+1. Create a project at console.firebase.google.com (Google Analytics not needed).
+2. Build, Authentication, Get started: turn on **Google** and **Email/Password**. Under
+   Settings, Authorized domains, add `insidemykitchen.netlify.app`.
+3. Build, Firestore Database, Create database (production mode, any nearby location). Open its
+   **Rules** tab, replace everything with the contents of `firestore.rules`, and Publish.
+4. Project settings (gear), Your apps, add a **Web** app. Copy the `firebaseConfig` values into
+   `js/firebase-config.js` and push; Netlify redeploys on its own.
+
+Claude recipe ideas and photo reading on the hosted site need an Anthropic API key in Settings.

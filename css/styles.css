@@ -1307,3 +1307,13 @@ body.searching #rec-book > .fold .chev { display: none; }
 
 /* Backups */
 .backup-dialog textarea { width: 100%; box-sizing: border-box; font: .78rem/1.4 ui-monospace, Menlo, monospace; min-height: 180px; }
+
+/* Account (hosted site) */
+.account-section .google-btn { display: inline-flex; align-items: center; gap: 10px; background: #fff; color: #3c4043; border: 1px solid #dadce0; font-weight: 700; }
+.acct-or { margin: 12px 0 8px; }
+.acct-fields { display: flex; flex-direction: column; gap: 8px; }
+.acct-fields .row { gap: 8px; }
+.link-btn { align-self: flex-start; background: none; border: 0; padding: 4px 0; text-decoration: underline; color: var(--muted); }
+.acct-msg { color: #9f4a5c; font-weight: 700; margin: 8px 0 0; min-height: 1em; }
+.account-section .share-on + .btn { margin-top: 10px; }
+.account-nudge { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
