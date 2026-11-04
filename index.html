@@ -334,6 +334,8 @@
   <dialog id="away-dialog" class="away-dialog"><div id="away-detail"></div></dialog>
   <dialog id="restock-dialog" class="restock-dialog"><div id="restock-detail"></div></dialog>
 
+  <dialog id="backup-dialog" class="backup-dialog"><div id="backup-detail"></div></dialog>
+
   <dialog id="settings-dialog">
     <form method="dialog" class="settings">
       <h2>Settings</h2>
@@ -352,7 +354,9 @@
       <h3>Your data</h3>
       <div class="row">
         <button class="btn" type="button" id="export-data">Export backup</button>
-        <label class="btn file-btn"><input type="file" accept="application/json" id="import-data" hidden />Import backup</label>
+        <button class="btn" type="button" id="copy-data">Copy backup</button>
+        <label class="btn file-btn"><input type="file" accept="application/json,.json" id="import-data" hidden />Import backup</label>
+        <button class="btn" type="button" id="paste-data">Paste backup</button>
         <button class="btn danger" type="button" id="reset-data">Clear everything</button>
       </div>
       <div class="row end"><button class="btn primary" value="close">Done</button></div>

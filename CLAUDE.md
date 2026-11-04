@@ -31,7 +31,7 @@ trip a shell safety check.
 Live (private) at https://claude.ai/artifact/Y9cQDkigxbgmJixeDpFKjp. Update it by publishing
 `index.html` with the Artifact tool and listing changed files in `files`, for example
 `{"css/styles.css": "css/styles.css", "js/app.js": "js/app.js"}`. Omit `capabilities` to keep the
-current ones: `sample` (with `images: true`), `db` and `user`.
+current ones: `sample` (with `images: true`), `db`, `user` and `downloads` (for Export backup).
 
 - `sample`: on claude.ai the page asks Claude through the viewer's own account (recipe ideas,
   receipt and recipe photos). Outside claude.ai it falls back to an API key in Settings, then to
@@ -164,4 +164,7 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   (`defrostHours` in `js/frozen.js`: chicken 24h, shrimp 8h, bread 2h...). Each reminder has a tick:
   ticking moves the food to the fridge, unticking puts it back (`state.defrostLog`, synced).
 - Days out are set in a calendar dialog (next five weeks); tap a day to mark it, tap again to undo.
+- Backups (Settings, Your data): Export backup saves a .json file (through the `downloads` capability
+  on claude.ai, a normal download elsewhere); Copy backup puts the same text on the clipboard; Import
+  backup or Paste backup restores it. Backups never include the API key or share code.
 - Calories are estimates; say so in the UI.

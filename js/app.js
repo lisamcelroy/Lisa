@@ -2158,29 +2158,101 @@ $("#set-apikey").addEventListener("input", (e) => {
   if (e.target.value.trim()) $("#set-useclaude").checked = true;
 });
 
-$("#export-data").addEventListener("click", () => {
-  const { apiKey, ...settings } = state.settings;
-  const blob = new Blob([JSON.stringify({ ...state, settings }, null, 2)], { type: "application/json" });
+// ---------- Backups ----------
+// Export saves a .json file (on claude.ai through its download prompt), Copy puts
+// the same text on the clipboard, and Import or Paste restores it on another device.
+
+function backupText() {
+  const { apiKey, householdId, ...settings } = state.settings;
+  return JSON.stringify({ app: "Inside my Kitchen", exportedAt: new Date().toISOString(), ...state, settings }, null, 2);
+}
+const backupName = () => `inside-my-kitchen-backup-${isoDay(new Date())}.json`;
+
+$("#export-data").addEventListener("click", async () => {
+  const text = backupText();
+  const downloads = globalThis.claude?.use ? await globalThis.claude.use("downloads").catch(() => null) : null;
+  if (downloads) {
+    try {
+      await downloads.save({ filename: backupName(), data: text });
+      return toast("Backup saved");
+    } catch (err) {
+      if (err?.code === "declined") return;
+      if (err?.code === "rate_limited") return toast("One moment, then try again");
+      console.error(err);
+      return showBackupText(text, "Saving a file isn't available here, so here's your backup to copy instead.");
+    }
+  }
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `fridgeforme-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  a.download = backupName();
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast("Backup downloaded");
 });
+
+$("#copy-data").addEventListener("click", async () => {
+  const text = backupText();
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("Backup copied. Paste it into Paste backup on your other device.");
+  } catch {
+    showBackupText(text, "Copying isn't allowed here. Select all the text below and copy it.");
+  }
+});
+
+$("#paste-data").addEventListener("click", () => showBackupText("", ""));
+
+// One dialog for both: showing a backup to copy, or pasting one in to restore.
+function showBackupText(text, note) {
+  const restoring = !text;
+  const dlg = $("#backup-dialog");
+  $("#backup-detail").innerHTML = `
+    <h2>${restoring ? "Paste a backup" : "Your backup"}</h2>
+    <p class="muted small">${restoring ? "Paste the backup text you copied from the other device, then tap Restore. This replaces what's here." : esc(note)}</p>
+    <textarea id="backup-text" rows="10" spellcheck="false" ${restoring ? `placeholder="Paste here"` : "readonly"}></textarea>
+    <div class="row end">
+      <button type="button" class="btn" data-backup="close">${restoring ? "Cancel" : "Done"}</button>
+      ${restoring ? `<button type="button" class="btn primary" data-backup="restore">Restore</button>` : `<button type="button" class="btn primary" data-backup="select">Select all</button>`}
+    </div>`;
+  $("#backup-text").value = text;
+  dlg.onclick = (e) => {
+    const act = e.target.closest("[data-backup]")?.dataset.backup;
+    if (e.target === dlg || act === "close") return dlg.close();
+    if (act === "select") {
+      const ta = $("#backup-text");
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      try { document.execCommand("copy") && toast("Copied"); } catch {}
+    }
+    if (act === "restore" && restoreBackup($("#backup-text").value)) dlg.close();
+  };
+  if (!dlg.open) dlg.showModal();
+  if (!restoring) setTimeout(() => $("#backup-text").select(), 50);
+}
+
+function restoreBackup(text) {
+  try {
+    const data = JSON.parse(text);
+    if (!Array.isArray(data.inventory)) throw new Error("bad file");
+    const { app, exportedAt, ...rest } = data;
+    const { householdId, ...settings } = rest.settings || {};
+    state = { ...state, ...rest, settings: { ...state.settings, ...settings, apiKey: state.settings.apiKey } };
+    state.ideas ||= { key: "", recipes: [] };
+    state.inventory = state.inventory || [];
+    commit();
+    toast(`Backup restored: ${state.inventory.length} item${state.inventory.length === 1 ? "" : "s"} in your kitchen`);
+    return true;
+  } catch {
+    toast("That doesn't look like an Inside my Kitchen backup");
+    return false;
+  }
+}
 
 $("#import-data").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   e.target.value = "";
-  if (!file) return;
-  try {
-    const data = JSON.parse(await file.text());
-    if (!Array.isArray(data.inventory)) throw new Error("bad file");
-    state = { ...state, ...data, settings: { ...state.settings, ...(data.settings || {}), apiKey: state.settings.apiKey } };
-    commit();
-    toast("Backup restored");
-  } catch {
-    toast("That doesn't look like a Inside my Kitchen backup");
-  }
+  if (file) restoreBackup(await file.text());
 });
 
 $("#reset-data").addEventListener("click", () => {

@@ -1304,3 +1304,6 @@ body.searching #rec-book > .fold .chev { display: none; }
 .share-steps li + li { margin-top: 6px; }
 .share-warn { color: #9f4a5c; font-weight: 700; }
 .share-join input::placeholder { text-transform: none; letter-spacing: 0; }
+
+/* Backups */
+.backup-dialog textarea { width: 100%; box-sizing: border-box; font: .78rem/1.4 ui-monospace, Menlo, monospace; min-height: 180px; }
