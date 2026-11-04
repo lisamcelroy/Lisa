@@ -1,12 +1,13 @@
 import { FOODS, LOCATIONS } from "./data/foods.js";
 import { RECIPES } from "./data/recipes.js";
-import { canonicalName, titleCase, foodInfo, matchFood } from "./normalize.js";
+import { canonicalName, titleCase, foodInfo, matchFood, satisfies } from "./normalize.js";
 import { parseReceipt } from "./receipt.js";
 import { parseRecipeText } from "./recipeImport.js";
 import { recommend, cookRecipe, daysLeft, SOON_DAYS } from "./recommend.js";
 import { loadState, saveState, makeItem, addToInventory, newId, toSynced, adoptRemote, mergeOnLoad } from "./store.js";
 import { connectCloud } from "./cloud.js";
 import { renderAppliances } from "./fridge.js";
+import { needsDefrost, defrostHint, defrostTo, moveItem } from "./frozen.js";
 import { foodIcon } from "./icons.js";
 import { estimateCalories } from "./nutrition.js";
 import { KEYWORDS, KEYWORD_IDS, KEYWORD_LABEL, keywordsFor } from "./data/keywords.js";
@@ -75,6 +76,7 @@ function renderFridge() {
     ? `${nonSpice("fridge")} in the fridge, ${nonSpice("freezer")} in the freezer, ${nonSpice("pantry")} in the pantry, ${spices} seasoning${spices === 1 ? "" : "s"}` + (soon ? `. ${soon} to use soon.` : ".")
     : "Empty for now. Add food or scan a receipt to stock it up.";
   $$("#appliance-filter .chip").forEach((c) => c.classList.toggle("active", c.dataset.show === ui.show));
+  renderDefrostBanner();
   const { fridge, pantry, rack } = renderAppliances(inv);
   const box = $("#appliances");
   box.classList.toggle("both", ui.show === "both");
@@ -110,6 +112,8 @@ function renderItemDialog() {
     <div class="food-bubble big-bubble" style="--food:${color}">${svg}</div>
     <h2>${esc(item.name)}</h2>
     <p class="muted small">${esc(item.category)}${expiryText(item) ? " &middot; " + expiryText(item) : ""}</p>
+    ${needsDefrost(item) ? `<p class="defrost-note">Frozen. Defrost before using: ${esc(defrostHint(item))}.</p>` : ""}
+    ${item.defrostedAt && !needsDefrost(item) ? `<p class="thawed-note">Defrosted ${esc(new Date(item.defrostedAt).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }))}. Don't refreeze it raw.</p>` : ""}
     <div class="stepper">
       <button class="step" data-act="dec" aria-label="Less">&minus;</button>
       <span class="qty">${esc(formatQty(item.qty, item.unit))}</span>
@@ -119,6 +123,7 @@ function renderItemDialog() {
       ${LOCATIONS.map((l) => `<button class="chip loc-${l} ${l === item.location ? "active" : ""}" data-move="${l}">${titleCase(l)}</button>`).join("")}
     </div>
     <div class="row end">
+      ${needsDefrost(item) ? `<button class="btn defrost-btn" data-act="defrost">Defrost it</button>` : ""}
       <button class="btn danger" data-act="usedup">Used it up</button>
       <button class="btn" data-act="recipes">Recipes with this</button>
       <button class="btn primary" data-act="close">Done</button>
@@ -147,7 +152,14 @@ $("#item-dialog").addEventListener("click", (e) => {
     $("#recipe-search").value = item.name;
     return switchTab("recipes");
   }
-  if (move) item.location = move;
+  if (move || act === "defrost") {
+    const to = move || defrostTo(item);
+    replaceItem(moveItem(item, to));
+    if (act === "defrost") toast(`${titleCase(item.name)} is defrosting in the ${to}. Use within ${daysLeft(state.inventory.find((it) => it.id === item.id))} days.`);
+    else if (to === "freezer") toast(`${titleCase(item.name)} frozen. It will need defrosting before you use it.`);
+    commit();
+    return renderItemDialog();
+  }
   if (act === "inc") item.qty = +(item.qty + stepAmount(item)).toFixed(2);
   if (act === "dec") item.qty = +(item.qty - stepAmount(item)).toFixed(2);
   if (act === "usedup" || item.qty <= 0) {
@@ -159,6 +171,82 @@ $("#item-dialog").addEventListener("click", (e) => {
     commit();
     renderItemDialog();
   }
+});
+
+// ---------- Frozen food ----------
+
+function replaceItem(next) {
+  state.inventory = state.inventory.map((it) => (it.id === next.id ? next : it));
+}
+
+/** The frozen item that would be used for a recipe ingredient. */
+function frozenItemFor(ingredient) {
+  return state.inventory.find((it) => needsDefrost(it) && satisfies(it.name, ingredient));
+}
+
+/** What's actually in the freezer for these ingredients ("chicken" -> "chicken breast"). */
+function frozenNames(ingredients) {
+  return [...new Set(ingredients.map((n) => frozenItemFor(n)?.name || n))];
+}
+
+/** Defrost one frozen item for each ingredient name. */
+function defrostFor(ingredients) {
+  const done = [];
+  for (const ing of ingredients) {
+    const item = frozenItemFor(ing);
+    if (!item) continue;
+    replaceItem(moveItem(item, defrostTo(item)));
+    done.push(item.name);
+  }
+  if (done.length) {
+    commit();
+    toast(`Defrosting: ${done.join(", ")}`);
+  }
+}
+
+/** Planned meals today and tomorrow that need something taken out of the freezer. */
+function defrostReminders() {
+  const out = [];
+  for (const offset of [0, 1]) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + offset);
+    const iso = isoDay(d);
+    for (const meal of MEALS) {
+      const id = state.plan[iso]?.[meal]?.recipeId;
+      const recipe = id && findRecipe(id);
+      if (!recipe) continue;
+      const [r] = recommend([recipe], state.inventory, { assumeStaples: state.settings.assumeStaples });
+      if (r.frozen.length) out.push({ iso, when: offset ? "tomorrow" : "today", meal, title: recipe.title, frozen: r.frozen });
+    }
+  }
+  return out;
+}
+
+function defrostNote(iso) {
+  const due = defrostReminders().filter((x) => x.iso === iso);
+  if (!due.length) return "";
+  const names = [...new Set(due.flatMap((x) => x.frozen))];
+  const shown = frozenNames(names);
+  const when = due[0].when === "today" ? "now" : "tonight";
+  return `<div class="defrost-reminder"><span>Defrost ${when}: <b>${esc(shown.join(", "))}</b></span>
+    <button class="btn small" data-defrost="${esc(names.join("|"))}">Defrost</button></div>`;
+}
+
+function renderDefrostBanner() {
+  const due = defrostReminders();
+  $("#defrost-banner").innerHTML = due.length
+    ? `<div class="card defrost-card">
+        <h2>Take out of the freezer</h2>
+        ${due.map((x) => `<div class="defrost-row"><span><b>${esc(frozenNames(x.frozen).join(", "))}</b> for ${x.when}'s ${esc(MEAL_LABEL[x.meal].toLowerCase())} (${esc(x.title)})</span>
+          <button class="btn small" data-defrost="${esc(x.frozen.join("|"))}">Defrost</button></div>`).join("")}
+      </div>`
+    : "";
+}
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-defrost]");
+  if (btn) defrostFor(btn.dataset.defrost.split("|"));
 });
 
 // ---------- Spice rack ----------
@@ -302,7 +390,7 @@ $("#inventory").addEventListener("change", (e) => {
   if (e.target.dataset.action !== "move") return;
   const item = state.inventory.find((it) => it.id === e.target.closest(".item").dataset.id);
   if (item) {
-    item.location = e.target.value;
+    replaceItem(moveItem(item, e.target.value));
     commit();
   }
 });
@@ -445,7 +533,7 @@ function fromReceiptParse(parsed) {
     unit: p.unit,
     raw: p.raw,
     food: p.food,
-    location: p.food?.location || "fridge",
+    location: p.frozen ? "freezer" : p.food?.location || "fridge",
   }));
 }
 
@@ -617,6 +705,7 @@ function recipeCard(r) {
     ${kwPills(r.recipe, 3)}
     <div class="meter" aria-label="${pct}% of ingredients on hand"><div style="width:${pct}%"></div></div>
     ${r.usesSoon.length ? `<div class="rescue">Uses up: ${esc(r.usesSoon.join(", "))}</div>` : ""}
+    ${r.frozen.length ? `<div class="defrost">Defrost first: ${esc(frozenNames(r.frozen).join(", "))}</div>` : ""}
     <div class="missing">${r.missing.length ? `Need: <b>${esc(r.missing.join(", "))}</b>` : "You have everything"}</div>
   </button>`;
 }
@@ -722,12 +811,14 @@ function openRecipe(id) {
     <h2>${esc(recipe.title)}</h2>
     <p class="muted">${recipe.minutes} min &middot; serves ${recipe.servings}${kcalText(recipe) ? ` &middot; <span class="kcal" title="Estimated per serving from the ingredients, without optional extras">${kcalText(recipe)} per serving</span>` : ""}${r.usesSoon.length ? ` &middot; <span class="rescue">uses up ${esc(r.usesSoon.join(", "))}</span>` : ""}</p>
     ${kwPills(recipe)}
+    ${r.frozen.length ? `<p class="defrost-note">Defrost first: ${r.frozen.map((n) => `${esc(frozenItemFor(n)?.name || n)} (${esc(defrostHint(frozenItemFor(n) || { name: n }))})`).join(", ")}.</p>` : ""}
     <h3>Ingredients</h3>
     <ul class="ing-list">
       ${recipe.ingredients.map((ing) => {
         const cls = have.has(ing.name) ? "ok" : missing.has(ing.name) ? "no" : "opt";
         const mark = cls === "ok" ? "&#10003;" : cls === "no" ? "&#10007;" : "&middot;";
-        return `<li><span class="${cls}">${mark}</span><span>${esc(formatQty(ing.qty, ing.unit))} ${esc(ing.name)}${ing.optional ? ' <span class="muted">(optional)</span>' : ""}</span></li>`;
+        const ice = r.frozen.includes(ing.name) ? ' <span class="ice-tag">frozen</span>' : "";
+        return `<li><span class="${cls}">${mark}</span><span>${esc(formatQty(ing.qty, ing.unit))} ${esc(ing.name)}${ing.optional ? ' <span class="muted">(optional)</span>' : ""}${ice}</span></li>`;
       }).join("")}
     </ul>
     <h3>Steps</h3>
@@ -981,6 +1072,7 @@ function renderPlan() {
         <div><b>${d.toLocaleDateString(undefined, { weekday: "long" })}</b> <span class="muted small">${dayMonth(d)}${iso === today ? " &middot; today" : ""}</span></div>
         ${c.meals ? `<span class="day-kcal">${c.known ? "" : "at least "}~${c.total} kcal</span>` : ""}
       </div>
+      ${defrostNote(iso)}
       <div class="slots">
         ${MEALS.map((m) => {
           const e = day[m];

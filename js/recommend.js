@@ -2,6 +2,7 @@
 import { FOOD_BY_NAME } from "./data/foods.js";
 import { satisfies } from "./normalize.js";
 import { subtract } from "./units.js";
+import { needsDefrost } from "./frozen.js";
 
 const DAY = 24 * 60 * 60 * 1000;
 export const SOON_DAYS = 3;
@@ -30,13 +31,15 @@ export function recommend(recipes, inventory, { assumeStaples = true, now = Date
     const missing = [];
     const optionalHave = [];
     const usesSoon = new Set();
+    const frozen = []; // required ingredients we only have frozen
 
     for (const ing of recipe.ingredients) {
       const matches = stocked.filter((it) => satisfies(it.name, ing.name));
       const staple = isStaple(ing.name);
       if (matches.length) {
         (ing.optional ? optionalHave : have).push(ing.name);
-        for (const m of matches) if (daysLeft(m, now) <= SOON_DAYS) usesSoon.add(m.name);
+        for (const m of matches) if (daysLeft(m, now) <= SOON_DAYS && !needsDefrost(m)) usesSoon.add(m.name);
+        if (!ing.optional && matches.every(needsDefrost)) frozen.push(ing.name);
       } else if (staple && assumeStaples) {
         // treated as on hand; not counted either way
       } else if (!ing.optional) {
@@ -49,9 +52,9 @@ export function recommend(recipes, inventory, { assumeStaples = true, now = Date
     // Fewer missing items first, then recipes that rescue food about to spoil,
     // then overall coverage, with a small nudge for optional extras on hand.
     const score =
-      coverage * 100 - missing.length * 15 + usesSoon.size * 12 + optionalHave.length * 2 + (have.length ? 0 : -100);
+      coverage * 100 - missing.length * 15 + usesSoon.size * 12 + optionalHave.length * 2 - frozen.length * 4 + (have.length ? 0 : -100);
 
-    return { recipe, have, missing, optionalHave, usesSoon: [...usesSoon], coverage, score };
+    return { recipe, have, missing, optionalHave, usesSoon: [...usesSoon], frozen, coverage, score };
   });
 
   return results.sort((a, b) => b.score - a.score || a.recipe.minutes - b.recipe.minutes);
@@ -70,7 +73,7 @@ export function cookRecipe(recipe, inventory, servingsFactor = 1) {
     // Prefer the item that expires first.
     const candidates = next
       .filter((it) => satisfies(it.name, ing.name) && it.qty > 0)
-      .sort((a, b) => (a.expiresAt || Infinity) - (b.expiresAt || Infinity));
+      .sort((a, b) => needsDefrost(a) - needsDefrost(b) || (a.expiresAt || Infinity) - (b.expiresAt || Infinity));
     if (!candidates.length) continue;
     const item = candidates[0];
     const left = subtract(item.qty, item.unit, ing.qty * servingsFactor, ing.unit);

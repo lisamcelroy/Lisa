@@ -1,6 +1,7 @@
 // Local persistence. Everything stays in this browser's localStorage.
 import { foodInfo, canonicalName } from "./normalize.js";
 import { normalizeUnit } from "./units.js";
+import { isFrozenText, freezerDays } from "./frozen.js";
 
 // Storage name kept from the app's first name so existing kitchens still load.
 const KEY = "fridgemate:v1";
@@ -59,14 +60,17 @@ export function makeItem({ name, qty = 1, unit = "count", location, category, ex
   // keepName: use the name exactly as given (e.g. a seasoning the catalog doesn't know, like "za'atar").
   const canonical = keepName ? String(name).trim() : canonicalName(name);
   const info = foodInfo(canonical);
-  const days = shelfLife ?? info?.shelfLife;
+  const cat = category || info?.category || "other";
+  // Saying it's frozen ("frozen salmon", receipt "FRZ") puts it in the freezer.
+  const loc = location || (isFrozenText(name) ? "freezer" : info?.location || "fridge");
+  const days = shelfLife ?? (loc === "freezer" ? freezerDays(canonical, cat) : info?.shelfLife);
   return {
     id: newId(),
     name: canonical,
     qty: Number(qty) || 1,
     unit: normalizeUnit(unit) || "count",
-    location: location || info?.location || "fridge",
-    category: category || info?.category || "other",
+    location: loc,
+    category: cat,
     addedAt: now,
     expiresAt: expiresAt ?? (days ? now + days * DAY : null),
   };

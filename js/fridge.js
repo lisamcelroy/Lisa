@@ -3,6 +3,7 @@
 import { foodIcon } from "./icons.js";
 import { daysLeft, SOON_DAYS } from "./recommend.js";
 import { formatQty } from "./units.js";
+import { needsDefrost } from "./frozen.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
@@ -63,7 +64,8 @@ function tile(item, { showQty = true } = {}) {
   const note = f === "gone" ? "expired" : f === "soon" ? (d === 0 ? "use today" : `${d}d left`) : "";
   const qty = formatQty(item.qty, item.unit);
   const style = `--food:${color};--i:${delay++}`;
-  return `<button class="food ${f}" data-id="${esc(item.id)}" style="${style}" aria-label="${esc(item.name)}, ${esc(qty)}${note ? ", " + note : ""}">
+  const ice = needsDefrost(item);
+  return `<button class="food ${f} ${ice ? "frozen" : ""}" data-id="${esc(item.id)}" style="${style}" aria-label="${esc(item.name)}, ${esc(qty)}${ice ? ", frozen, defrost before using" : ""}${note ? ", " + note : ""}">
     <span class="food-bubble">${svg}${showQty ? `<span class="food-qty">${esc(qty)}</span>` : ""}</span>
     <span class="food-name">${esc(item.name)}</span>
   </button>`;

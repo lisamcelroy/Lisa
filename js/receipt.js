@@ -1,6 +1,7 @@
 // Parse grocery receipt text (from OCR or pasted) into pantry items.
 import { matchFood, cleanText, titleCase } from "./normalize.js";
 import { normalizeUnit } from "./units.js";
+import { isFrozenText } from "./frozen.js";
 
 // Lines containing any of these are totals, payment or store chatter, not groceries.
 const SKIP_WORDS = [
@@ -92,6 +93,7 @@ export function parseReceipt(text) {
       unit,
       price,
       food,
+      frozen: isFrozenText(original) || food?.location === "freezer",
     });
   }
 
@@ -101,7 +103,7 @@ export function parseReceipt(text) {
 function mergeDuplicates(items) {
   const out = [];
   for (const item of items) {
-    const same = item.food && out.find((o) => o.food === item.food && o.unit === item.unit);
+    const same = item.food && out.find((o) => o.food === item.food && o.unit === item.unit && o.frozen === item.frozen);
     if (same) {
       same.qty += item.qty;
       if (item.price !== null) same.price = (same.price || 0) + item.price;

@@ -12,6 +12,11 @@ what is actually in your kitchen, starting with food that is about to go off.
   sauces in the door; grains, cans, sauces, a bread box and a produce basket in the pantry
 - Items that need using soon wobble with an orange ring; expired ones get a red ring
 - Tap an item to change the amount, move it, mark it used up, or see recipes that use it
+- Frozen food: say "frozen" when adding (or a receipt says FRZ) and it goes in the freezer with a
+  freezer use-by. Anything in the freezer needs defrosting before use (except things made to cook
+  from frozen, like frozen peas): it gets a frost badge, recipes say "Defrost first", and "Defrost
+  it" moves it to the fridge with a short thawed use-by. Meals planned for today or tomorrow that
+  need something frozen show a reminder to take it out in time
 - A spice rack for seasonings (cumin, paprika, oregano, cinnamon, chili flakes and more). Tap
   "Stock the rack" to tick the ones you own, or add your own. Any seasoning counts for recipes
   that just call for spices, and the List tab has its own Seasonings group

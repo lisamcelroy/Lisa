@@ -132,10 +132,12 @@ const RECIPE_SCHEMA = {
  * no quantities) so repeat requests can be served from cache.
  */
 export function buildIdeasPrompt(inventory, { soon = [], request = "", exclude = [], count = 4 } = {}) {
+  const frozen = inventory.filter((it) => it.location === "freezer").map((it) => it.name);
   const names = [...new Set(inventory.map((it) => it.name))].sort();
   return (
     `Here is what is in my kitchen: ${names.join(", ") || "nothing yet"}. ` +
     (soon.length ? `These need using up in the next few days, so favour them: ${[...soon].sort().join(", ")}. ` : "") +
+    (frozen.length ? `These are frozen and would need defrosting first: ${[...new Set(frozen)].sort().join(", ")}. ` : "") +
     (request ? `What I'm in the mood for: ${request}. ` : "") +
     (exclude.length ? `Don't repeat these, I've already seen them: ${exclude.join("; ")}. ` : "") +
     `Suggest ${count} practical, varied home recipes that use mostly what I have, ` +
