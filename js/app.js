@@ -988,7 +988,7 @@ document.addEventListener("visibilitychange", () => document.visibilityState ===
     setTimeout(() => el.remove(), reduced ? 0 : 500);
   };
   el.addEventListener("click", leave);
-  setTimeout(leave, reduced ? 900 : 2300);
+  setTimeout(leave, reduced ? 900 : 3300);
 })();
 
 $("#add-unit").innerHTML = unitOptions("count");
