@@ -50,3 +50,29 @@ test("Claude hears about everyone at the table", () => {
   assert.match(line, /small amounts.*bell pepper \(Andrey\)/);
   assert.equal(familyRequest([]), "");
 });
+
+test("allergies and diets rule out ingredients, with the reason", () => {
+  const shrimp = RECIPES.find((r) => r.id === "lemon-garlic-shrimp");
+  const fam = [{ id: "x", name: "Andrey", allergies: ["shellfish"], prefs: [] }];
+  const c = familyCheck(shrimp, fam);
+  assert.ok(c.blocked.length);
+  assert.match(familyNotes(c)[0].text, /Andrey can't have the shrimp \(shellfish allergy\)/);
+  const vegan = [{ id: "v", name: "Lisa", diets: ["vegan"], prefs: [] }];
+  assert.ok(familyCheck(byTitle("Veggie Omelette"), vegan).blocked.length, "eggs are not vegan");
+  assert.equal(familyCheck(RECIPES.find((r) => r.id === "chickpea-curry"), vegan).blocked.length, 0);
+  const keto = [{ id: "k", name: "Lisa", diets: ["keto"], prefs: [] }];
+  assert.ok(familyCheck(RECIPES.find((r) => r.id === "spaghetti-bolognese"), keto).blocked.length);
+  const gf = [{ id: "g", name: "Lisa", diets: ["glutenfree"], prefs: [] }];
+  assert.ok(familyCheck({ ingredients: [{ name: "soy sauce" }] }, gf).blocked.length, "soy sauce has wheat");
+  assert.ok(familyCheck({ ingredients: [{ name: "sourdough loaf" }] }, gf).blocked.length, "unknown wheat foods too");
+});
+
+test("salt diets give advice instead of hiding recipes", () => {
+  const low = [{ id: "s", name: "Lisa", diets: ["lowsalt"], prefs: [] }];
+  const c = familyCheck(byTitle("Veggie Omelette"), low);
+  assert.equal(c.blocked.length, 0);
+  assert.match(familyNotes(c).map((n) => n.text).join(" "), /Low salt for Lisa: skip added salt/);
+  const high = [{ id: "h", name: "Andrey", diets: ["highsalt"], prefs: [] }];
+  assert.match(familyNotes(familyCheck(byTitle("Veggie Omelette"), high)).map((n) => n.text).join(" "), /High salt for Andrey/);
+  assert.match(familyRequest([{ id: "x", name: "Andrey", allergies: ["peanuts"], diets: ["keto"], prefs: [] }]), /Andrey is allergic to peanuts.*Andrey eats keto/);
+});

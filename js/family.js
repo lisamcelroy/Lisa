@@ -1,6 +1,9 @@
 // Family food preferences: who loves, tolerates, hates or is allergic to what,
 // and what that means for a recipe. Pure functions, tested in test/family.test.js.
 import { FOOD_BY_NAME } from "./data/foods.js";
+import { ALLERGENS, DIETS, ALLERGEN_BY_ID, DIET_BY_ID } from "./data/diets.js";
+
+export { ALLERGENS, DIETS };
 
 export const LEVELS = [
   { id: "allergic", label: "Allergic", hint: "Never in a meal" },
@@ -33,8 +36,24 @@ export const pruneAway = (away = [], today) => away.filter((d) => d >= today).so
  * loves: someone loves an ingredient in it.
  */
 export function familyCheck(recipe, family = [], day) {
-  const out = { blocked: [], leaveOut: [], tolerate: [], loves: [] };
+  const out = { blocked: [], leaveOut: [], tolerate: [], loves: [], advice: [] };
   for (const m of eating(family, day)) {
+    // Allergies and diets rule ingredients out, like "allergic" and "hates" do.
+    const rules = [
+      ...(m.allergies || []).map((id) => ALLERGEN_BY_ID[id] && { test: ALLERGEN_BY_ID[id].test, level: "allergic", why: `${ALLERGEN_BY_ID[id].label.toLowerCase()} allergy` }),
+      ...(m.diets || []).map((id) => DIET_BY_ID[id]?.rule === "avoid" && { test: DIET_BY_ID[id].test, level: "diet", why: DIET_BY_ID[id].label.toLowerCase() }),
+    ].filter(Boolean);
+    for (const rule of rules) {
+      for (const ing of recipe.ingredients || []) {
+        if (!rule.test(ing.name)) continue;
+        (ing.optional ? out.leaveOut : out.blocked).push({ who: m.name, food: ing.name, level: rule.level, why: rule.why });
+      }
+    }
+    if ((m.diets || []).includes("lowsalt")) {
+      const salty = (recipe.ingredients || []).filter((i) => DIET_BY_ID.lowsalt.test(i.name)).map((i) => i.name);
+      out.advice.push({ who: m.name, kind: "lowsalt", foods: salty });
+    }
+    if ((m.diets || []).includes("highsalt")) out.advice.push({ who: m.name, kind: "highsalt", foods: [] });
     for (const p of m.prefs || []) {
       for (const ing of recipe.ingredients || []) {
         if (!prefHits(p.food, ing.name)) continue;
@@ -58,10 +77,23 @@ export function familyNotes(check) {
     for (const h of list) m.set(h.food, [...new Set([...(m.get(h.food) || []), h.who])]);
     return [...m];
   };
-  for (const [food, who] of byFood(check.blocked)) notes.push({ kind: "blocked", text: `${names(who)} won't eat the ${food}` });
-  for (const [food, who] of byFood(check.leaveOut)) notes.push({ kind: "leave", text: `Leave out the ${food} for ${names(who)}` });
+  const whyOf = (list, food) => [...new Set(list.filter((h) => h.food === food && h.why).map((h) => h.why))];
+  for (const [food, who] of byFood(check.blocked)) {
+    const why = whyOf(check.blocked, food);
+    notes.push({ kind: "blocked", text: why.length ? `${names(who)} can't have the ${food} (${why.join(", ")})` : `${names(who)} won't eat the ${food}` });
+  }
+  for (const [food, who] of byFood(check.leaveOut)) {
+    const why = whyOf(check.leaveOut, food);
+    notes.push({ kind: "leave", text: `Leave out the ${food} for ${names(who)}${why.length ? ` (${why.join(", ")})` : ""}` });
+  }
   for (const [food, who] of byFood(check.tolerate)) notes.push({ kind: "tolerate", text: `Keep the ${food} small or on the side for ${names(who)}` });
   for (const [food, who] of byFood(check.loves)) notes.push({ kind: "loves", text: `${names(who)} ${who.length > 1 ? "love" : "loves"} the ${food}` });
+  for (const a of check.advice || []) {
+    if (a.kind === "lowsalt") notes.push({ kind: "tolerate", text: a.foods.length
+      ? `Low salt for ${a.who}: skip added salt${a.foods.filter((f) => f !== "salt").length ? ` and use low-sodium ${a.foods.filter((f) => f !== "salt").join(", ")}` : ""}`
+      : `Low salt for ${a.who}: season with herbs and lemon instead of salt` });
+    if (a.kind === "highsalt") notes.push({ kind: "loves", text: `High salt for ${a.who}: salt their portion well` });
+  }
   return notes;
 }
 
@@ -75,6 +107,12 @@ export function familyRequest(family = [], day) {
     return out;
   };
   const parts = [`I'm cooking for ${names(at.map((m) => m.name))}`];
+  for (const m of at) {
+    const allergies = (m.allergies || []).map((id) => ALLERGEN_BY_ID[id]?.label.toLowerCase()).filter(Boolean);
+    if (allergies.length) parts.push(`${m.name} is allergic to ${names(allergies)}, so never include any`);
+    const diets = (m.diets || []).map((id) => DIET_BY_ID[id]).filter(Boolean);
+    if (diets.length) parts.push(`${m.name} eats ${diets.map((d) => `${d.label.toLowerCase()} (${d.hint})`).join(", ")}`);
+  }
   const allergic = group("allergic"), hates = group("hates"), tolerates = group("tolerates"), loves = group("loves");
   if (allergic.length) parts.push(`never use these, someone is allergic: ${allergic.join(", ")}`);
   if (hates.length) parts.push(`don't use these, someone hates them: ${hates.join(", ")}`);

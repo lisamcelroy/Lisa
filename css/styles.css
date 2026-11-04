@@ -1245,3 +1245,36 @@ body.searching #rec-book > .fold .chev { display: none; }
 
 /* Fridge door: sauces and drinks in separate bins. */
 .door-bin + .door-bin { margin-top: 10px; padding-top: 10px; border-top: 3px solid color-mix(in srgb, var(--fridge-edge) 70%, transparent); }
+
+/* Family: allergies and diet */
+.member-more { margin: 4px 0 8px; border-radius: 16px; background: color-mix(in srgb, var(--accent) 6%, transparent); padding: 8px 10px; }
+.member-more > summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.member-more > summary::-webkit-details-marker { display: none; }
+.member-more > summary::after { content: ""; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin-left: auto; transition: transform .2s; }
+.member-more[open] > summary::after { transform: rotate(-135deg); }
+.member-more > summary .pref-chip { padding: 3px 10px; }
+.member-more p { margin: 10px 0 6px; }
+.health-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.health-chips .chip { padding: 6px 12px; font-size: .85rem; }
+.health-chips .chip.allergy-on { background: #9f4a5c; border-color: #9f4a5c; color: #fdf6ea; }
+.pref-chip.diet-chip { background: color-mix(in srgb, #f4af30 35%, var(--surface)); color: var(--text); }
+
+/* Sleep nudge under the greeting */
+.sleep-line { margin: 6px 0 0; font-size: .86rem; font-weight: 600; color: var(--accent); display: flex; gap: 6px; align-items: flex-start; }
+.sleep-line::before { content: ""; flex: none; width: 14px; height: 14px; margin-top: 2px; border-radius: 50%; box-shadow: inset -4px -3px 0 0 #f4af30; transform: rotate(-20deg); }
+
+/* Groceries running low */
+.supply-card { background: color-mix(in srgb, #f4af30 12%, var(--surface)); }
+.supply-card.short { border-left: 4px solid #f4af30; }
+.supply-card h2 { margin-bottom: 4px; }
+.supply-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+.supply-row + .supply-row { border-top: 1px dashed color-mix(in srgb, #f4af30 45%, transparent); }
+.supply-icon { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #f4af30; color: #fdf6ea; }
+.supply-icon.cheat { background: var(--accent); }
+.supply-text { flex: 1; min-width: 0; font-size: .92rem; }
+
+/* Rate a recipe */
+.rate-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--hair); }
+.rate-row .muted { margin-right: auto; }
+.btn.rate.on { background: #f4af30; color: var(--text); border-color: #f4af30; }
+.btn.rate.on.down { background: #9f4a5c; color: #fdf6ea; border-color: #9f4a5c; }

@@ -58,6 +58,8 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 | `js/frozen.js` | Freezer rules: "frozen" text goes to the freezer; freezer food needs defrosting unless it cooks from frozen |
 | `js/nutrition.js` | Calorie estimates per serving from ingredients (optional extras skipped) |
 | `js/family.js` | Family food preferences (allergic, hates, tolerates, loves) and what they mean for a recipe |
+| `js/data/diets.js` | Common allergies (peanuts, tree nuts, dairy, eggs, gluten, shellfish, fish, soy, sesame) and diets (vegetarian, vegan, pescatarian, keto, low carb, gluten-free, dairy-free, halal, low salt, high salt) and which ingredients each rules out |
+| `js/supply.js` | Grocery outlook: fresh food left, suggested shopping day and cheat day |
 | `js/cooktime.js` | Time to cook today: time limits, quick prep and hands-off checks |
 | `js/mealtimes.js` | Meal time windows: weekdays, weekends and single-day changes (`settings.mealTimes`); meal start times and the current meal |
 | `js/plan.js` | Meal plan dates (weeks start Monday), totals, pruning |
@@ -109,6 +111,14 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   option); an optional one becomes "Leave out the X for Y"; tolerated foods get "Keep the X small or on
   the side"; loved foods get a note. Disliking a group (cheese) covers its members (cheddar). Claude's
   ideas get the same rules in the request. Stored in synced `state.family`.
+- Each person can have allergies and diets (`m.allergies`, `m.diets`) in a foldable "Allergies and diet"
+  section. Allergies and avoid-diets hide recipes like "allergic" does, with the reason ("Andrey can't
+  have the shrimp (shellfish allergy)"); low salt and high salt add advice notes instead. Sent to Claude.
+- Recipes can be rated "We loved it" or "Not for us" (`state.recipeFeedback`, synced). Not-for-us
+  recipes sink to the bottom, are never suggested on Home, and are mentioned to Claude.
+- Between 11:30 pm and 5 am a cute sleep nudge (8 hours of solid sleep) shows under the greeting.
+- When groceries run low, Home shows a suggested shopping day and, if there's almost nothing to cook,
+  a suggested cheat day (order in or eat out) with "Plan it".
 - Every recipe shows "Suggested for" meal tags, with a meal filter row on Recipes. Home only suggests
   a recipe that suits the meal for the time of day (breakfast until 11, lunch until 4pm, then dinner);
   the planner lists recipes that suit the slot first. Never suggest a heavy dinner for breakfast.

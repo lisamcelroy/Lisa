@@ -14,8 +14,9 @@ import { estimateCalories } from "./nutrition.js";
 import { KEYWORDS, KEYWORD_IDS, KEYWORD_LABEL, keywordsFor } from "./data/keywords.js";
 import { MEALS, MEAL_LABEL, isoDay, fromIsoDay, weekDays, dayCalories, prunePlan, plannedRecipeIds } from "./plan.js";
 import { UNIT_CHOICES, formatQty, normalizeUnit } from "./units.js";
-import { LEVELS, LEVEL_LABEL, familyCheck, familyNotes, familyRequest, eating, isOut, pruneAway } from "./family.js";
+import { LEVELS, LEVEL_LABEL, familyCheck, familyNotes, familyRequest, eating, isOut, pruneAway, ALLERGENS, DIETS } from "./family.js";
 import { MEAL_TYPES, MEAL_TYPE_LABEL, mealsFor, mealNow } from "./data/meals.js";
+import { groceryOutlook, dayWord, isoOf } from "./supply.js";
 import { TIME_OPTIONS, PREP_OPTIONS, fitsTime, todaysChoice, timeRequest } from "./cooktime.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -346,15 +347,36 @@ function greeting() {
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
+// Between 11:30 pm and 5 am: a gentle nudge to get some sleep.
+const SLEEP_LINES = [
+  "It's getting late, {name}. Your fridge will keep, so go get 8 hours of solid sleep.",
+  "Past bedtime! 8 cozy hours of sleep makes tomorrow's cooking more fun.",
+  "Lights out soon, {name}? Aim for a full 8 hours. Breakfast will be waiting.",
+  "Night owl alert. Tuck in for 8 hours of solid sleep, the leftovers aren't going anywhere.",
+];
+function renderSleepLine(now = new Date()) {
+  const el = $("#sleep-line");
+  if (!el) return;
+  const mins = now.getHours() * 60 + now.getMinutes();
+  const late = mins >= 23 * 60 + 30 || mins < 5 * 60;
+  el.hidden = !late;
+  if (late) {
+    const name = (state.settings.name || "").trim() || "friend";
+    el.textContent = SLEEP_LINES[now.getDate() % SLEEP_LINES.length].replace("{name}", name);
+  }
+}
+
 // Keep the greeting in step with the clock while the app stays open.
 setInterval(() => {
   const el = $("#hello"), name = (state.settings.name || "").trim();
   if (el) el.textContent = name ? `${greeting()}, ${name}` : greeting();
+  renderSleepLine();
 }, 60000);
 
 function renderHome() {
   const name = (state.settings.name || "").trim();
   $("#hello").textContent = name ? `${greeting()}, ${name}` : greeting();
+  renderSleepLine();
   const now = new Date();
   $("#badge-day").textContent = String(now.getDate()).padStart(2, "0");
   $("#badge-month").textContent = now.toLocaleDateString(undefined, { month: "short" });
@@ -365,7 +387,7 @@ function renderHome() {
   const due = defrostReminders().filter((x) => !x.done && x.when === "today");
   const soon = state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS && !needsDefrost(it));
   const ranked = recommend(allRecipes(), state.inventory, { assumeStaples: state.settings.assumeStaples });
-  const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length && !isBlocked(r) && mealsFor(r.recipe).includes(currentMeal(state.settings.mealTimes)));
+  const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length && !isBlocked(r) && mealsFor(r.recipe).includes(currentMeal(state.settings.mealTimes)) && !disliked(r));
 
   // What the assistant says.
   const lines = [];
@@ -402,6 +424,7 @@ function renderHome() {
     </div>`;
 
   $("#home-defrost").innerHTML = defrostCardHtml();
+  $("#home-supply").innerHTML = supplyCardHtml(ranked);
 
   $("#home-soon").innerHTML = soon.length
     ? `<div class="card soon">
@@ -418,7 +441,44 @@ function renderHome() {
       : `<div class="row home-start"><button class="btn primary" data-go="scan">Scan a receipt</button><button class="btn" data-go="kitchen">Add food</button></div>`;
 }
 
+// Groceries running low: a suggested shopping day, and a cheat day if there's
+// almost nothing to cook until then.
+function supplyCardHtml(ranked) {
+  const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length && !isBlocked(r)).length;
+  const today = new Date();
+  const days = weekDays(0).concat(weekDays(1)).map(isoDay).filter((iso) => iso >= isoDay(today));
+  const missingDays = days.filter((iso) => MEALS.some((m) => {
+    const id = state.plan[iso]?.[m]?.recipeId;
+    const recipe = id && findRecipe(id);
+    return recipe && recommend([recipe], state.inventory, { assumeStaples: state.settings.assumeStaples })[0].missing.length;
+  }));
+  const plannedDinners = Object.keys(state.plan).filter((iso) => state.plan[iso]?.dinner);
+  const o = groceryOutlook(state.inventory, { now: today, readyCount: ready, missingDays, plannedDinners });
+  if (!state.inventory.length || (!o.short && o.shopDay - today > 3 * 864e5)) return "";
+  const shop = dayWord(o.shopDay, today);
+  const cap = (w) => w[0].toUpperCase() + w.slice(1);
+  return `<div class="card supply-card${o.short ? " short" : ""}">
+      <h2>${o.short ? "Groceries are running low" : "Shopping day coming up"}</h2>
+      ${o.reasons.length ? `<p class="muted small">${esc(cap(o.reasons.join(", ")))}.</p>` : ""}
+      <div class="supply-row">
+        <span class="supply-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M3.5 4.5h2.5l2.2 10.5h10l2-7.5H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19" r="1.5" fill="currentColor"/><circle cx="17" cy="19" r="1.5" fill="currentColor"/></svg></span>
+        <span class="supply-text">Suggested shopping day: <b>${esc(cap(shop))}</b></span>
+        <button class="btn small" data-go="shopping">Shopping list</button>
+      </div>
+      ${o.cheatDay ? `<div class="supply-row">
+        <span class="supply-icon cheat" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 11h16a8 7.5 0 0 1-16 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 7.5l1 -3M8.5 8l-1 -2.6M15.5 8l1 -2.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <span class="supply-text">Suggested cheat day: <b>${esc(cap(dayWord(o.cheatDay, today)))}</b>. Order in or eat out, no cooking needed.</span>
+        <button class="btn small" data-cheat="${isoOf(o.cheatDay)}">Plan it</button>
+      </div>` : ""}
+    </div>`;
+}
+
 $("#view-home").addEventListener("click", (e) => {
+  const cheat = e.target.closest("[data-cheat]")?.dataset.cheat;
+  if (cheat) {
+    setPlan(cheat, "dinner", { text: "Cheat day: order in or eat out", kcal: null });
+    return toast(`Cheat day planned for ${dayWord(fromIsoDay(cheat))}. Enjoy!`);
+  }
   const go = e.target.closest("[data-go]")?.dataset.go;
   if (go) return switchTab(go);
   if (e.target.closest("[data-action=show-rescue]")) {
@@ -947,6 +1007,7 @@ function recipeCard(r) {
     ${r.frozen.length ? `<div class="defrost">Defrost first: ${esc(frozenNames(r.frozen).join(", "))}</div>` : ""}
     <div class="missing">${r.missing.length ? `Need: <b>${esc(r.missing.join(", "))}</b>` : "You have everything"}</div>
     ${familyLines(r.recipe)}
+    ${rating(r.recipe) === "down" ? `<div class="fam-note fam-tolerate">Not for you, so it's suggested less</div>` : rating(r.recipe) === "up" ? `<div class="fam-note fam-loves">You loved this one</div>` : ""}
   </button>`;
 }
 
@@ -1060,7 +1121,7 @@ function renderRecipes() {
     $("#recipes").innerHTML = blockedNote(blockedCount) + `<div class="empty">${hint}</div>`;
     return;
   }
-  $("#recipes").innerHTML = blockedNote(blockedCount) + list.map(recipeCard).join("");
+  $("#recipes").innerHTML = blockedNote(blockedCount) + sinkDisliked(list).map(recipeCard).join("");
 }
 
 // Search: every recipe (yours, the book and Claude's ideas), ignoring the other
@@ -1101,6 +1162,23 @@ $("#meal-filter").addEventListener("click", (e) => {
   ui.meal = b.dataset.meal;
   renderRecipes();
 });
+
+// Ratings: "Not for us" recipes are suggested less (sink to the bottom, never
+// suggested on Home); "We loved it" ones get a note and are mentioned to Claude.
+const rating = (recipe) => state.recipeFeedback?.[recipe.id] || "";
+const disliked = (r) => rating(r.recipe || r) === "down";
+const sinkDisliked = (list) => [...list].sort((a, b) => disliked(a) - disliked(b));
+
+function ratingRequest() {
+  const fb = state.recipeFeedback || {};
+  const title = (id) => findRecipe(id)?.title;
+  const down = Object.keys(fb).filter((id) => fb[id] === "down").map(title).filter(Boolean);
+  const up = Object.keys(fb).filter((id) => fb[id] === "up").map(title).filter(Boolean);
+  const parts = [];
+  if (down.length) parts.push(`we didn't like ${down.slice(-8).join(", ")}, so suggest different dishes`);
+  if (up.length) parts.push(`we loved ${up.slice(-8).join(", ")}, so similar ideas are welcome`);
+  return parts.join("; ");
+}
 
 // Family preferences on the Recipes tab (for whoever is eating that day; today unless given).
 const todayIso = () => isoDay(new Date());
@@ -1214,6 +1292,11 @@ function openRecipe(id) {
       <button class="btn" data-act="plan">Plan it</button>
       <button class="btn primary" data-act="cook">I cooked this</button>
       <button class="btn" data-act="close">Close</button>
+    </div>
+    <div class="rate-row" role="group" aria-label="How did you like it?">
+      <span class="muted small">How was it?</span>
+      <button class="btn small rate ${rating(recipe) === "up" ? "on" : ""}" data-act="rate-up" aria-pressed="${rating(recipe) === "up"}">We loved it</button>
+      <button class="btn small rate ${rating(recipe) === "down" ? "on down" : ""}" data-act="rate-down" aria-pressed="${rating(recipe) === "down"}">Not for us</button>
     </div>`;
 
   const dlg = $("#recipe-dialog");
@@ -1240,6 +1323,15 @@ function openRecipe(id) {
       dlg.close();
     }
     if (act === "edit") return openRecipeEditor(recipe.id);
+    if (act === "rate-up" || act === "rate-down") {
+      const want = act === "rate-up" ? "up" : "down";
+      state.recipeFeedback = { ...(state.recipeFeedback || {}) };
+      if (state.recipeFeedback[recipe.id] === want) delete state.recipeFeedback[recipe.id];
+      else state.recipeFeedback[recipe.id] = want;
+      commit();
+      toast(!state.recipeFeedback[recipe.id] ? "Rating cleared" : want === "down" ? "Got it. We'll suggest this less." : "Noted. More like this!");
+      return openRecipe(recipe.id);
+    }
     if (act === "restore") {
       state.customRecipes = state.customRecipes.filter((x) => x.id !== recipe.id);
       commit();
@@ -1393,7 +1485,8 @@ function renderIdeas() {
       .filter((r) => !ui.keywords.size || [...ui.keywords].every((k) => keywordsFor(r.recipe).includes(k)))
       .filter((r) => !cookTime() || fitsTime(r.recipe, cookTime()))
       .filter((r) => !isBlocked(r))
-      .filter((r) => ui.meal === "any" || mealsFor(r.recipe).includes(ui.meal));
+      .filter((r) => ui.meal === "any" || mealsFor(r.recipe).includes(ui.meal))
+      .sort((a, b) => disliked(a) - disliked(b));
     $("#ideas-list").innerHTML = ranked.length
       ? ranked.map(recipeCard).join("")
       : `<div class="empty">None of these ideas match ${[...[...ui.keywords].map((k) => `"${KEYWORD_LABEL[k]}"`), ...(cookTime() ? [esc(timeSummary(cookTime()))] : [])].join(" + ")}. Tap More ideas for new ones.</div>`;
@@ -1419,7 +1512,7 @@ async function fetchIdeas({ fresh = false, more = false } = {}) {
 
   const opts = {
     soon: state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS).map((it) => it.name),
-    request: [$("#ai-request").value.trim(), timeRequest(cookTime()), familyRequest(state.family, todayIso()), ui.meal !== "any" ? `These are for ${ui.meal}, so every recipe must suit ${ui.meal}` : ""].filter(Boolean).join(". "),
+    request: [$("#ai-request").value.trim(), timeRequest(cookTime()), familyRequest(state.family, todayIso()), ratingRequest(), ui.meal !== "any" ? `These are for ${ui.meal}, so every recipe must suit ${ui.meal}` : ""].filter(Boolean).join(". "),
     exclude: more ? state.ideas.recipes.map((r) => r.title) : [],
   };
   try {
@@ -1647,7 +1740,7 @@ function pickList() {
   const pool = [...allRecipes(), ...state.ideas.recipes];
   const ranked = recommend(pool, state.inventory, { assumeStaples: state.settings.assumeStaples })
     .filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.ingredients.some((i) => i.name.includes(q)))
-    .sort((a, b) => (isBlocked(a, planUi.slot.day) - isBlocked(b, planUi.slot.day)) || (suits(b) - suits(a)) || b.score - a.score)
+    .sort((a, b) => (isBlocked(a, planUi.slot.day) - isBlocked(b, planUi.slot.day)) || (disliked(a) - disliked(b)) || (suits(b) - suits(a)) || b.score - a.score)
     .slice(0, 40);
   return ranked.length
     ? ranked.map((r) => `<button class="pick" data-recipe="${esc(r.recipe.id)}"><b>${esc(r.recipe.title)}</b>
@@ -1968,7 +2061,18 @@ function renderFamily() {
         <button class="eat-toggle ${isOut(m, today) ? "" : "on"}" data-fam="today" data-member="${m.id}" aria-pressed="${!isOut(m, today)}">${isOut(m, today) ? "Out today" : "Eating today"}</button>
         <button class="icon-btn small" data-fam="del-member" data-member="${m.id}" aria-label="Remove ${esc(m.name)}">&times;</button>
       </div>
-      ${byLevel || `<p class="muted small">No preferences yet.</p>`}
+      ${(() => {
+        const al = (m.allergies || []).map((id) => ALLERGENS.find((a) => a.id === id)?.label).filter(Boolean);
+        const di = (m.diets || []).map((id) => DIETS.find((d) => d.id === id)?.label).filter(Boolean);
+        return `<details class="member-more"${ui.openHealth === m.id ? " open" : ""} data-health="${m.id}">
+          <summary><span class="pref-level">Allergies and diet</span>${al.length || di.length ? [...al.map((x) => `<span class="pref-chip lvl-allergic">${esc(x)}</span>`), ...di.map((x) => `<span class="pref-chip diet-chip">${esc(x)}</span>`)].join("") : `<span class="muted small">None</span>`}</summary>
+          <p class="muted small">Allergies</p>
+          <div class="chips health-chips">${ALLERGENS.map((a) => `<button type="button" class="chip ${(m.allergies || []).includes(a.id) ? "active allergy-on" : ""}" data-fam="allergy" data-member="${m.id}" data-id="${a.id}" aria-pressed="${(m.allergies || []).includes(a.id)}">${a.label}</button>`).join("")}</div>
+          <p class="muted small">Diet</p>
+          <div class="chips health-chips">${DIETS.map((d) => `<button type="button" class="chip ${(m.diets || []).includes(d.id) ? "active" : ""}" data-fam="diet" data-member="${m.id}" data-id="${d.id}" aria-pressed="${(m.diets || []).includes(d.id)}" title="${d.hint}">${d.label}</button>`).join("")}</div>
+        </details>`;
+      })()}
+      ${byLevel || `<p class="muted small">No food preferences yet.</p>`}
       <div class="away-row">
         <span class="pref-level">Out on</span>
         ${later.map((d) => `<span class="pref-chip away-chip">${esc(shortDate(fromIsoDay(d)))}<button aria-label="${esc(m.name)} is home on ${esc(shortDate(fromIsoDay(d)))}" data-fam="del-away" data-member="${m.id}" data-day="${d}">&times;</button></span>`).join("")}
@@ -2024,6 +2128,21 @@ $("#family-list").addEventListener("click", (e) => {
   }
   if (act === "del-away" && m) { m.away = m.away.filter((d) => d !== b.dataset.day); commit(); toast(`${m.name} is home on ${shortDate(fromIsoDay(b.dataset.day))}`); }
   if (act === "away" && m) openAwayPicker(m.id);
+  if ((act === "allergy" || act === "diet") && m) {
+    const key = act === "allergy" ? "allergies" : "diets";
+    const id = b.dataset.id;
+    const set = new Set(m[key] || []);
+    if (set.has(id)) set.delete(id);
+    else {
+      set.add(id);
+      // Opposites can't both be on.
+      if (id === "lowsalt") set.delete("highsalt");
+      if (id === "highsalt") set.delete("lowsalt");
+    }
+    m[key] = [...set];
+    ui.openHealth = m.id;
+    commit();
+  }
   if (act === "del-pref" && m) { m.prefs = m.prefs.filter((p) => p.food !== b.dataset.food); commit(); }
   if (act === "del-member" && m && confirm(`Remove ${m.name} and their preferences?`)) {
     state.family = state.family.filter((x) => x !== m);
