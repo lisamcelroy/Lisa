@@ -62,14 +62,16 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 
 ## Design system
 
-- Palette: Tangerine `#F08C21` (accent), Butter `#F2D88F` (solid page background), Blush `#E36888`,
-  Sea `#6698CC`, Matcha `#B4B534`. Text is warm cocoa brown `#6b3416` (deepened Tangerine; muted `#9a5b2c`). The owner dislikes navy: never use it; cards
-  are light Butter cream `#fff7e2`. Dark mode: deep chocolate `#2a1a12` (cards `#3a251a`) with Butter text.
-- Older token names are kept and remapped: `--olive` Matcha, `--raspberry`/`--pink` Blush,
-  `--lilac` Sea, `--coral` Tangerine, `--sun` deeper Butter.
-- Meaning colours: missing ingredients and dinner Blush, frozen food Sea blue, fridge and freezer
-  Sea, pantry Matcha, breakfast deeper Butter, lunch Tangerine.
-- Logo: name only, one solid colour (Tangerine, `var(--coral)`), no mascot. "Inside my" in DM Serif
+- Palette (the whole app uses only these five plus tints of them): Rose Sorbet `#D96C81` (accent,
+  buttons, logo), Sunflower Gold `#F4AF30`, Vanilla Cream `#F5E9CF` (solid page background), Rose
+  Sorbet Light `#F0A9B6`, Rose Sorbet Dark `#9F4A5C` (all text). Cards are a lighter vanilla
+  `#fbf5e8`. Dark mode: deep rose-brown `#3b1e26` (cards `#4a2631`) with Vanilla text. The owner
+  dislikes navy and dull colours: never bring navy back. Food illustrations keep their own colours.
+- Older token names are kept and remapped: `--coral`/`--pink`/`--raspberry`/`--accent` Rose Sorbet,
+  `--olive`/`--sun` Sunflower Gold, `--lilac` Rose Light, `--accent-deep` Rose Dark.
+- Meaning colours: breakfast Gold, lunch Rose Sorbet, dinner Rose Dark; fridge Rose Sorbet, freezer
+  and frozen food Rose Dark on pale rose (with a snowflake), pantry Gold.
+- Logo: name only, one solid colour (Rose Sorbet, `var(--coral)`), no mascot. "Inside my" in DM Serif
   Display sits up and right of a heavy Poppins 800 "Kitchen", with the slogan "let's make cooking fun
   again" in tracked Poppins 600 caps underneath (`.logomark`, `.lm-top`, `.lm-main`, `.lm-tag`).
   The splash shows the same logo inside the ring of food icons.

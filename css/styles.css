@@ -1,137 +1,135 @@
 :root {
-  /* Palette: Tangerine #F08C21, Butter #F2D88F, Blush #E36888, Sea #6698CC, Matcha #B4B534.
-     Text uses a warm cocoa brown (deepened Tangerine) so it stays lively and readable on Butter. */
-  --bg: #f2d88f;
-  --blob-1: #f2d88f;
-  --blob-2: #f2d88f;
-  --blob-3: #f2d88f;
-  --surface: #fff7e2;
-  --surface-2: #faecc4;
-  --text: #6b3416;
-  --muted: #9a5b2c;
-  --border: #e6c97a;
-  /* named slots from earlier palettes, now mapped onto the five colours */
-  --olive: #b4b534;
-  --raspberry: #e36888;
-  --sun: #e2b94a;
-  --lilac: #6698cc;
-  --pink: #e36888;
-  --coral: #f08c21;
-  --accent: #f08c21;
-  --accent-deep: #d8760c;
-  --accent-ink: #5a2a0e;
-  --accent-soft: #fbdcb5;
-  --pink-soft: #f8d3dc;
-  --warn: #b65f06;
-  --warn-soft: #fbe2c4;
-  --danger: #c2456a;
-  --danger-soft: #f8d6df;
-  --fridge: #4f84bd;
-  --freezer: #6698cc;
-  --pantry: #8c8d1a;
+  /* Palette: Rose Sorbet #D96C81, Sunflower Gold #F4AF30, Vanilla Cream #F5E9CF,
+     Rose Sorbet Light #F0A9B6, Rose Sorbet Dark #9F4A5C. Everything else is a tint of these.
+     Text is Rose Sorbet Dark on a solid Vanilla Cream background. */
+  --bg: #f5e9cf;
+  --blob-1: #f5e9cf;
+  --blob-2: #f5e9cf;
+  --blob-3: #f5e9cf;
+  --surface: #fbf5e8;
+  --surface-2: #f9e4df;
+  --text: #9f4a5c;
+  --muted: #b55f72;
+  --border: #efcdc4;
+  --olive: #f4af30;
+  --raspberry: #d96c81;
+  --sun: #f4af30;
+  --lilac: #f0a9b6;
+  --pink: #d96c81;
+  --coral: #d96c81;
+  --accent: #d96c81;
+  --accent-deep: #9f4a5c;
+  --accent-ink: #fdf6ea;
+  --accent-soft: #f9dce1;
+  --pink-soft: #f9dce1;
+  --warn: #9f4a5c;
+  --warn-soft: #fbe6bd;
+  --danger: #9f4a5c;
+  --danger-soft: #f9dce1;
+  --fridge: #d96c81;
+  --freezer: #9f4a5c;
+  --pantry: #f4af30;
+  --fridge-shell: #fbf5e8;
+  --fridge-edge: #f0a9b6;
+  --fridge-inside: #fffaf1;
+  --freezer-inside: #fbe6ea;
+  --glass: rgb(240 169 182 / 30%);
+  --drawer: #f9e1e5;
+  --wood: #f8cd78;
+  --wood-dark: #f4af30;
+  --wood-inside: #fdf4df;
+  --bin: #fbe6bd;
   --radius: 28px;
   --radius-sm: 18px;
-  --shadow: 0 1px 2px rgb(107 52 22 / 5%), 0 14px 34px -22px rgb(107 52 22 / 30%);
+  --shadow: 0 1px 2px rgb(159 74 92 / 6%), 0 14px 34px -22px rgb(159 74 92 / 32%);
   --press: none;
-
-  /* fridge (Sea), pantry (Matcha) */
-  --fridge-shell: #f2f6fb;
-  --fridge-edge: #a9c3e3;
-  --fridge-inside: #f8fbfe;
-  --freezer-inside: #e6eef8;
-  --glass: rgb(102 152 204 / 30%);
-  --drawer: #e1ebf6;
-  --wood: #cfd07a;
-  --wood-dark: #b4b534;
-  --wood-inside: #fbf8e6;
-  --bin: #eef0c8;
   color-scheme: light;
   font-family: "Zalando Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #2a1a12;
-    --blob-1: #2a1a12;
-    --blob-2: #2a1a12;
-    --blob-3: #2a1a12;
-    --surface: #3a251a;
-    --surface-2: #4a3022;
-    --text: #f2d88f;
-    --muted: #ecc9a0;
-    --border: #5a3b2a;
-    --olive: #c9ca4f;
-    --raspberry: #ec85a1;
-    --sun: #f2d88f;
-    --lilac: #8db4dd;
-    --pink: #ec85a1;
-    --coral: #f5a04a;
-    --accent: #f5a04a;
-    --accent-deep: #f08c21;
-    --accent-ink: #2a1a12;
-    --accent-soft: #4a3a2a;
-    --pink-soft: #4a2d3a;
-    --warn: #f5b25e;
-    --warn-soft: #3f3322;
-    --danger: #f08aa5;
-    --danger-soft: #4a2733;
-    --fridge: #8db4dd;
-    --freezer: #8db4dd;
-    --pantry: #c9ca4f;
+    --bg: #3b1e26;
+    --blob-1: #3b1e26;
+    --blob-2: #3b1e26;
+    --blob-3: #3b1e26;
+    --surface: #4a2631;
+    --surface-2: #5a2f3c;
+    --text: #f5e9cf;
+    --muted: #f0a9b6;
+    --border: #6b3a48;
+    --olive: #f4af30;
+    --raspberry: #f0a9b6;
+    --sun: #f4af30;
+    --lilac: #f0a9b6;
+    --pink: #f0a9b6;
+    --coral: #f0a9b6;
+    --accent: #d96c81;
+    --accent-deep: #f0a9b6;
+    --accent-ink: #fdf6ea;
+    --accent-soft: #5a2f3c;
+    --pink-soft: #5a2f3c;
+    --warn: #f4af30;
+    --warn-soft: #4f3420;
+    --danger: #f0a9b6;
+    --danger-soft: #5a2a35;
+    --fridge: #f0a9b6;
+    --freezer: #f0a9b6;
+    --pantry: #f4af30;
+    --fridge-shell: #4a2631;
+    --fridge-edge: #7a4454;
+    --fridge-inside: #43222c;
+    --freezer-inside: #52293a;
+    --glass: rgb(240 169 182 / 25%);
+    --drawer: #5a2f3c;
+    --wood: #8a6420;
+    --wood-dark: #f4af30;
+    --wood-inside: #4a3320;
+    --bin: #5a3d22;
     --shadow: 0 14px 34px -20px rgb(0 0 0 / 70%);
-    --fridge-shell: #263a52;
-    --fridge-edge: #46638a;
-    --fridge-inside: #22334a;
-    --freezer-inside: #2a4060;
-    --glass: rgb(141 180 221 / 30%);
-    --drawer: #2c4462;
-    --wood: #5e5f22;
-    --wood-dark: #8f9028;
-    --wood-inside: #2a3524;
-    --bin: #364028;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #2a1a12;
-  --blob-1: #2a1a12;
-  --blob-2: #2a1a12;
-  --blob-3: #2a1a12;
-  --surface: #3a251a;
-  --surface-2: #4a3022;
-  --text: #f2d88f;
-  --muted: #ecc9a0;
-  --border: #5a3b2a;
-  --olive: #c9ca4f;
-  --raspberry: #ec85a1;
-  --sun: #f2d88f;
-  --lilac: #8db4dd;
-  --pink: #ec85a1;
-  --coral: #f5a04a;
-  --accent: #f5a04a;
-  --accent-deep: #f08c21;
-  --accent-ink: #2a1a12;
-  --accent-soft: #4a3a2a;
-  --pink-soft: #4a2d3a;
-  --warn: #f5b25e;
-  --warn-soft: #3f3322;
-  --danger: #f08aa5;
-  --danger-soft: #4a2733;
-  --fridge: #8db4dd;
-  --freezer: #8db4dd;
-  --pantry: #c9ca4f;
+  --bg: #3b1e26;
+  --blob-1: #3b1e26;
+  --blob-2: #3b1e26;
+  --blob-3: #3b1e26;
+  --surface: #4a2631;
+  --surface-2: #5a2f3c;
+  --text: #f5e9cf;
+  --muted: #f0a9b6;
+  --border: #6b3a48;
+  --olive: #f4af30;
+  --raspberry: #f0a9b6;
+  --sun: #f4af30;
+  --lilac: #f0a9b6;
+  --pink: #f0a9b6;
+  --coral: #f0a9b6;
+  --accent: #d96c81;
+  --accent-deep: #f0a9b6;
+  --accent-ink: #fdf6ea;
+  --accent-soft: #5a2f3c;
+  --pink-soft: #5a2f3c;
+  --warn: #f4af30;
+  --warn-soft: #4f3420;
+  --danger: #f0a9b6;
+  --danger-soft: #5a2a35;
+  --fridge: #f0a9b6;
+  --freezer: #f0a9b6;
+  --pantry: #f4af30;
+  --fridge-shell: #4a2631;
+  --fridge-edge: #7a4454;
+  --fridge-inside: #43222c;
+  --freezer-inside: #52293a;
+  --glass: rgb(240 169 182 / 25%);
+  --drawer: #5a2f3c;
+  --wood: #8a6420;
+  --wood-dark: #f4af30;
+  --wood-inside: #4a3320;
+  --bin: #5a3d22;
   --shadow: 0 14px 34px -20px rgb(0 0 0 / 70%);
-  --fridge-shell: #263a52;
-  --fridge-edge: #46638a;
-  --fridge-inside: #22334a;
-  --freezer-inside: #2a4060;
-  --glass: rgb(141 180 221 / 30%);
-  --drawer: #2c4462;
-  --wood: #5e5f22;
-  --wood-dark: #8f9028;
-  --wood-inside: #2a3524;
-  --bin: #364028;
   color-scheme: dark;
 }
 
@@ -363,7 +361,7 @@ dialog {
   width: min(560px, calc(100% - 32px)); max-height: 85vh; padding: 22px; box-shadow: 0 30px 60px -20px rgb(0 0 0 / 45%);
 }
 dialog[open] { animation: pop .28s cubic-bezier(.3, 1.5, .5, 1); }
-dialog::backdrop { background: rgb(43 35 64 / 40%); backdrop-filter: blur(3px); }
+dialog::backdrop { background: rgb(80 30 42 / 40%); backdrop-filter: blur(3px); }
 @keyframes pop { from { transform: scale(.85); opacity: 0; } }
 .ing-list { list-style: none; padding: 0; margin: 0 0 12px; }
 .ing-list li { padding: 7px 0; border-bottom: 2px dashed var(--border); display: flex; gap: 10px; }
@@ -382,9 +380,9 @@ ol.steps li { margin-bottom: 8px; }
 .item-dialog .stepper .step { width: 46px; height: 46px; font-size: 1.5rem; }
 .item-dialog .stepper .qty { font-family: "Funnel Sans", "Zalando Sans", system-ui, sans-serif; font-weight: 800; font-size: 1.3rem; min-width: 90px; }
 .item-dialog .where { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-.item-dialog .where .chip.active.loc-fridge { background: var(--fridge); color: #fff7e2; }
-.item-dialog .where .chip.active.loc-freezer { background: var(--freezer); color: #5a2a0e; }
-.item-dialog .where .chip.active.loc-pantry { background: var(--pantry); color: #fff7e2; }
+.item-dialog .where .chip.active.loc-fridge { background: var(--fridge); color: #fdf6ea; }
+.item-dialog .where .chip.active.loc-freezer { background: var(--freezer); color: #9f4a5c; }
+.item-dialog .where .chip.active.loc-pantry { background: var(--pantry); color: #fdf6ea; }
 .item-dialog .row.end { justify-content: center; }
 
 /* ---------- Shopping ---------- */
@@ -403,7 +401,7 @@ ol.steps li { margin-bottom: 8px; }
   width: min(600px, calc(100% - 20px));
   display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px;
   background: var(--surface); border-radius: 999px; padding: 6px;
-  box-shadow: 0 16px 34px -14px rgb(43 35 64 / 40%), 0 2px 0 rgb(43 35 64 / 5%);
+  box-shadow: 0 16px 34px -14px rgb(80 30 42 / 40%), 0 2px 0 rgb(80 30 42 / 5%);
 }
 .tabbar button {
   font: inherit; font-size: .7rem; font-weight: 800; background: none; border: 0; color: var(--muted); cursor: pointer;
@@ -456,7 +454,7 @@ ol.steps li { margin-bottom: 8px; }
 }
 .fridge .handle {
   position: absolute; right: -9px; top: 70px; width: 12px; height: 70px; border-radius: 999px;
-  background: linear-gradient(90deg, #ffe3c8, #f7a06e); box-shadow: 0 3px 0 rgb(0 0 0 / 10%);
+  background: linear-gradient(90deg, #f9dce1, #f0a9b6); box-shadow: 0 3px 0 rgb(0 0 0 / 10%);
 }
 .compartment { border-radius: 24px; padding: 10px; }
 .compartment.freezer {
@@ -465,14 +463,14 @@ ol.steps li { margin-bottom: 8px; }
     radial-gradient(circle at 78% 30%, rgb(255 255 255 / 70%) 0 1.5px, transparent 2.5px),
     radial-gradient(circle at 46% 80%, rgb(255 255 255 / 60%) 0 2px, transparent 3px),
     var(--freezer-inside);
-  margin-bottom: 10px; box-shadow: inset 0 3px 10px rgb(228 106 166 / 14%);
+  margin-bottom: 10px; box-shadow: inset 0 3px 10px rgb(217 108 129 / 14%);
 }
 .compartment.freezer .zone-label { color: var(--freezer); }
 .fridge-body { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.compartment.main { background: var(--fridge-inside); box-shadow: inset 0 3px 10px rgb(154 107 201 / 12%); }
+.compartment.main { background: var(--fridge-inside); box-shadow: inset 0 3px 10px rgb(217 108 129 / 12%); }
 .compartment.main .zone-label { color: var(--fridge); }
 .compartment.door {
-  background: var(--fridge-inside); box-shadow: inset 0 3px 10px rgb(154 107 201 / 12%);
+  background: var(--fridge-inside); box-shadow: inset 0 3px 10px rgb(217 108 129 / 12%);
   border: 3px dashed var(--fridge-edge);
 }
 .shelf { padding: 6px 0 12px; margin-bottom: 8px; position: relative; }
@@ -482,7 +480,7 @@ ol.steps li { margin-bottom: 8px; }
 }
 .drawer {
   background: var(--drawer); border-radius: 20px; padding: 8px 6px 10px; margin-top: 4px;
-  box-shadow: inset 0 -4px 0 rgb(228 106 166 / 16%);
+  box-shadow: inset 0 -4px 0 rgb(217 108 129 / 16%);
   position: relative;
 }
 .drawer::before {
@@ -515,8 +513,8 @@ ol.steps li { margin-bottom: 8px; }
 .bin { background: var(--bin); border-radius: 22px 22px 28px 28px; padding: 8px 4px 10px; box-shadow: inset 0 -5px 0 rgb(0 0 0 / 6%); }
 .basket {
   background:
-    repeating-linear-gradient(45deg, transparent 0 8px, rgb(160 167 58 / 18%) 8px 10px),
-    repeating-linear-gradient(-45deg, transparent 0 8px, rgb(160 167 58 / 18%) 8px 10px),
+    repeating-linear-gradient(45deg, transparent 0 8px, rgb(244 175 48 / 18%) 8px 10px),
+    repeating-linear-gradient(-45deg, transparent 0 8px, rgb(244 175 48 / 18%) 8px 10px),
     var(--bin);
 }
 
@@ -558,33 +556,33 @@ ol.steps li { margin-bottom: 8px; }
 /* frozen food */
 .food.frozen .food-bubble::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: radial-gradient(circle at 70% 75%, rgb(255 255 255 / 55%), transparent 55%), linear-gradient(160deg, rgb(200 225 255 / 45%), transparent 60%);
-  box-shadow: inset 0 0 0 2px rgb(170 205 255 / 75%);
+  background: radial-gradient(circle at 70% 75%, rgb(255 255 255 / 55%), transparent 55%), linear-gradient(160deg, rgb(249 220 225 / 45%), transparent 60%);
+  box-shadow: inset 0 0 0 2px rgb(240 169 182 / 75%);
 }
 .food.frozen .food-bubble::after {
   content: "\2744"; position: absolute; left: -5px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%;
-  display: grid; place-items: center; font-size: .72rem; color: #4a7fc4; background: #eef5ff; box-shadow: 0 2px 6px rgb(0 0 0 / 15%);
+  display: grid; place-items: center; font-size: .72rem; color: #9f4a5c; background: #fbe6ea; box-shadow: 0 2px 6px rgb(0 0 0 / 15%);
 }
-.defrost, .defrost-note { color: #3f76bd; font-weight: 800; }
+.defrost, .defrost-note { color: #9f4a5c; font-weight: 800; }
 .defrost { font-size: .8rem; }
-.defrost-note { font-size: .9rem; background: #eef5ff; border-radius: 14px; padding: 8px 12px; margin: 6px 0 8px; }
+.defrost-note { font-size: .9rem; background: #fbe6ea; border-radius: 14px; padding: 8px 12px; margin: 6px 0 8px; }
 .thawed-note { font-size: .85rem; color: var(--muted); margin: 0 0 6px; }
-.ice-tag { font-size: .7rem; font-weight: 800; color: #3f76bd; background: #eef5ff; border-radius: 999px; padding: 1px 8px; margin-left: 4px; }
-.defrost-btn { background: #e3efff; color: #2f63a8; }
-.defrost-reminder { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #eef5ff; color: #2f63a8; border-radius: 14px; padding: 6px 6px 6px 12px; margin: 0 0 8px; font-size: .85rem; }
-.defrost-card { background: linear-gradient(135deg, #eef5ff, color-mix(in srgb, var(--lilac) 12%, var(--surface))); }
-.defrost-card h2 { color: #2f63a8; }
+.ice-tag { font-size: .7rem; font-weight: 800; color: #9f4a5c; background: #fbe6ea; border-radius: 999px; padding: 1px 8px; margin-left: 4px; }
+.defrost-btn { background: #f9dce1; color: #9f4a5c; }
+.defrost-reminder { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fbe6ea; color: #9f4a5c; border-radius: 14px; padding: 6px 6px 6px 12px; margin: 0 0 8px; font-size: .85rem; }
+.defrost-card { background: linear-gradient(135deg, #fbe6ea, color-mix(in srgb, var(--lilac) 12%, var(--surface))); }
+.defrost-card h2 { color: #9f4a5c; }
 .defrost-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; font-size: .9rem; }
-.defrost-row + .defrost-row { border-top: 2px dashed rgb(120 160 220 / 25%); }
+.defrost-row + .defrost-row { border-top: 2px dashed rgb(217 108 129 / 25%); }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .defrost-note, :root:not([data-theme="light"]) .ice-tag, :root:not([data-theme="light"]) .defrost-reminder { background: #1f2c40; color: #9cc3ff; }
-  :root:not([data-theme="light"]) .defrost { color: #9cc3ff; }
-  :root:not([data-theme="light"]) .defrost-card { background: linear-gradient(135deg, #1f2c40, var(--surface)); }
-  :root:not([data-theme="light"]) .defrost-card h2 { color: #9cc3ff; }
-  :root:not([data-theme="light"]) .defrost-btn { background: #24395a; color: #cfe2ff; }
+  :root:not([data-theme="light"]) .defrost-note, :root:not([data-theme="light"]) .ice-tag, :root:not([data-theme="light"]) .defrost-reminder { background: #52293a; color: #f0a9b6; }
+  :root:not([data-theme="light"]) .defrost { color: #f0a9b6; }
+  :root:not([data-theme="light"]) .defrost-card { background: linear-gradient(135deg, #52293a, var(--surface)); }
+  :root:not([data-theme="light"]) .defrost-card h2 { color: #f0a9b6; }
+  :root:not([data-theme="light"]) .defrost-btn { background: #5a2f3c; color: #fbe6ea; }
 }
-:root[data-theme="dark"] .defrost-note, :root[data-theme="dark"] .ice-tag, :root[data-theme="dark"] .defrost-reminder { background: #1f2c40; color: #9cc3ff; }
-:root[data-theme="dark"] .defrost { color: #9cc3ff; }
+:root[data-theme="dark"] .defrost-note, :root[data-theme="dark"] .ice-tag, :root[data-theme="dark"] .defrost-reminder { background: #52293a; color: #f0a9b6; }
+:root[data-theme="dark"] .defrost { color: #f0a9b6; }
 
 /* food bubbles */
 .shelf-items { display: flex; flex-wrap: wrap; gap: 6px 4px; min-height: 30px; }
@@ -647,7 +645,7 @@ ol.steps li { margin-bottom: 8px; }
   color: var(--text); padding: 6px 12px; border-radius: 999px; transition: background .15s, transform .12s;
 }
 .kw-chip:active { transform: scale(.94); }
-.kw-chip.on { background: var(--kw); border-color: var(--kw); color: #5a2a0e; }
+.kw-chip.on { background: var(--kw); border-color: var(--kw); color: #9f4a5c; }
 .kw-chip.on[style*="--sun"] { color: var(--text); }
 .kw-chip.clear { --kw: var(--muted); background: transparent; }
 .kw-pills { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -731,7 +729,7 @@ ol.steps li { margin-bottom: 8px; }
 
 .home-hero { display: flex; align-items: center; gap: 10px; margin: 6px 0 16px; }
 .mascot-wrap { flex: none; width: 104px; animation: float 3.6s ease-in-out infinite; }
-.mascot.big { width: 100%; height: auto; display: block; filter: drop-shadow(0 8px 10px rgb(107 52 22 / 16%)); }
+.mascot.big { width: 100%; height: auto; display: block; filter: drop-shadow(0 8px 10px rgb(159 74 92 / 16%)); }
 @keyframes float { 50% { transform: translateY(-6px); } }
 .speech {
   position: relative; flex: 1; background: var(--surface); border-radius: 26px; padding: 16px 18px; box-shadow: var(--shadow);
@@ -817,7 +815,7 @@ button.group-title { width: 100%; }
   transform: rotate(var(--a)) translate(var(--r)) rotate(calc(-1 * var(--a)));
 }
 .splash-food svg {
-  width: 100%; height: 100%; filter: blur(.4px) drop-shadow(0 6px 10px rgb(120 70 60 / 18%));
+  width: 100%; height: 100%; filter: blur(.4px) drop-shadow(0 6px 10px rgb(159 74 92 / 18%));
   animation: food-pop .6s cubic-bezier(.3, 1.6, .5, 1) both, bob 2.6s ease-in-out infinite;
   animation-delay: calc(.15s + var(--i) * .07s), calc(var(--i) * -.3s);
 }
@@ -843,15 +841,15 @@ button.group-title { width: 100%; }
    Same palette, icons and fonts; overrides the earlier, chunkier styling.
    ===================================================================== */
 :root {
-  --hair: rgb(107 52 22 / 11%);
+  --hair: rgb(159 74 92 / 11%);
   --radius: 28px;
-  --shadow: 0 1px 2px rgb(107 52 22 / 5%), 0 14px 34px -22px rgb(107 52 22 / 30%);
+  --shadow: 0 1px 2px rgb(159 74 92 / 5%), 0 14px 34px -22px rgb(159 74 92 / 30%);
   --press: none;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --hair: rgb(255 236 174 / 10%); --shadow: 0 14px 34px -20px rgb(0 0 0 / 70%); }
+  :root:not([data-theme="light"]) { --hair: rgb(245 233 207 / 10%); --shadow: 0 14px 34px -20px rgb(0 0 0 / 70%); }
 }
-:root[data-theme="dark"] { --hair: rgb(255 236 174 / 10%); --shadow: 0 14px 34px -20px rgb(0 0 0 / 70%); }
+:root[data-theme="dark"] { --hair: rgb(245 233 207 / 10%); --shadow: 0 14px 34px -20px rgb(0 0 0 / 70%); }
 
 body { letter-spacing: -.005em; }
 main { padding-top: 14px; }
@@ -895,7 +893,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .tabbar {
   background: color-mix(in srgb, var(--surface) 74%, transparent);
   backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid var(--hair); box-shadow: 0 18px 40px -20px rgb(107 52 22 / 35%);
+  border: 1px solid var(--hair); box-shadow: 0 18px 40px -20px rgb(159 74 92 / 35%);
 }
 .tabbar button { font-weight: 700; }
 .tabbar button.active { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-deep); }
@@ -915,8 +913,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .pill { border: 1px solid var(--hair); font-weight: 600; }
 .soon { background: var(--surface); border-left: 4px solid var(--warn); }
 .ideas { background: var(--surface); border-top: 4px solid var(--accent); }
-dialog { box-shadow: 0 40px 90px -30px rgb(20 35 55 / 45%); }
-dialog::backdrop { background: rgb(20 35 55 / 30%); backdrop-filter: blur(6px); }
+dialog { box-shadow: 0 40px 90px -30px rgb(80 30 42 / 45%); }
+dialog::backdrop { background: rgb(80 30 42 / 30%); backdrop-filter: blur(6px); }
 
 /* meal slots */
 .slot.filled { background: color-mix(in srgb, var(--meal) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--meal) 22%, transparent); }
@@ -985,14 +983,14 @@ dialog::backdrop { background: rgb(20 35 55 / 30%); backdrop-filter: blur(6px); 
 .plan-heading .hero-title { font-size: 1.45rem; }
 .plan-head .icon-btn { width: 38px; height: 38px; }
 .bg-art::after { opacity: .24; }
-.defrost-card { background: var(--surface); border-left: 4px solid #5b8fd6; }
+.defrost-card { background: var(--surface); border-left: 4px solid #d96c81; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .defrost-card { background: var(--surface); } }
 :root[data-theme="dark"] .defrost-card { background: var(--surface); }
 
 /* On phones the save status is a small dot so it never crowds the centred logo (full text in its tooltip/label). */
 @media (max-width: 480px) {
   .sync:not(:empty) { font-size: 0; padding: 0; width: 10px; height: 10px; min-width: 0; border-radius: 50%; box-shadow: none; border: 0; left: 18px; background: var(--muted); }
-  .sync[data-status="saved"] { background: #b4b534; }
+  .sync[data-status="saved"] { background: #f4af30; }
   .sync[data-status="offline"], .sync[data-status="local"] { background: var(--warn); }
   .sync[data-status="saved"]::before { content: none; }
 }
@@ -1004,8 +1002,8 @@ body { background: var(--bg); }
 .topbar { background: color-mix(in srgb, var(--bg) 85%, transparent); }
 .badge { color: var(--accent-ink); }
 .defrost-card { border-left-color: var(--lilac); }
-.defrost, .defrost-note { color: #3b6ea6; }
-.defrost-note, .ice-tag, .defrost-reminder { background: #e3edf8; }
+.defrost, .defrost-note { color: #9f4a5c; }
+.defrost-note, .ice-tag, .defrost-reminder { background: #fbe6ea; }
 /* Wordmark letters cycle through the four palette colours that stand out on Butter. */
 .wordmark span:nth-child(4n+1) { color: var(--coral); }
 .wordmark span:nth-child(4n+2) { color: var(--pink); }
@@ -1031,3 +1029,11 @@ body { background: var(--bg); }
 /* Header: the slogan is wider than "Kitchen", so it hangs centred without widening the logo. */
 .topbar .lm-tag { width: 0; align-self: center; display: flex; justify-content: center; white-space: nowrap; padding: 0; letter-spacing: .16em; }
 .topbar .logomark { margin-bottom: 2px; }
+
+/* Meals: breakfast Sunflower Gold, lunch Rose Sorbet, dinner Rose Sorbet Dark (Rose Light in dark mode). */
+.slot.meal-breakfast, .mk.breakfast { --meal: #f4af30; }
+.slot.meal-lunch { --meal: #d96c81; }
+.slot.meal-dinner { --meal: var(--accent-deep); }
+.mk.breakfast { background: #f4af30; }
+.mk.lunch { background: #d96c81; }
+.mk.dinner { background: var(--accent-deep); }
