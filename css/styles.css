@@ -1,138 +1,137 @@
 :root {
-  /* Apricot and orange: pale apricot background, vibrant orange accent */
-  --bg: #ffecae;
-  --blob-1: #ffd99a;
-  --blob-2: #fff3cf;
-  --blob-3: #ffd2b0;
-  --surface: #fff8e3;
-  --surface-2: #ffefc4;
-  --text: #4a2414;
-  --muted: #87492a;
-  --border: #f6d48a;
-  /* supporting shades, all from the orange family (names kept from the fruit palette) */
-  --olive: #f17141;
-  --raspberry: #c9452a;
-  --sun: #f7a93b;
-  --lilac: #e0794f;
-  --pink: #f59a76;
-  --coral: #f17141;
-  --accent: #f17141;
-  --accent-deep: #d65a2b;
-  --accent-ink: #fff8e3;
-  --accent-soft: #fdd7b9;
-  --pink-soft: #fde0c8;
-  --warn: #b4530f;
-  --warn-soft: #ffe1b0;
-  --danger: #c0262d;
-  --danger-soft: #fbd9d2;
-  --fridge: #f17141;
-  --freezer: #e0794f;
-  --pantry: #c9672e;
-  --radius: 26px;
+  /* Palette: Tangerine #F08C21, Butter #F2D88F, Blush #E36888, Sea #6698CC, Matcha #B4B534.
+     Text uses a deep navy darkened from Sea so it stays readable on Butter. */
+  --bg: #f2d88f;
+  --blob-1: #f2d88f;
+  --blob-2: #f2d88f;
+  --blob-3: #f2d88f;
+  --surface: #fff7e2;
+  --surface-2: #faecc4;
+  --text: #24405f;
+  --muted: #45658a;
+  --border: #e6c97a;
+  /* named slots from earlier palettes, now mapped onto the five colours */
+  --olive: #b4b534;
+  --raspberry: #e36888;
+  --sun: #e2b94a;
+  --lilac: #6698cc;
+  --pink: #e36888;
+  --coral: #f08c21;
+  --accent: #f08c21;
+  --accent-deep: #d8760c;
+  --accent-ink: #1f3550;
+  --accent-soft: #fbdcb5;
+  --pink-soft: #f8d3dc;
+  --warn: #b65f06;
+  --warn-soft: #fbe2c4;
+  --danger: #c2456a;
+  --danger-soft: #f8d6df;
+  --fridge: #4f84bd;
+  --freezer: #6698cc;
+  --pantry: #8c8d1a;
+  --radius: 28px;
   --radius-sm: 18px;
-  --shadow: 0 2px 0 rgb(120 60 20 / 5%), 0 10px 24px -12px rgb(160 80 30 / 30%);
-  --press: 0 4px 0 rgb(120 50 20 / 20%);
+  --shadow: 0 1px 2px rgb(36 64 95 / 5%), 0 14px 34px -22px rgb(36 64 95 / 30%);
+  --press: none;
 
-  /* fridge and pantry */
-  --fridge-shell: #fff6dc;
-  --fridge-edge: #f7c08f;
-  --fridge-inside: #fffbef;
-  --freezer-inside: #fff0d4;
-  --glass: rgb(241 113 65 / 26%);
-  --drawer: #ffe3c8;
-  --wood: #f7bf73;
-  --wood-dark: #e0804a;
-  --wood-inside: #fff6dc;
-  --bin: #ffdfa0;
+  /* fridge (Sea), pantry (Matcha) */
+  --fridge-shell: #f2f6fb;
+  --fridge-edge: #a9c3e3;
+  --fridge-inside: #f8fbfe;
+  --freezer-inside: #e6eef8;
+  --glass: rgb(102 152 204 / 30%);
+  --drawer: #e1ebf6;
+  --wood: #cfd07a;
+  --wood-dark: #b4b534;
+  --wood-inside: #fbf8e6;
+  --bin: #eef0c8;
   color-scheme: light;
   font-family: "Zalando Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #24160d;
-    --blob-1: #3a2312;
-    --blob-2: #2f2010;
-    --blob-3: #3a1d12;
-    --surface: #33200f;
-    --surface-2: #402a16;
-    --text: #ffecae;
-    --muted: #d4a77f;
-    --border: #553620;
-    --olive: #f58a5e;
-    --raspberry: #ff7a5c;
-    --sun: #ffc163;
-    --lilac: #f09a72;
-    --pink: #ffb393;
-    --coral: #f58a5e;
-    --accent: #f58a5e;
-    --accent-deep: #f17141;
-    --accent-ink: #24160d;
-    --accent-soft: #4a2a17;
-    --pink-soft: #45261a;
-    --warn: #ffc163;
-    --warn-soft: #3d2a12;
-    --danger: #ff7a7a;
-    --danger-soft: #45201c;
-    --fridge: #f58a5e;
-    --freezer: #f09a72;
-    --pantry: #e59a5c;
-    --shadow: 0 10px 24px -12px rgb(0 0 0 / 60%);
-    --press: 0 4px 0 rgb(0 0 0 / 40%);
-    --fridge-shell: #3a2414;
-    --fridge-edge: #6b3f22;
-    --fridge-inside: #2e1c0e;
-    --freezer-inside: #3a2312;
-    --glass: rgb(245 138 94 / 30%);
-    --drawer: #45291a;
-    --wood: #6e4520;
-    --wood-dark: #a8622f;
-    --wood-inside: #2e1d0f;
-    --bin: #4a3014;
+    --bg: #1d2a3d;
+    --blob-1: #1d2a3d;
+    --blob-2: #1d2a3d;
+    --blob-3: #1d2a3d;
+    --surface: #26364d;
+    --surface-2: #2f415b;
+    --text: #f2d88f;
+    --muted: #b7c7dc;
+    --border: #3a4d68;
+    --olive: #c9ca4f;
+    --raspberry: #ec85a1;
+    --sun: #f2d88f;
+    --lilac: #8db4dd;
+    --pink: #ec85a1;
+    --coral: #f5a04a;
+    --accent: #f5a04a;
+    --accent-deep: #f08c21;
+    --accent-ink: #1d2a3d;
+    --accent-soft: #4a3a2a;
+    --pink-soft: #4a2d3a;
+    --warn: #f5b25e;
+    --warn-soft: #3f3322;
+    --danger: #f08aa5;
+    --danger-soft: #4a2733;
+    --fridge: #8db4dd;
+    --freezer: #8db4dd;
+    --pantry: #c9ca4f;
+    --shadow: 0 14px 34px -20px rgb(0 0 0 / 70%);
+    --fridge-shell: #263a52;
+    --fridge-edge: #46638a;
+    --fridge-inside: #22334a;
+    --freezer-inside: #2a4060;
+    --glass: rgb(141 180 221 / 30%);
+    --drawer: #2c4462;
+    --wood: #5e5f22;
+    --wood-dark: #8f9028;
+    --wood-inside: #2a3524;
+    --bin: #364028;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #24160d;
-  --blob-1: #3a2312;
-  --blob-2: #2f2010;
-  --blob-3: #3a1d12;
-  --surface: #33200f;
-  --surface-2: #402a16;
-  --text: #ffecae;
-  --muted: #d4a77f;
-  --border: #553620;
-  --olive: #f58a5e;
-  --raspberry: #ff7a5c;
-  --sun: #ffc163;
-  --lilac: #f09a72;
-  --pink: #ffb393;
-  --coral: #f58a5e;
-  --accent: #f58a5e;
-  --accent-deep: #f17141;
-  --accent-ink: #24160d;
-  --accent-soft: #4a2a17;
-  --pink-soft: #45261a;
-  --warn: #ffc163;
-  --warn-soft: #3d2a12;
-  --danger: #ff7a7a;
-  --danger-soft: #45201c;
-  --fridge: #f58a5e;
-  --freezer: #f09a72;
-  --pantry: #e59a5c;
-  --shadow: 0 10px 24px -12px rgb(0 0 0 / 60%);
-  --press: 0 4px 0 rgb(0 0 0 / 40%);
-  --fridge-shell: #3a2414;
-  --fridge-edge: #6b3f22;
-  --fridge-inside: #2e1c0e;
-  --freezer-inside: #3a2312;
-  --glass: rgb(245 138 94 / 30%);
-  --drawer: #45291a;
-  --wood: #6e4520;
-  --wood-dark: #a8622f;
-  --wood-inside: #2e1d0f;
-  --bin: #4a3014;
+  --bg: #1d2a3d;
+  --blob-1: #1d2a3d;
+  --blob-2: #1d2a3d;
+  --blob-3: #1d2a3d;
+  --surface: #26364d;
+  --surface-2: #2f415b;
+  --text: #f2d88f;
+  --muted: #b7c7dc;
+  --border: #3a4d68;
+  --olive: #c9ca4f;
+  --raspberry: #ec85a1;
+  --sun: #f2d88f;
+  --lilac: #8db4dd;
+  --pink: #ec85a1;
+  --coral: #f5a04a;
+  --accent: #f5a04a;
+  --accent-deep: #f08c21;
+  --accent-ink: #1d2a3d;
+  --accent-soft: #4a3a2a;
+  --pink-soft: #4a2d3a;
+  --warn: #f5b25e;
+  --warn-soft: #3f3322;
+  --danger: #f08aa5;
+  --danger-soft: #4a2733;
+  --fridge: #8db4dd;
+  --freezer: #8db4dd;
+  --pantry: #c9ca4f;
+  --shadow: 0 14px 34px -20px rgb(0 0 0 / 70%);
+  --fridge-shell: #263a52;
+  --fridge-edge: #46638a;
+  --fridge-inside: #22334a;
+  --freezer-inside: #2a4060;
+  --glass: rgb(141 180 221 / 30%);
+  --drawer: #2c4462;
+  --wood: #5e5f22;
+  --wood-dark: #8f9028;
+  --wood-inside: #2a3524;
+  --bin: #364028;
   color-scheme: dark;
 }
 
@@ -176,7 +175,7 @@ p { margin: 0 0 10px; }
 .wordmark span:nth-child(6n+3) { color: var(--sun); }
 .wordmark span:nth-child(6n+4) { color: var(--lilac); }
 .wordmark span:nth-child(6n+5) { color: var(--pink); }
-.wordmark span:nth-child(6n) { color: #e85d2f; }
+.wordmark span:nth-child(6n) { color: var(--lilac); }
 .hand { font-family: "Chewy", "Zalando Sans", system-ui, sans-serif; font-weight: 400; color: var(--coral); letter-spacing: .03em; }
 .logo .hand { font-size: .7rem; margin-top: 1px; }
 
@@ -383,9 +382,9 @@ ol.steps li { margin-bottom: 8px; }
 .item-dialog .stepper .step { width: 46px; height: 46px; font-size: 1.5rem; }
 .item-dialog .stepper .qty { font-family: "Funnel Sans", "Zalando Sans", system-ui, sans-serif; font-weight: 800; font-size: 1.3rem; min-width: 90px; }
 .item-dialog .where { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-.item-dialog .where .chip.active.loc-fridge { background: var(--fridge); color: #fff; }
-.item-dialog .where .chip.active.loc-freezer { background: var(--freezer); color: #fff; }
-.item-dialog .where .chip.active.loc-pantry { background: var(--pantry); color: #fff; }
+.item-dialog .where .chip.active.loc-fridge { background: var(--fridge); color: #fff7e2; }
+.item-dialog .where .chip.active.loc-freezer { background: var(--freezer); color: #1f3550; }
+.item-dialog .where .chip.active.loc-pantry { background: var(--pantry); color: #fff7e2; }
 .item-dialog .row.end { justify-content: center; }
 
 /* ---------- Shopping ---------- */
@@ -648,7 +647,7 @@ ol.steps li { margin-bottom: 8px; }
   color: var(--text); padding: 6px 12px; border-radius: 999px; transition: background .15s, transform .12s;
 }
 .kw-chip:active { transform: scale(.94); }
-.kw-chip.on { background: var(--kw); border-color: var(--kw); color: #fff; }
+.kw-chip.on { background: var(--kw); border-color: var(--kw); color: #1f3550; }
 .kw-chip.on[style*="--sun"] { color: var(--text); }
 .kw-chip.clear { --kw: var(--muted); background: transparent; }
 .kw-pills { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -732,7 +731,7 @@ ol.steps li { margin-bottom: 8px; }
 
 .home-hero { display: flex; align-items: center; gap: 10px; margin: 6px 0 16px; }
 .mascot-wrap { flex: none; width: 104px; animation: float 3.6s ease-in-out infinite; }
-.mascot.big { width: 100%; height: auto; display: block; filter: drop-shadow(0 8px 10px rgb(120 60 20 / 18%)); }
+.mascot.big { width: 100%; height: auto; display: block; filter: drop-shadow(0 8px 10px rgb(36 64 95 / 16%)); }
 @keyframes float { 50% { transform: translateY(-6px); } }
 .speech {
   position: relative; flex: 1; background: var(--surface); border-radius: 26px; padding: 16px 18px; box-shadow: var(--shadow);
@@ -844,9 +843,9 @@ button.group-title { width: 100%; }
    Same palette, icons and fonts; overrides the earlier, chunkier styling.
    ===================================================================== */
 :root {
-  --hair: rgb(74 36 20 / 9%);
+  --hair: rgb(36 64 95 / 11%);
   --radius: 28px;
-  --shadow: 0 1px 2px rgb(74 36 20 / 4%), 0 14px 34px -22px rgb(74 36 20 / 30%);
+  --shadow: 0 1px 2px rgb(36 64 95 / 5%), 0 14px 34px -22px rgb(36 64 95 / 30%);
   --press: none;
 }
 @media (prefers-color-scheme: dark) {
@@ -878,12 +877,12 @@ h2 { font-size: 1.22rem; }
 .btn { box-shadow: none; border: 1px solid var(--hair); background: var(--surface); font-weight: 700; padding: 10px 18px; }
 .btn:hover { filter: none; background: var(--surface-2); }
 .btn:active { transform: scale(.97); box-shadow: none; }
-.btn.primary { background: var(--accent); border-color: transparent; color: #fff; }
+.btn.primary { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
 .btn.primary:hover { background: var(--accent-deep); }
 .btn.small { padding: 6px 14px; font-size: .82rem; }
 .btn.danger { background: transparent; border-color: color-mix(in srgb, var(--danger) 30%, transparent); }
 .chip { box-shadow: none; border: 1px solid var(--hair); background: var(--surface); font-weight: 600; padding: 7px 15px; }
-.chip.active { background: var(--accent); border-color: transparent; color: #fff; }
+.chip.active { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
 input, select, textarea { background: var(--surface); border: 1px solid var(--hair); border-radius: 14px; }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent); }
 .toolbar input[type=search] { box-shadow: none; }
@@ -896,7 +895,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .tabbar {
   background: color-mix(in srgb, var(--surface) 74%, transparent);
   backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid var(--hair); box-shadow: 0 18px 40px -20px rgb(74 36 20 / 40%);
+  border: 1px solid var(--hair); box-shadow: 0 18px 40px -20px rgb(36 64 95 / 35%);
 }
 .tabbar button { font-weight: 700; }
 .tabbar button.active { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-deep); }
@@ -916,8 +915,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .pill { border: 1px solid var(--hair); font-weight: 600; }
 .soon { background: var(--surface); border-left: 4px solid var(--warn); }
 .ideas { background: var(--surface); border-top: 4px solid var(--accent); }
-dialog { box-shadow: 0 40px 90px -30px rgb(40 20 10 / 45%); }
-dialog::backdrop { background: rgb(40 20 10 / 30%); backdrop-filter: blur(6px); }
+dialog { box-shadow: 0 40px 90px -30px rgb(20 35 55 / 45%); }
+dialog::backdrop { background: rgb(20 35 55 / 30%); backdrop-filter: blur(6px); }
 
 /* meal slots */
 .slot.filled { background: color-mix(in srgb, var(--meal) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--meal) 22%, transparent); }
@@ -993,7 +992,22 @@ dialog::backdrop { background: rgb(40 20 10 / 30%); backdrop-filter: blur(6px); 
 /* On phones the save status is a small dot so it never crowds the centred logo (full text in its tooltip/label). */
 @media (max-width: 480px) {
   .sync:not(:empty) { font-size: 0; padding: 0; width: 10px; height: 10px; min-width: 0; border-radius: 50%; box-shadow: none; border: 0; left: 18px; background: var(--muted); }
-  .sync[data-status="saved"] { background: #3aa66b; }
+  .sync[data-status="saved"] { background: #b4b534; }
   .sync[data-status="offline"], .sync[data-status="local"] { background: var(--warn); }
   .sync[data-status="saved"]::before { content: none; }
 }
+
+/* Solid background: no squiggles or fruit pattern; the splash is plain too. */
+.bg-art { display: none; }
+body { background: var(--bg); }
+.splash { background: var(--bg); }
+.topbar { background: color-mix(in srgb, var(--bg) 85%, transparent); }
+.badge { color: var(--accent-ink); }
+.defrost-card { border-left-color: var(--lilac); }
+.defrost, .defrost-note { color: #3b6ea6; }
+.defrost-note, .ice-tag, .defrost-reminder { background: #e3edf8; }
+/* Wordmark letters cycle through the four palette colours that stand out on Butter. */
+.wordmark span:nth-child(4n+1) { color: var(--coral); }
+.wordmark span:nth-child(4n+2) { color: var(--pink); }
+.wordmark span:nth-child(4n+3) { color: var(--lilac); }
+.wordmark span:nth-child(4n) { color: var(--olive); }

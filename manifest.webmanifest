@@ -4,8 +4,8 @@
   "description": "Your fridge and pantry, receipt scanning, and recipes from what you have.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffecae",
-  "theme_color": "#ffecae",
+  "background_color": "#f2d88f",
+  "theme_color": "#f2d88f",
   "icons": [
     { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" },
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
