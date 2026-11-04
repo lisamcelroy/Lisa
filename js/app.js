@@ -8,6 +8,9 @@ import { loadState, saveState, makeItem, addToInventory, newId, toSynced, adoptR
 import { connectCloud } from "./cloud.js";
 import { renderAppliances } from "./fridge.js";
 import { foodIcon } from "./icons.js";
+import { estimateCalories } from "./nutrition.js";
+import { KEYWORDS, KEYWORD_IDS, KEYWORD_LABEL, keywordsFor } from "./data/keywords.js";
+import { MEALS, MEAL_LABEL, isoDay, fromIsoDay, weekDays, dayCalories, prunePlan, plannedRecipeIds } from "./plan.js";
 import { UNIT_CHOICES, formatQty, normalizeUnit } from "./units.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -15,8 +18,9 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 let state = loadState();
-const ui = { tab: "fridge", show: "both", itemId: null, loc: "all", search: "", recipeFilter: "ready", recipeSearch: "", review: [] };
+const ui = { tab: "fridge", show: "both", itemId: null, keywords: new Set(), loc: "all", search: "", recipeFilter: "ready", recipeSearch: "", review: [] };
 state.ideas ||= { key: "", recipes: [] };
+state.plan ||= {};
 
 // Saving: every change goes to this browser's storage straight away and, on
 // claude.ai, to the person's private saved copy (see cloud.js).
@@ -448,6 +452,7 @@ function saveCustomRecipe(recipe) {
       optional: Boolean(ing.optional),
     })),
     steps: recipe.steps || [],
+    keywords: (recipe.keywords || []).filter((k) => KEYWORD_IDS.includes(k)),
     custom: true,
     addedAt: recipe.addedAt || Date.now(),
   };
@@ -544,7 +549,8 @@ function recipeCard(r) {
   const extra = r.recipe.custom ? " &middot; mine" : "";
   return `<button class="recipe" data-recipe="${esc(r.recipe.id)}">
     <h3>${esc(r.recipe.title)}</h3>
-    <div class="tagline">${r.recipe.minutes} min &middot; serves ${r.recipe.servings}${extra}</div>
+    <div class="tagline">${r.recipe.minutes} min &middot; serves ${r.recipe.servings}${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""}${extra}</div>
+    ${kwPills(r.recipe, 3)}
     <div class="meter" aria-label="${pct}% of ingredients on hand"><div style="width:${pct}%"></div></div>
     ${r.usesSoon.length ? `<div class="rescue">Uses up: ${esc(r.usesSoon.join(", "))}</div>` : ""}
     <div class="missing">${r.missing.length ? `Need: <b>${esc(r.missing.join(", "))}</b>` : "You have everything"}</div>
@@ -557,7 +563,9 @@ function renderRecipes() {
 
   const ranked = recommend(allRecipes(), state.inventory, { assumeStaples: state.settings.assumeStaples });
   const q = ui.recipeSearch.toLowerCase();
-  let list = ranked.filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.tags.some((t) => t.includes(q)) || r.recipe.ingredients.some((i) => i.name.includes(q)));
+  renderKeywordFilter();
+  let list = ranked.filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.tags.some((t) => t.includes(q)) || r.recipe.ingredients.some((i) => i.name.includes(q)) || keywordsFor(r.recipe).some((k) => KEYWORD_LABEL[k].toLowerCase().includes(q)));
+  if (ui.keywords.size) list = list.filter((r) => { const ks = keywordsFor(r.recipe); return [...ui.keywords].every((k) => ks.includes(k)); });
 
   const f = ui.recipeFilter;
   if (f === "ready") list = list.filter((r) => r.missing.length === 0 && r.have.length);
@@ -565,6 +573,11 @@ function renderRecipes() {
   if (f === "mine") list = list.filter((r) => r.recipe.custom);
   if (f === "rescue") list = list.filter((r) => r.usesSoon.length).sort((a, b) => b.usesSoon.length - a.usesSoon.length || a.missing.length - b.missing.length);
 
+  if (!list.length && ui.keywords.size) {
+    const where = { ready: "Ready to cook", almost: "Almost there", mine: "Mine", rescue: "this list", all: "All" }[f];
+    $("#recipes").innerHTML = `<div class="empty">Nothing in ${where} matches ${[...ui.keywords].map((k) => `"${KEYWORD_LABEL[k]}"`).join(" + ")}.${f !== "all" ? ` <button class="btn small" data-act="kw-all">Show All recipes</button>` : ""}</div>`;
+    return;
+  }
   if (!list.length) {
     const hint = {
       ready: state.inventory.length
@@ -581,6 +594,33 @@ function renderRecipes() {
   $("#recipes").innerHTML = list.map(recipeCard).join("");
 }
 
+// Scenario keywords: pick any number; a recipe has to match all of them.
+const KW_COLORS = ["var(--olive)", "var(--raspberry)", "var(--sun)", "var(--lilac)", "var(--pink)", "var(--coral)"];
+const kwColor = (id) => KW_COLORS[KEYWORD_IDS.indexOf(id) % KW_COLORS.length];
+
+function kwPills(recipe, max = Infinity) {
+  const ks = keywordsFor(recipe);
+  if (!ks.length) return "";
+  const shown = ks.slice(0, max);
+  return `<div class="kw-pills">${shown.map((k) => `<span class="kw" style="--kw:${kwColor(k)}">${esc(KEYWORD_LABEL[k])}</span>`).join("")}${ks.length > shown.length ? `<span class="kw more">+${ks.length - shown.length}</span>` : ""}</div>`;
+}
+
+function renderKeywordFilter() {
+  $("#keyword-filter").innerHTML =
+    KEYWORDS.map((k) => `<button class="kw-chip ${ui.keywords.has(k.id) ? "on" : ""}" style="--kw:${kwColor(k.id)}" data-kw="${k.id}" aria-pressed="${ui.keywords.has(k.id)}">${esc(k.label)}</button>`).join("") +
+    (ui.keywords.size ? `<button class="kw-chip clear" data-kw-clear>Clear</button>` : "");
+}
+
+$("#keyword-filter").addEventListener("click", (e) => {
+  const chip = e.target.closest("[data-kw]");
+  if (e.target.closest("[data-kw-clear]")) ui.keywords.clear();
+  else if (chip) {
+    const k = chip.dataset.kw;
+    ui.keywords.has(k) ? ui.keywords.delete(k) : ui.keywords.add(k);
+  } else return;
+  renderRecipes();
+});
+
 $("#recipe-filter").addEventListener("click", (e) => {
   const chip = e.target.closest(".chip");
   if (!chip) return;
@@ -594,6 +634,10 @@ $("#recipe-search").addEventListener("input", (e) => {
 });
 
 $("#recipes").addEventListener("click", (e) => {
+  if (e.target.closest("[data-act=kw-all]")) {
+    ui.recipeFilter = "all";
+    return renderRecipes();
+  }
   const card = e.target.closest("[data-recipe]");
   if (card) openRecipe(card.dataset.recipe);
 });
@@ -612,7 +656,8 @@ function openRecipe(id) {
 
   $("#recipe-detail").innerHTML = `
     <h2>${esc(recipe.title)}</h2>
-    <p class="muted">${recipe.minutes} min &middot; serves ${recipe.servings}${r.usesSoon.length ? ` &middot; <span class="rescue">uses up ${esc(r.usesSoon.join(", "))}</span>` : ""}</p>
+    <p class="muted">${recipe.minutes} min &middot; serves ${recipe.servings}${kcalText(recipe) ? ` &middot; <span class="kcal" title="Estimated per serving from the ingredients, without optional extras">${kcalText(recipe)} per serving</span>` : ""}${r.usesSoon.length ? ` &middot; <span class="rescue">uses up ${esc(r.usesSoon.join(", "))}</span>` : ""}</p>
+    ${kwPills(recipe)}
     <h3>Ingredients</h3>
     <ul class="ing-list">
       ${recipe.ingredients.map((ing) => {
@@ -627,6 +672,7 @@ function openRecipe(id) {
       ${recipe.custom ? `<button class="btn danger" data-act="delete">Delete</button>` : ""}
       ${isIdea ? `<button class="btn" data-act="keep">Save to my recipes</button>` : ""}
       ${r.missing.length ? `<button class="btn" data-act="shop">Add ${r.missing.length} to shopping list</button>` : ""}
+      <button class="btn" data-act="plan">Plan it</button>
       <button class="btn primary" data-act="cook">I cooked this</button>
       <button class="btn" data-act="close">Close</button>
     </div>`;
@@ -653,6 +699,10 @@ function openRecipe(id) {
       state.customRecipes = state.customRecipes.filter((x) => x.id !== recipe.id);
       commit();
       dlg.close();
+    }
+    if (act === "plan") {
+      dlg.close();
+      return openPlanFor(recipe);
     }
     if (act === "keep") {
       state.ideas.recipes = state.ideas.recipes.filter((x) => x !== recipe);
@@ -777,6 +827,220 @@ window.claude?.use?.("sample").then(async (fn) => {
   updateScanEngine();
   if (ui.tab === "recipes") renderRecipes();
 }).catch(() => {});
+
+// ---------- Meal plan ----------
+
+const planUi = { week: 0, slot: null, recipe: null, meal: "dinner" };
+
+function kcalOf(recipe) {
+  return estimateCalories(recipe).perServing;
+}
+
+function kcalText(recipe) {
+  const k = kcalOf(recipe);
+  return k > 0 ? `~${k} kcal` : "";
+}
+
+const shortDate = (d) => d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+const dayMonth = (d) => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+// Ideas from Claude are saved to "Mine" when planned, so the plan never points at something that disappears.
+function entryFor(recipe) {
+  let r = recipe;
+  if (recipe.idea) {
+    state.ideas.recipes = state.ideas.recipes.filter((x) => x !== recipe);
+    r = saveCustomRecipe({ ...recipe, id: undefined, idea: undefined, tags: ["mine", "claude"] });
+  }
+  return { recipeId: r.id, title: r.title, kcal: kcalOf(r) };
+}
+
+function setPlan(day, meal, entry) {
+  const plan = { ...state.plan, [day]: { ...(state.plan[day] || {}) } };
+  if (entry) plan[day][meal] = entry;
+  else delete plan[day][meal];
+  state.plan = prunePlan(plan);
+  commit();
+}
+
+function defaultMeal(recipe) {
+  const tags = recipe.tags || [];
+  if (tags.includes("breakfast")) return "breakfast";
+  if (tags.includes("lunch") || tags.includes("salad")) return "lunch";
+  return "dinner";
+}
+
+function weekMissing(days) {
+  const ids = plannedRecipeIds(state.plan, days, isoDay(new Date()));
+  const missing = new Set();
+  for (const id of ids) {
+    const recipe = findRecipe(id);
+    if (!recipe) continue;
+    const [r] = recommend([recipe], state.inventory, { assumeStaples: state.settings.assumeStaples });
+    r.missing.forEach((m) => missing.add(m));
+  }
+  return [...missing];
+}
+
+function renderPlan() {
+  const days = weekDays(planUi.week);
+  const today = isoDay(new Date());
+  $("#plan-title").textContent =
+    { 0: "This week", 1: "Next week", "-1": "Last week" }[planUi.week] ?? `Week of ${dayMonth(days[0])}`;
+  $("#plan-range").textContent = `${dayMonth(days[0])} to ${dayMonth(days[6])}`;
+
+  let meals = 0;
+  const totals = [];
+  for (const d of days) {
+    const c = dayCalories(state.plan[isoDay(d)]);
+    meals += c.meals;
+    if (c.meals) totals.push(c.total);
+  }
+  const avg = totals.length ? Math.round(totals.reduce((a, b) => a + b, 0) / totals.length / 10) * 10 : 0;
+  const missing = weekMissing(days);
+  $("#plan-summary").innerHTML = `
+    <div class="plan-stats">
+      <div><b>${meals}<small>/21</small></b><span>meals planned</span></div>
+      <div><b>${avg ? "~" + avg : "&ndash;"}</b><span>avg kcal a day</span></div>
+      <div><b>${missing.length}</b><span>to buy</span></div>
+    </div>
+    ${missing.length ? `<button class="btn small" data-act="plan-shop">Add ${missing.length} missing ingredient${missing.length === 1 ? "" : "s"} to shopping list</button>` : ""}`;
+
+  $("#plan-days").innerHTML = days.map((d) => {
+    const iso = isoDay(d);
+    const day = state.plan[iso] || {};
+    const c = dayCalories(day);
+    return `<div class="plan-day ${iso === today ? "today" : ""} ${iso < today ? "past" : ""}">
+      <div class="plan-day-head">
+        <div><b>${d.toLocaleDateString(undefined, { weekday: "long" })}</b> <span class="muted small">${dayMonth(d)}${iso === today ? " &middot; today" : ""}</span></div>
+        ${c.meals ? `<span class="day-kcal">${c.known ? "" : "at least "}~${c.total} kcal</span>` : ""}
+      </div>
+      <div class="slots">
+        ${MEALS.map((m) => {
+          const e = day[m];
+          const ref = `${iso}|${m}`;
+          if (!e) return `<button class="slot empty meal-${m}" data-pick="${ref}"><span class="slot-label">${MEAL_LABEL[m]}</span><span class="slot-add">+ Add</span></button>`;
+          return `<div class="slot filled meal-${m}">
+            <button class="slot-main" data-open="${ref}"><span class="slot-label">${MEAL_LABEL[m]}</span><span class="slot-title">${esc(e.title || e.text)}</span>${Number.isFinite(e.kcal) && e.kcal > 0 ? `<span class="slot-kcal">~${e.kcal} kcal</span>` : ""}</button>
+            <button class="x" data-clear="${ref}" aria-label="Clear ${m}">&times;</button>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+$("#plan-prev").addEventListener("click", () => { planUi.week--; renderPlan(); });
+$("#plan-next").addEventListener("click", () => { planUi.week++; renderPlan(); });
+$("#plan-summary").addEventListener("click", (e) => {
+  if (!e.target.closest("[data-act=plan-shop]")) return;
+  const missing = weekMissing(weekDays(planUi.week));
+  addToShopping(missing);
+  toast(`Added ${missing.length} to your shopping list`);
+});
+$("#plan-days").addEventListener("click", (e) => {
+  const pick = e.target.closest("[data-pick]")?.dataset.pick;
+  const clear = e.target.closest("[data-clear]")?.dataset.clear;
+  const open = e.target.closest("[data-open]")?.dataset.open;
+  if (pick) return openSlotPicker(...pick.split("|"));
+  if (clear) return setPlan(...clear.split("|"), null);
+  if (open) {
+    const [day, meal] = open.split("|");
+    const id = state.plan[day]?.[meal]?.recipeId;
+    return id && findRecipe(id) ? openRecipe(id) : openSlotPicker(day, meal);
+  }
+});
+
+// Picker: choose a recipe (or type something) for one day's meal.
+function pickList() {
+  const { meal } = planUi.slot;
+  const q = ($("#plan-search")?.value || "").trim().toLowerCase();
+  const fits = { breakfast: ["breakfast"], lunch: ["lunch", "salad", "soup", "quick"], dinner: ["dinner", "family", "soup"] }[meal];
+  const pool = [...allRecipes(), ...state.ideas.recipes];
+  const ranked = recommend(pool, state.inventory, { assumeStaples: state.settings.assumeStaples })
+    .filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.ingredients.some((i) => i.name.includes(q)))
+    .sort((a, b) => (fits.some((t) => b.recipe.tags?.includes(t)) - fits.some((t) => a.recipe.tags?.includes(t))) || b.score - a.score)
+    .slice(0, 40);
+  return ranked.length
+    ? ranked.map((r) => `<button class="pick" data-recipe="${esc(r.recipe.id)}"><b>${esc(r.recipe.title)}</b>
+        <span>${r.recipe.minutes} min${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""} &middot; ${r.missing.length ? `need ${r.missing.length}` : "you have everything"}${r.recipe.idea ? " &middot; idea" : ""}</span></button>`).join("")
+    : `<div class="empty">No recipes match.</div>`;
+}
+
+function openSlotPicker(day, meal) {
+  planUi.slot = { day, meal };
+  planUi.recipe = null;
+  const d = fromIsoDay(day);
+  $("#plan-detail").innerHTML = `
+    <h2>${MEAL_LABEL[meal]} &middot; ${esc(shortDate(d))}</h2>
+    <input id="plan-search" type="search" placeholder="Search recipes or ingredients" aria-label="Search recipes" />
+    <div class="pick-list" id="pick-list">${pickList()}</div>
+    <h3>Or something else</h3>
+    <div class="row">
+      <input id="plan-text" placeholder="Leftovers, eating out..." aria-label="Something else" />
+      <input id="plan-text-kcal" type="number" min="0" step="10" placeholder="kcal" aria-label="Calories (optional)" />
+      <button class="btn" data-act="plan-text">Add</button>
+    </div>
+    <div class="row end"><button class="btn" data-act="close">Close</button></div>`;
+  $("#plan-search").addEventListener("input", () => { $("#pick-list").innerHTML = pickList(); });
+  const dlg = $("#plan-dialog");
+  if (!dlg.open) dlg.showModal();
+}
+
+// Planner from a recipe: choose the meal and the day.
+function renderPlanFor() {
+  const recipe = planUi.recipe;
+  const days = Array.from({ length: 14 }, (_, i) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i); return d; });
+  $("#plan-detail").innerHTML = `
+    <h2>Plan ${esc(recipe.title)}</h2>
+    <p class="muted small">${kcalText(recipe) ? kcalText(recipe) + " per serving &middot; " : ""}pick a meal, then a day</p>
+    <div class="chips meal-chips">${MEALS.map((m) => `<button class="chip ${m === planUi.meal ? "active" : ""}" data-meal="${m}">${MEAL_LABEL[m]}</button>`).join("")}</div>
+    <div class="pick-days">${days.map((d) => {
+      const iso = isoDay(d);
+      const taken = state.plan[iso]?.[planUi.meal];
+      return `<button class="pick-day ${taken ? "taken" : ""}" data-day="${iso}"><b>${d.toLocaleDateString(undefined, { weekday: "short" })}</b><span>${dayMonth(d)}</span><small>${taken ? esc(taken.title || taken.text) : "free"}</small></button>`;
+    }).join("")}</div>
+    <div class="row end"><button class="btn" data-act="close">Close</button></div>`;
+}
+
+function openPlanFor(recipe) {
+  planUi.slot = null;
+  planUi.recipe = recipe;
+  planUi.meal = defaultMeal(recipe);
+  renderPlanFor();
+  const dlg = $("#plan-dialog");
+  if (!dlg.open) dlg.showModal();
+}
+
+$("#plan-dialog").addEventListener("click", (e) => {
+  const dlg = $("#plan-dialog");
+  if (e.target === dlg) return dlg.close();
+  const act = e.target.closest("[data-act]")?.dataset.act;
+  if (act === "close") return dlg.close();
+  const meal = e.target.closest("[data-meal]")?.dataset.meal;
+  if (meal) {
+    planUi.meal = meal;
+    return renderPlanFor();
+  }
+  const day = e.target.closest("[data-day]")?.dataset.day;
+  if (day && planUi.recipe) {
+    setPlan(day, planUi.meal, entryFor(planUi.recipe));
+    dlg.close();
+    return toast(`Planned for ${MEAL_LABEL[planUi.meal].toLowerCase()} on ${shortDate(fromIsoDay(day))}`);
+  }
+  const id = e.target.closest("[data-recipe]")?.dataset.recipe;
+  if (id && planUi.slot) {
+    const recipe = findRecipe(id);
+    if (recipe) setPlan(planUi.slot.day, planUi.slot.meal, entryFor(recipe));
+    return dlg.close();
+  }
+  if (act === "plan-text" && planUi.slot) {
+    const text = $("#plan-text").value.trim();
+    if (!text) return $("#plan-text").focus();
+    const kcal = parseInt($("#plan-text-kcal").value, 10);
+    setPlan(planUi.slot.day, planUi.slot.meal, { text, kcal: Number.isFinite(kcal) ? kcal : null });
+    dlg.close();
+  }
+});
 
 // ---------- Shopping ----------
 
@@ -917,6 +1181,7 @@ function render() {
   if (ui.tab === "fridge") renderFridge();
   if (ui.tab === "kitchen") renderKitchen();
   if (ui.tab === "recipes") renderRecipes();
+  if (ui.tab === "plan") renderPlan();
 }
 
 // ---------- Saved copy on claude.ai ----------

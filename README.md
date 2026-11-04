@@ -43,6 +43,21 @@ what is actually in your kitchen, starting with food that is about to go off.
 - "Add missing to shopping list" and "I cooked this", which takes the ingredients out of your stock
 - Basics like salt, pepper, oil and spices are assumed on hand (you can turn this off in Settings)
 
+**Recipe keywords and calories**
+- Every recipe shows an estimated calorie count per serving, worked out from its ingredients
+  (optional extras left out)
+- Filter recipes by occasion: Easy to cook, Ready in 20 min, Great for parties, The perfect entree,
+  Cozy comfort food, Light and healthy, Meal prep friendly, Kid friendly, Budget friendly, Weekend
+  brunch, Date night, One pan, Uses up leftovers, Vegetarian, Vegan. Pick several to narrow down.
+  Your own recipes get quick/vegetarian/vegan automatically, and Claude tags the ones it writes.
+
+**Plan**
+- A week calendar with breakfast, lunch and dinner for each day; flip between weeks
+- Fill a meal from your recipes (best matches for that meal first) or type anything ("leftovers")
+  with optional calories; or tap "Plan it" on any recipe and pick the day
+- Daily calorie totals, meals planned this week, and one tap to add everything the week's recipes
+  still need to your shopping list
+
 **Shopping list**
 - Tick items as you shop, then move them into your kitchen in one tap
 
@@ -84,6 +99,9 @@ Covers name matching, receipt parsing, recipe import, recipe ranking and cooking
 index.html            app shell
 css/styles.css        styles (light and dark)
 js/app.js             UI and wiring
+js/plan.js            meal plan dates and totals
+js/nutrition.js       calorie estimates
+js/data/keywords.js   recipe keywords
 js/fridge.js          the fridge and pantry drawing: which shelf each item goes on
 js/icons.js           food icons (inline SVG)
 js/data/foods.js      food catalog: names, receipt aliases, storage location, shelf life

@@ -1,10 +1,17 @@
 // Optional Claude integration. Only used when the person adds their own API key
 // in Settings. The key stays in this browser and requests go straight to Anthropic.
 import { FOODS, LOCATIONS } from "./data/foods.js";
+import { KEYWORD_IDS } from "./data/keywords.js";
 
 const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.135.0/+esm";
 const MODEL = "claude-opus-5-5";
 const FOOD_NAMES = FOODS.map((f) => f.name).join(", ");
+const KEYWORD_HINT =
+  `Tag each recipe with every keyword that fits, using only these ids: ${KEYWORD_IDS.join(", ")} ` +
+  "(easy = easy to cook, quick = ready in 20 minutes, party = great for parties, entree = a main course, " +
+  "comfort = cozy comfort food, healthy = light and healthy, mealprep = keeps well for meal prep, kids = kid friendly, " +
+  "budget = budget friendly, brunch = weekend brunch, datenight = date night, onepan = one pan or pot, " +
+  "leftovers = good for using up leftovers).";
 
 let sdkPromise = null;
 
@@ -92,7 +99,7 @@ const RECIPE_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["title", "minutes", "servings", "ingredients", "steps"],
+        required: ["title", "minutes", "servings", "ingredients", "steps", "keywords"],
         properties: {
           title: { type: "string" },
           minutes: { type: "integer" },
@@ -112,6 +119,7 @@ const RECIPE_SCHEMA = {
             },
           },
           steps: { type: "array", items: { type: "string" } },
+          keywords: { type: "array", items: { type: "string", enum: KEYWORD_IDS } },
         },
       },
     },
@@ -132,13 +140,13 @@ export function buildIdeasPrompt(inventory, { soon = [], request = "", exclude =
     `Suggest ${count} practical, varied home recipes that use mostly what I have, ` +
     "assuming salt, pepper, oil, water and common spices are available. Keep the shopping needed to 0-2 items per recipe. " +
     `Write ingredient names in lower case and, where one matches, use exactly one of these names: ${FOOD_NAMES}. ` +
-    "Keep steps short and clear (3-6 steps)."
+    "Keep steps short and clear (3-6 steps). " + KEYWORD_HINT
   );
 }
 
 const JSON_SHAPE =
   'Reply with only JSON of this shape: {"recipes": [{"title": string, "minutes": integer, "servings": integer, ' +
-  '"ingredients": [{"name": string, "qty": number, "unit": string, "optional": boolean}], "steps": [string]}]}';
+  '"ingredients": [{"name": string, "qty": number, "unit": string, "optional": boolean}], "steps": [string], "keywords": [string]}]}';
 
 /** Keep only well-formed recipes from a model reply. */
 export function cleanIdeas(data) {
@@ -153,6 +161,7 @@ export function cleanIdeas(data) {
         .filter((i) => i && typeof i.name === "string" && i.name.trim())
         .map((i) => ({ name: i.name, qty: Number(i.qty) || 1, unit: String(i.unit || "count"), optional: Boolean(i.optional) })),
       steps: Array.isArray(r.steps) ? r.steps.map(String) : [],
+      keywords: Array.isArray(r.keywords) ? r.keywords.filter((k) => KEYWORD_IDS.includes(k)) : [],
     }));
 }
 
@@ -178,7 +187,7 @@ const RECIPE_PHOTO_PROMPT =
   "the title, every ingredient with its amount and unit, and the method as short steps in the book's order. " +
   "Estimate total minutes and servings from the page if they aren't printed. " +
   `Write ingredient names in lower case and, where one matches, use exactly one of these names: ${FOOD_NAMES}. ` +
-  'If no recipe is visible, return {"recipes": []}.';
+  KEYWORD_HINT + ' If no recipe is visible, return {"recipes": []}.';
 
 /** Read a recipe from one or more photos with the person's own API key. */
 export async function scanRecipeWithClaude(apiKey, files) {

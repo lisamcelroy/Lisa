@@ -164,6 +164,7 @@
         </div>
         <input id="recipe-search" type="search" placeholder="Search recipes" aria-label="Search recipes" />
       </div>
+      <div class="kw-row" id="keyword-filter" role="group" aria-label="Filter by occasion"></div>
       <div class="card ideas" id="ideas" hidden>
         <div class="ideas-head">
           <h2>Fresh ideas for your kitchen</h2>
@@ -179,6 +180,21 @@
       <p class="muted small ideas-hint" id="ideas-hint" hidden>Want recipe ideas made from your exact ingredients? Add a Claude API key in Settings.</p>
       <h2 class="section-title" id="library-title">From the recipe book</h2>
       <div id="recipes" class="recipe-grid"></div>
+    </section>
+
+    <!-- Meal plan -->
+    <section id="view-plan" class="view" data-view="plan" hidden>
+      <div class="plan-head">
+        <button class="icon-btn" id="plan-prev" aria-label="Previous week"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="plan-heading">
+          <h2 class="hero-title" id="plan-title">This week</h2>
+          <p class="muted small" id="plan-range"></p>
+        </div>
+        <button class="icon-btn" id="plan-next" aria-label="Next week"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="card plan-summary" id="plan-summary"></div>
+      <div class="plan-days" id="plan-days"></div>
+      <p class="muted small plan-note">Calories are estimates per serving, worked out from each recipe's ingredients.</p>
     </section>
 
     <!-- Shopping -->
@@ -200,6 +216,7 @@
     <button data-tab="kitchen"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5.5" cy="6.5" r="1.4"/><circle cx="5.5" cy="12" r="1.4"/><circle cx="5.5" cy="17.5" r="1.4"/><path d="M10 6.5h9M10 12h9M10 17.5h9"/></svg></span>List</button>
     <button data-tab="scan"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8V6.5A2.5 2.5 0 0 1 6.5 4H8M16 4h1.5A2.5 2.5 0 0 1 20 6.5V8M20 16v1.5a2.5 2.5 0 0 1-2.5 2.5H16M8 20H6.5A2.5 2.5 0 0 1 4 17.5V16M8 9.5h8M8 12h8M8 14.5h5"/></svg></span>Scan</button>
     <button data-tab="recipes"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 11h16a8 7.5 0 0 1-16 0z"/><path d="M9 7.5c0-1.5 1-1.5 1-3M13 7.5c0-1.5 1-1.5 1-3"/></svg></span>Recipes</button>
+    <button data-tab="plan"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="4"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/><circle cx="8.5" cy="14.5" r=".6"/><circle cx="12" cy="14.5" r=".6"/><circle cx="15.5" cy="14.5" r=".6"/></svg></span>Plan</button>
     <button data-tab="shopping"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 4.5h2.5l2.2 10.5h10l2-7.5H7"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg></span>Shopping<span class="badge" id="shop-count" hidden></span></button>
   </nav>
 
@@ -207,6 +224,7 @@
 
   <dialog id="recipe-dialog"><div id="recipe-detail"></div></dialog>
   <dialog id="item-dialog" class="item-dialog"><div id="item-detail"></div></dialog>
+  <dialog id="plan-dialog" class="plan-dialog"><div id="plan-detail"></div></dialog>
 
   <dialog id="settings-dialog">
     <form method="dialog" class="settings">
