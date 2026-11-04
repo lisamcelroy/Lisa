@@ -4,6 +4,7 @@ import { foodIcon } from "./icons.js";
 import { daysLeft, SOON_DAYS } from "./recommend.js";
 import { formatQty } from "./units.js";
 import { needsDefrost } from "./frozen.js";
+import { isFruitName } from "./data/guess.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
@@ -14,7 +15,7 @@ export const FRIDGE_ZONES = [
   { id: "other", label: "Other" },
   { id: "veg", label: "Vegetables" },
   { id: "fruit", label: "Fruit" },
-  { id: "door", label: "Condiments and sauces" },
+  { id: "door", label: "Sauces and drinks" },
 ];
 
 export const PANTRY_ZONES = [
@@ -24,12 +25,11 @@ export const PANTRY_ZONES = [
   { id: "sauces", label: "Oils and sauces" },
   { id: "bread", label: "Bread and bakery" },
   { id: "basket", label: "Fruit and veg" },
+  { id: "snacks", label: "Snacks and drinks" },
 ];
 
 // Produce is split into fruit and vegetables, the way a store lays it out.
-const FRUITS = new Set(["apple", "avocado", "banana", "berries", "lemon", "lime"]);
-const FRUITY = /\b(apples?|oranges?|clementines?|mandarins?|grapes?|mangos?|mangoes|peach(es)?|pears?|plums?|cherr(y|ies)|melons?|watermelon|kiwis?|pineapples?|berr(y|ies)|strawberr(y|ies)|blueberr(y|ies)|raspberr(y|ies)|nectarines?|apricots?|figs?|dates|grapefruit|pomegranates?|papayas?|limes?|lemons?|bananas?|avocados?)\b/i;
-export const isFruit = (item) => FRUITS.has(item.name) || FRUITY.test(item.name || "");
+export const isFruit = (item) => isFruitName(item.name);
 
 /** Which shelf an item belongs on, from where it lives and what it is. */
 export function zoneFor(item) {
@@ -42,12 +42,13 @@ export function zoneFor(item) {
     if (c === "condiments" || c === "staples") return "sauces";
     if (c === "bakery") return "bread";
     if (c === "produce") return "basket";
+    if (c === "snacks" || c === "drinks") return "snacks";
     return "cans";
   }
   if (c === "dairy") return "dairy";
   if (c === "meat" || c === "seafood" || c === "protein") return "meat";
   if (c === "produce") return isFruit(item) ? "fruit" : "veg";
-  if (c === "condiments") return "door";
+  if (c === "condiments" || c === "drinks") return "door";
   return "other";
 }
 
@@ -74,9 +75,9 @@ function tile(item, { showQty = true } = {}) {
   const qty = formatQty(item.qty, item.unit);
   const style = `--food:${color};--i:${delay++}`;
   const ice = needsDefrost(item);
-  return `<button class="food ${f} ${ice ? "frozen" : ""}" data-id="${esc(item.id)}" style="${style}" aria-label="${esc(item.name)}, ${esc(qty)}${ice ? ", frozen, defrost before using" : ""}${note ? ", " + note : ""}">
+  return `<button class="food ${f} ${ice ? "frozen" : ""}" data-id="${esc(item.id)}" style="${style}" aria-label="${esc(item.label || item.name)}, ${esc(qty)}${ice ? ", frozen, defrost before using" : ""}${note ? ", " + note : ""}">
     <span class="food-bubble">${svg}${showQty ? `<span class="food-qty">${esc(qty)}</span>` : ""}</span>
-    <span class="food-name">${esc(item.name)}</span>
+    <span class="food-name">${esc(item.label || item.name)}</span>
   </button>`;
 }
 
@@ -147,7 +148,7 @@ export function renderAppliances(inventory, collapsed = new Set()) {
       <div class="pantry-top" aria-hidden="true"></div>
       ${foldHeader("pantry", "Pantry", count(PANTRY_ZONES.map((p) => p.id)), collapsed)}
       <div class="fold-body">
-        ${["grains", "baking", "cans", "sauces"].map((id) => `
+        ${["grains", "baking", "cans", "sauces", "snacks"].filter((id) => id !== "snacks" || z.snacks?.length).map((id) => `
           <div class="shelf wood" data-zone="${id}">
             <div class="shelf-label">${label(PANTRY_ZONES, id)}</div>
             ${shelf(z[id], "Empty shelf")}

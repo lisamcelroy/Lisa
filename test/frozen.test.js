@@ -43,7 +43,7 @@ test("receipt lines marked frozen are flagged for the freezer", () => {
   const chicken = items.filter((i) => i.name === "chicken breast");
   assert.equal(chicken.length, 2, "frozen and fresh stay separate");
   assert.deepEqual(chicken.map((c) => c.frozen).sort(), [false, true]);
-  assert.ok(items.find((i) => i.name === "berries").frozen);
+  assert.ok(items.find((i) => i.name === "frozen berries").frozen);
 });
 
 test("recipes say what needs defrosting, and cooking uses unfrozen food first", () => {

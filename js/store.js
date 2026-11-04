@@ -1,7 +1,9 @@
 // Local persistence. Everything stays in this browser's localStorage.
-import { foodInfo, canonicalName } from "./normalize.js";
+import { foodInfo, canonicalName, tidyName, searchText } from "./normalize.js";
+import { VARIETY_GROUPS } from "./data/foods.js";
 import { normalizeUnit } from "./units.js";
 import { isFrozenText, freezerDays } from "./frozen.js";
+import { guessFood } from "./data/guess.js";
 
 // Storage name kept from the app's first name so existing kitchens still load.
 const KEY = "fridgemate:v1";
@@ -25,6 +27,18 @@ function safeParse(raw) {
   }
 }
 
+/**
+ * Items saved as "other" before the app knew better (asparagus, oat milk...)
+ * get their proper category, so they move to the right shelf.
+ */
+export function recategorize(inventory = []) {
+  return inventory.map((it) => {
+    if (it.category && it.category !== "other") return it;
+    const better = foodInfo(it.name)?.category || foodInfo(canonicalName(it.name))?.category || guessFood(it.name)?.category;
+    return better ? { ...it, category: better } : it;
+  });
+}
+
 export function loadState(storage = globalThis.localStorage) {
   let saved = null;
   try {
@@ -36,6 +50,7 @@ export function loadState(storage = globalThis.localStorage) {
   if (saved) {
     Object.assign(state, saved);
     state.settings = { ...DEFAULT_STATE.settings, ...(saved.settings || {}) };
+    state.inventory = recategorize(state.inventory);
   }
   return state;
 }
@@ -61,13 +76,19 @@ export function makeItem({ name, qty = 1, unit = "count", location, category, ex
   // keepName: use the name exactly as given (e.g. a seasoning the catalog doesn't know, like "za'atar").
   const canonical = keepName ? String(name).trim() : canonicalName(name);
   const info = foodInfo(canonical);
-  const cat = category || info?.category || "other";
+  // Not in the catalog: work it out from the name ("purple kohlrabi" is a vegetable).
+  const guess = info ? null : guessFood(canonical);
+  const cat = category || info?.category || guess?.category || "other";
   // Saying it's frozen ("frozen salmon", receipt "FRZ") puts it in the freezer.
-  const loc = location || (isFrozenText(name) ? "freezer" : info?.location || "fridge");
-  const days = shelfLife ?? (loc === "freezer" ? freezerDays(canonical, cat) : info?.shelfLife);
+  const loc = location || (isFrozenText(name) ? "freezer" : info?.location || guess?.location || "fridge");
+  const days = shelfLife ?? (loc === "freezer" ? freezerDays(canonical, cat) : info?.shelfLife ?? guess?.shelfLife);
+  // "oat milk" is stored as plant milk for recipes, but keeps its own name on screen.
+  const typed = tidyName(name).replace(/\bfrozen\b/g, "").replace(/\s+/g, " ").trim();
+  const label = !keepName && info && VARIETY_GROUPS.has(info.name) && typed && searchText(typed) !== searchText(canonical) ? typed : undefined;
   return {
     id: newId(),
     name: canonical,
+    ...(label ? { label } : {}),
     qty: Number(qty) || 1,
     unit: normalizeUnit(unit) || "count",
     location: loc,
@@ -81,7 +102,7 @@ export function makeItem({ name, qty = 1, unit = "count", location, category, ex
 export function addToInventory(inventory, items) {
   const next = inventory.map((it) => ({ ...it }));
   for (const item of items) {
-    const existing = next.find((it) => it.name === item.name && it.unit === item.unit && it.location === item.location);
+    const existing = next.find((it) => it.name === item.name && (it.label || "") === (item.label || "") && it.unit === item.unit && it.location === item.location);
     if (existing) {
       existing.qty = Math.round((existing.qty + item.qty) * 100) / 100;
       // A fresh purchase pushes the use-by date out.
@@ -112,6 +133,7 @@ export function adoptRemote(local, remote) {
   for (const k of SYNCED_KEYS) if (remote[k] !== undefined) next[k] = remote[k];
   next.settings = { ...local.settings, ...(remote.settings || {}), apiKey: local.settings?.apiKey || "" };
   next.updatedAt = remote.updatedAt || 0;
+  next.inventory = recategorize(next.inventory);
   return next;
 }
 

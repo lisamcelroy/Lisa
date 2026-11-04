@@ -71,6 +71,11 @@ export function matchFood(text) {
   return null;
 }
 
+/** The typed text, tidied (lower case, receipt shorthand expanded, packaging words dropped). */
+export function tidyName(text) {
+  return expand(text) || cleanText(text);
+}
+
 /** Lower case, punctuation-free and singular, for forgiving searches ("Wings" finds "chicken wing"). */
 export function searchText(text) {
   return singularPhrase(cleanText(text));

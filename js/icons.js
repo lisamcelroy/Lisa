@@ -2,6 +2,8 @@
 // darker tone for shading, teal-green leaves, no gradients. Names map to a
 // shape and colour; anything unknown falls back to its category.
 
+import { guessFood, isFruitName } from "./data/guess.js";
+
 const TEAL = "#14a88e";
 const TEAL_DARK = "#3d8c78";
 const STEM = "#7a4a2a";
@@ -102,6 +104,13 @@ const SHAPES = {
   bunch: (c, d) => `<path d="M7.2 20.6C8.2 15 8.2 10 7.2 6M12 21V5.6M16.8 20.6C15.8 15 15.8 10 16.8 6" stroke="${c}" stroke-width="2.8" stroke-linecap="round" fill="none"/>
     <path d="M12 21V12" stroke="${d}" stroke-width="2.8" stroke-linecap="round"/>
     <path d="M5 6C6 3 8.4 2.6 9.4 4.4M10 5C10.6 2.2 13.4 2 14 4.4M14.6 4.6C15.8 2.4 18.6 2.8 19 5.4" stroke="${TEAL}" stroke-width="1.8" stroke-linecap="round" fill="none"/>`,
+  spears: (c, d) => `<path d="M7 21L9.2 6.6M12 21.2V5M17 21L14.8 6.6" stroke="${c}" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M9.2 6.6L8.4 3.8L10.2 5ZM12 5L11 2.2L13 2.2ZM14.8 6.6L13.8 5L15.6 3.8Z" fill="${d}"/>
+    <path d="M8.1 11.4L9.4 10.6M11.2 9.8H12.8M14.6 10.6L15.9 11.4M8.6 15.6L10 15M14 15L15.4 15.6" stroke="${d}" stroke-width="1" stroke-linecap="round"/>
+    <path d="M6.4 17.6H17.6" stroke="#c98b4f" stroke-width="1.8" stroke-linecap="round"/>`,
+  pods: (c, d) => `<path d="M3.6 18.4C8 18.6 14.6 14.4 19.8 5.2C20.6 6 20.8 7 20.4 8C16.4 16.6 9.4 20.8 3.6 18.4Z" fill="${c}"/>
+    <path d="M5.2 21C9.6 21 16.6 16.8 21.4 8.2C22 9.2 22 10 21.6 11C17.4 18.8 10.6 22.6 5.2 21Z" fill="${d}"/>
+    <g fill="${d}"><circle cx="8.4" cy="16.8" r=".9"/><circle cx="12" cy="14.6" r=".9"/><circle cx="15.2" cy="11.6" r=".9"/></g>`,
   berries: (c, d) => `<circle cx="7.6" cy="9.6" r="4.4" fill="${c}"/><circle cx="16.4" cy="8.8" r="4.4" fill="${c}"/><circle cx="12.2" cy="16.4" r="4.4" fill="${c}"/>
     <path d="M6.6 8.6L8.6 10.6M8.6 8.6L6.6 10.6M15.4 7.8L17.4 9.8M17.4 7.8L15.4 9.8M11.2 15.4L13.2 17.4M13.2 15.4L11.2 17.4" stroke="${d}" stroke-width="1" stroke-linecap="round"/>`,
 };
@@ -137,9 +146,106 @@ const FOOD_ICONS = {
   "dried basil": ["shaker", "#14a88e"], "italian seasoning": ["shaker", "#7aa04a"], "bay leaves": ["leaf", "#6f9a4a"], cinnamon: ["shaker", "#a0582d"],
   nutmeg: ["shaker", "#9a6a3d"], turmeric: ["shaker", "#f2b01e"], "curry powder": ["shaker", "#e8a21e"], "garlic powder": ["shaker", "#efe3cf"],
   "onion powder": ["shaker", "#ead9b8"], "ground ginger": ["shaker", "#e0b06a"], vanilla: ["bottle", "#5a3b2e"],
+  "asparagus": ["spears", "#5fae4e"],
+  "green beans": ["pods", "#4fa84a"],
+  "snap peas": ["pods", "#7cc456"],
+  "corn on the cob": ["long", "#f7cc3a"],
+  "cauliflower": ["tree", "#efe6cf"],
+  "brussels sprouts": ["fruit", "#6fb94f"],
+  "eggplant": ["long", "#6b3f8f"],
+  "butternut squash": ["potato", "#f2a54a"],
+  "pumpkin": ["fruit", "#f08a2c"],
+  "beet": ["fruit", "#a3264f"],
+  "radish": ["fruit", "#e8476a"],
+  "leek": ["bunch", "#8fcf72"],
+  "shallot": ["onion", "#c9867a"],
+  "jalapeno": ["long", "#3a9a45"],
+  "arugula": ["leaf", "#3f9a4a"],
+  "bok choy": ["leaf", "#5fb86a"],
+  "artichoke": ["tree", "#7fa84a"],
+  "parsnip": ["carrot", "#efdcae"],
+  "fennel": ["bunch", "#b9dc8a"],
+  "bean sprouts": ["bunch", "#efe6cf"],
+  "parsley": ["leaf", "#2f9a5a"],
+  "dill": ["leaf", "#6fae4e"],
+  "mint": ["leaf", "#3fb88a"],
+  "orange": ["fruit", "#f7922a"],
+  "grapes": ["berries", "#7a3f8f"],
+  "mango": ["fruit", "#f7b733"],
+  "pineapple": ["tomato", "#f7c43a"],
+  "peach": ["fruit", "#f7a07a"],
+  "pear": ["fruit", "#b6cf4a"],
+  "plum": ["fruit", "#7a2f5f"],
+  "cherries": ["berries", "#c8243a"],
+  "watermelon": ["fruit", "#3a9a45"],
+  "melon": ["fruit", "#f2c06a"],
+  "kiwi": ["fruit", "#8a6a3a"],
+  "grapefruit": ["fruit", "#f58a6a"],
+  "pomegranate": ["fruit", "#c8243a"],
+  "pork": ["meat", "#f08a78"],
+  "ground pork": ["meat", "#f2907a"],
+  "lamb": ["meat", "#d9483a"],
+  "turkey": ["drumstick", "#e8906a"],
+  "hot dogs": ["long", "#c9583a"],
+  "pepperoni": ["disc", "#c9383a"],
+  "white fish": ["fish", "#a9c3d9"],
+  "scallops": ["disc", "#f4e6cf"],
+  "mussels": ["fish", "#3a3f5f"],
+  "crab": ["fish", "#f2704a"],
+  "cottage cheese": ["cup", "#9cc4ea"],
+  "ricotta": ["cup", "#f4efe2"],
+  "goat cheese": ["block", "#f8f4ea"],
+  "swiss cheese": ["cheese", "#f9e08a"],
+  "provolone": ["cheese", "#f7d36a"],
+  "brie": ["disc", "#f6efd9"],
+  "plant milk": ["carton", "#d9b98a"],
+  "buttermilk": ["carton", "#9cc4ea"],
+  "bagel": ["disc", "#d9a05a"],
+  "buns": ["bread", "#e8b56a"],
+  "pita": ["disc", "#efd39b"],
+  "naan": ["disc", "#e8c37a"],
+  "english muffin": ["disc", "#e3b06a"],
+  "croissant": ["long", "#e8a54a"],
+  "couscous": ["jar", "#ead39a"],
+  "breadcrumbs": ["bag", "#e8c37a"],
+  "cereal": ["box", "#f4c95d"],
+  "kidney beans": ["can", "#a33a3a"],
+  "lentils": ["jar", "#d97a3a"],
+  "refried beans": ["can", "#8a5a3a"],
+  "pasta sauce": ["jar", "#e8452a"],
+  "ketchup": ["bottle", "#d8301e"],
+  "hot sauce": ["bottle", "#e8452a"],
+  "bbq sauce": ["bottle", "#7a2f1e"],
+  "jam": ["jar", "#c8243a"],
+  "hummus": ["cup", "#e8c98a"],
+  "pesto": ["jar", "#4f9a3a"],
+  "salad dressing": ["bottle", "#f4efd9"],
+  "worcestershire sauce": ["bottle", "#4a2a1e"],
+  "fish sauce": ["bottle", "#b5803a"],
+  "teriyaki sauce": ["bottle", "#5a2f1e"],
+  "frozen berries": ["box", "#7a3f8f"],
+  "ice cream": ["cup", "#f9c8d6"],
+  "frozen pizza": ["disc", "#f2a54a"],
+  "french fries": ["box", "#f7cc3a"],
+  "baking soda": ["box", "#f4efe2"],
+  "chocolate chips": ["bag", "#6a3f2a"],
+  "cocoa powder": ["can", "#6a3f2a"],
+  "yeast": ["bag", "#e8c37a"],
+  "cornstarch": ["box", "#f4efe2"],
+  "orange juice": ["carton", "#f7922a"],
+  "coffee": ["bag", "#5a3b2e"],
+  "tea": ["box", "#7a9a55"],
+  "chips": ["bag", "#f7cc3a"],
+  "tortilla chips": ["bag", "#f2b04a"],
+  "crackers": ["box", "#e8c37a"],
+  "nuts": ["jar", "#c98b4f"],
+  "peanuts": ["jar", "#d9a05a"],
+  "popcorn": ["bag", "#f9e08a"],
+  "chocolate": ["block", "#6a3f2a"],
 };
 
 const CATEGORY_ICONS = {
+  drinks: ["carton", "#f7922a"], snacks: ["bag", "#f7cc3a"],
   produce: ["fruit", "#8ccf7a"], dairy: ["carton", "#7ab8e8"], meat: ["meat", "#e8604c"], seafood: ["fish", "#f07a5c"],
   protein: ["block", "#f4efe2"], bakery: ["bread", "#e3a55a"], frozen: ["box", "#7ab8e8"], canned: ["can", "#c4a3cc"],
   grains: ["jar", "#f4c95d"], baking: ["bag", "#efe9dc"], condiments: ["bottle", "#f7923a"], spices: ["shaker", "#e07a3a"],
@@ -148,7 +254,10 @@ const CATEGORY_ICONS = {
 
 /** @returns {{svg: string, color: string}} */
 export function foodIcon(name, category = "other") {
-  const [shape, color] = FOOD_ICONS[name] || CATEGORY_ICONS[category] || CATEGORY_ICONS.other;
+  const guessed = !FOOD_ICONS[name] && (!category || category === "other") ? guessFood(name)?.category : null;
+  const cat = guessed || category;
+  const produce = cat === "produce" ? (isFruitName(name) ? ["fruit", "#f2704a"] : ["leaf", "#3fa860"]) : null;
+  const [shape, color] = FOOD_ICONS[name] || produce || CATEGORY_ICONS[cat] || CATEGORY_ICONS.other;
   const svg = SHAPES[shape](color, shade(color, -0.2), shade(color, 0.35));
   return { color, svg: `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${svg}</svg>` };
 }

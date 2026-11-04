@@ -126,7 +126,7 @@ function renderItemDialog() {
   const { svg, color } = foodIcon(item.name, item.category);
   $("#item-detail").innerHTML = `
     <div class="food-bubble big-bubble" style="--food:${color}">${svg}</div>
-    <h2>${esc(item.name)}</h2>
+    <h2>${esc(item.label || item.name)}</h2>
     <p class="muted small">${esc(item.category)}${expiryText(item) ? " &middot; " + expiryText(item) : ""}</p>
     ${needsDefrost(item) ? `<p class="defrost-note">Frozen. Defrost before using: ${esc(defrostHint(item))}.</p>` : ""}
     ${item.defrostedAt && !needsDefrost(item) ? `<p class="thawed-note">Defrosted ${esc(new Date(item.defrostedAt).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }))}. Don't refreeze it raw.</p>` : ""}
@@ -336,7 +336,7 @@ function renderHome() {
   $("#home-soon").innerHTML = soon.length
     ? `<div class="card soon">
         <h2>Use these soon</h2>
-        <div class="soon-list">${soon.map((it) => `<span class="pill">${esc(it.name)} &middot; ${expiryText(it)}</span>`).join("")}</div>
+        <div class="soon-list">${soon.map((it) => `<span class="pill">${esc(it.label || it.name)} &middot; ${expiryText(it)}</span>`).join("")}</div>
         <button class="btn small" data-action="show-rescue">Recipes that use them</button>
       </div>`
     : "";
@@ -491,7 +491,7 @@ function renderKitchen() {
   $("#use-soon").innerHTML = soon.length
     ? `<div class="card soon">
          <h2>Use these soon</h2>
-         <div class="soon-list">${soon.map((it) => `<span class="pill">${esc(it.name)} &middot; ${expiryText(it)}</span>`).join("")}</div>
+         <div class="soon-list">${soon.map((it) => `<span class="pill">${esc(it.label || it.name)} &middot; ${expiryText(it)}</span>`).join("")}</div>
          <button class="btn small" data-action="show-rescue">Recipes that use them</button>
        </div>`
     : "";
@@ -499,7 +499,7 @@ function renderKitchen() {
   const q = ui.search.toLowerCase();
   const visible = inv
     .filter((it) => ui.loc === "all" || groupOf(it) === ui.loc)
-    .filter((it) => !q || it.name.includes(q) || it.category.includes(q));
+    .filter((it) => !q || it.name.includes(q) || (it.label || "").includes(q) || it.category.includes(q));
 
   if (!inv.length) {
     $("#inventory").innerHTML = `<div class="empty">Your kitchen is empty. Add items above, or scan a grocery receipt from the Scan tab.</div>`;
@@ -518,7 +518,7 @@ function renderKitchen() {
       ${shut ? "" : `
       ${items.map((it) => `
         <div class="item" data-id="${it.id}">
-          <div class="item-name">${esc(it.name)}</div>
+          <div class="item-name">${esc(it.label || it.name)}</div>
           <div class="item-meta">${esc(it.category)} ${expiryText(it) ? "&middot; " + expiryText(it) : ""}</div>
           <div class="item-controls">
             <button class="step" data-action="dec" aria-label="Less ${esc(it.name)}">&minus;</button>

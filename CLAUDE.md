@@ -49,6 +49,7 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 | `js/app.js` | UI wiring for every tab, dialogs, saving, splash, name prompt, folding |
 | `js/data/foods.js` | Food catalog: names, receipt aliases, category, default location, shelf life, `parent` (cheddar counts as cheese, cumin as spices) |
 | `js/data/recipes.js` | 34 built-in recipes using catalog ingredient names (tests enforce this) |
+| `js/data/guess.js` | Works out the category, storage and shelf life of foods not in the catalog from words in the name (kohlrabi is a vegetable, lamb shank is meat) |
 | `js/data/meals.js` | Which meals each recipe suits (breakfast, lunch, dinner, snack); hand-picked for built-ins, Claude labels its ideas |
 | `js/data/keywords.js` | Occasion keywords; hand-picked per recipe, selective (at most 3 per recipe); quick/vegetarian/vegan worked out |
 | `js/normalize.js` | Free text and receipt shorthand to catalog foods (longest match wins) |
@@ -125,6 +126,10 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   case, punctuation and plurals, so "wings" finds "chicken wing"). No results offers to ask Claude.
 - The recipe editor keeps what you type (`typedName`): the catalog name only when the text means
   exactly that food, so "chicken wings" never becomes "chicken".
+- Food is identified properly, never left as "Other" when it can be helped: about 190 catalog foods
+  (each needs nutrition and ideally an icon), then `guessFood` for anything else, and `recategorize`
+  fixes items saved as "other" on load. Foods in `VARIETY_GROUPS` keep the typed variety as
+  `item.label` ("oat milk", "cod") while matching recipes as the group (plant milk, white fish).
 - Seasonings live on a spice rack and count for recipes that just say "spices".
 - Anything in the freezer must be defrosted before use; recipes and the plan remind you.
 - Calories are estimates; say so in the UI.
