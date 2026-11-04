@@ -171,7 +171,9 @@ p { margin: 0 0 10px; }
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 .topbar h1 { margin: 0; line-height: 1; }
-.logo { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.logo { display: flex; align-items: center; gap: 8px; }
+.logo > div { display: flex; flex-direction: column; align-items: flex-start; }
+.logo-mark { width: 40px; height: 40px; color: var(--text); flex: none; }
 .wordmark { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 1.75rem; letter-spacing: -.01em; }
 .wordmark span:nth-child(6n+1) { color: var(--olive); }
 .wordmark span:nth-child(6n+2) { color: var(--raspberry); }
@@ -555,6 +557,54 @@ ol.steps li { margin-bottom: 8px; }
   .food-name { max-width: 68px; }
   .tabbar button { font-size: .64rem; }
 }
+
+/* ---------- Opening splash ---------- */
+
+.splash {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; overflow: hidden; cursor: pointer;
+  background:
+    radial-gradient(360px 300px at 15% 10%, var(--blob-1), transparent 70%),
+    radial-gradient(360px 300px at 90% 85%, var(--blob-3), transparent 70%),
+    radial-gradient(320px 260px at 85% 15%, var(--blob-2), transparent 70%),
+    var(--bg);
+  transition: opacity .45s ease, transform .45s ease;
+}
+.splash.leaving { opacity: 0; transform: scale(1.06); pointer-events: none; }
+.splash-center { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.splash-fridge { width: 120px; height: 120px; color: var(--text); animation: fridge-in .7s cubic-bezier(.3, 1.6, .5, 1) both; }
+.splash-fridge .magnet { transform-box: fill-box; transform-origin: center; animation: magnet-pop .4s cubic-bezier(.3, 1.8, .5, 1) both; }
+.splash-fridge .m1 { animation-delay: .55s; }
+.splash-fridge .m2 { animation-delay: .7s; }
+.splash-fridge .sparkle { animation: sparkle .9s ease-out .8s both; }
+.splash-word { font-size: clamp(2.6rem, 11vw, 4rem); margin-top: 10px; line-height: 1; }
+.splash-word span { display: inline-block; animation: letter-in .5s cubic-bezier(.3, 1.7, .5, 1) both; }
+.splash-word span:nth-child(1) { animation-delay: .35s; } .splash-word span:nth-child(2) { animation-delay: .4s; }
+.splash-word span:nth-child(3) { animation-delay: .45s; } .splash-word span:nth-child(4) { animation-delay: .5s; }
+.splash-word span:nth-child(5) { animation-delay: .55s; } .splash-word span:nth-child(6) { animation-delay: .6s; }
+.splash-word span:nth-child(7) { animation-delay: .65s; } .splash-word span:nth-child(8) { animation-delay: .7s; }
+.splash-word span:nth-child(9) { animation-delay: .75s; } .splash-word span:nth-child(10) { animation-delay: .8s; }
+.splash-word span:nth-child(11) { animation-delay: .85s; }
+.splash-tag { font-size: 1.15rem; margin-top: 6px; animation: rise .5s ease 1s both; }
+.splash-ring { position: absolute; left: 50%; top: 50%; width: 0; height: 0; animation: ring-spin 14s linear infinite; }
+.splash-food {
+  --r: min(42vw, 230px);
+  position: absolute; left: -32px; top: -32px; width: 64px; height: 64px;
+  transform: rotate(var(--a)) translate(var(--r)) rotate(calc(-1 * var(--a)));
+}
+.splash-food svg {
+  width: 100%; height: 100%; filter: blur(.4px) drop-shadow(0 6px 10px rgb(120 70 60 / 18%));
+  animation: food-pop .6s cubic-bezier(.3, 1.6, .5, 1) both, bob 2.6s ease-in-out infinite;
+  animation-delay: calc(.15s + var(--i) * .07s), calc(var(--i) * -.3s);
+}
+@keyframes fridge-in { from { transform: translateY(40px) scale(.4) rotate(-8deg); opacity: 0; } }
+@keyframes magnet-pop { from { transform: scale(0); } }
+@keyframes sparkle { from { opacity: 0; transform: scale(.6); } 60% { opacity: 1; } to { opacity: 1; } }
+@keyframes letter-in { from { transform: translateY(24px) scale(.6); opacity: 0; } }
+@keyframes rise { from { transform: translateY(10px); opacity: 0; } }
+@keyframes food-pop { from { transform: scale(0) rotate(-30deg); opacity: 0; } }
+@keyframes bob { 50% { translate: 0 -8px; } }
+@keyframes ring-spin { to { rotate: 360deg; } }
+@media (max-width: 420px) { .splash-food { width: 52px; height: 52px; left: -26px; top: -26px; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

@@ -3,22 +3,38 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#2f6f4f" />
+  <meta name="theme-color" content="#fff8e7" />
   <meta name="description" content="Track your fridge and pantry, scan grocery receipts, and get recipes that use what you have." />
-  <title>FridgeMate</title>
+  <title>FridgeForMe</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="icons/icon.svg" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=DM+Serif+Display&family=Nunito:wght@400;600;700;800&display=swap" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <div class="splash" id="splash" aria-hidden="true">
+    <div class="splash-ring" id="splash-ring"></div>
+    <div class="splash-center">
+      <svg class="splash-fridge" viewBox="0 0 64 64">
+        <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="8" width="28" height="44" rx="7"/><path d="M18 24h28"/><path d="M24 14.5v4"/><path d="M24 30v8"/><path d="M22 52v4M42 52v4"/></g>
+        <circle class="magnet m1" cx="38" cy="16" r="2.8" fill="#d93653"/>
+        <circle class="magnet m2" cx="39" cy="36" r="2.8" fill="#a0a73a"/>
+        <g class="sparkle" fill="none" stroke="#ff7650" stroke-width="2.4" stroke-linecap="round"><path d="M8 12l3 3M6 22h4M54 10l-3 3M58 20h-4"/></g>
+      </svg>
+      <div class="wordmark splash-word"><span>F</span><span>r</span><span>i</span><span>d</span><span>g</span><span>e</span><span>F</span><span>o</span><span>r</span><span>M</span><span>e</span></div>
+      <div class="hand splash-tag">fresh from your fridge</div>
+    </div>
+  </div>
   <header class="topbar">
     <div class="logo">
-      <h1 aria-label="FridgeMate"><span class="wordmark" aria-hidden="true"><span>F</span><span>r</span><span>i</span><span>d</span><span>g</span><span>e</span><span>M</span><span>a</span><span>t</span><span>e</span></span></h1>
-      <span class="hand">fresh from your fridge</span>
+      <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="8" width="28" height="44" rx="7"/><path d="M18 24h28"/><path d="M24 14.5v4"/><path d="M24 30v8"/><path d="M22 52v4M42 52v4"/></g><circle cx="38" cy="16" r="3" fill="var(--raspberry)"/><circle cx="39" cy="36" r="3" fill="var(--olive)"/></svg>
+      <div>
+        <h1 aria-label="FridgeForMe"><span class="wordmark" aria-hidden="true"><span>F</span><span>r</span><span>i</span><span>d</span><span>g</span><span>e</span><span>F</span><span>o</span><span>r</span><span>M</span><span>e</span></span></h1>
+        <span class="hand">fresh from your fridge</span>
+      </div>
     </div>
     <span class="sync" id="sync-status" role="status" aria-live="polite"></span>
     <button class="icon-btn" id="open-settings" aria-label="Settings">

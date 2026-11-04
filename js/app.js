@@ -868,7 +868,7 @@ $("#export-data").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify({ ...state, settings }, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `fridgemate-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `fridgeforme-backup-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 });
@@ -884,7 +884,7 @@ $("#import-data").addEventListener("change", async (e) => {
     commit();
     toast("Backup restored");
   } catch {
-    toast("That doesn't look like a FridgeMate backup");
+    toast("That doesn't look like a FridgeForMe backup");
   }
 });
 
@@ -960,6 +960,36 @@ connectCloud({
 // Save immediately when the page is hidden or closed.
 addEventListener("pagehide", () => cloud?.flush());
 document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && cloud?.flush());
+
+// ---------- Opening splash ----------
+// A ring of painted food floats around the fridge while the name pops in,
+// then the splash fades away on its own (tap to skip).
+
+(function splash() {
+  const el = $("#splash");
+  if (!el) return;
+  const foods = [
+    ["apple", "produce"], ["lemon", "produce"], ["carrot", "produce"], ["berries", "produce"],
+    ["cheddar", "dairy"], ["egg", "dairy"], ["broccoli", "produce"], ["banana", "produce"],
+    ["milk", "dairy"], ["bell pepper", "produce"],
+  ];
+  $("#splash-ring").innerHTML = foods
+    .map(([name, cat], i) => {
+      const angle = (360 / foods.length) * i - 90;
+      return `<span class="splash-food" style="--a:${angle}deg;--i:${i}">${foodIcon(name, cat).svg}</span>`;
+    })
+    .join("");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let gone = false;
+  const leave = () => {
+    if (gone) return;
+    gone = true;
+    el.classList.add("leaving");
+    setTimeout(() => el.remove(), reduced ? 0 : 500);
+  };
+  el.addEventListener("click", leave);
+  setTimeout(leave, reduced ? 900 : 2300);
+})();
 
 $("#add-unit").innerHTML = unitOptions("count");
 $("#food-names").innerHTML = FOODS.filter((f) => f.name !== "water").map((f) => `<option value="${f.name}"></option>`).join("");

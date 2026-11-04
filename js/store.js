@@ -2,6 +2,7 @@
 import { foodInfo, canonicalName } from "./normalize.js";
 import { normalizeUnit } from "./units.js";
 
+// Storage name kept from the app's first name so existing kitchens still load.
 const KEY = "fridgemate:v1";
 const DAY = 24 * 60 * 60 * 1000;
 
