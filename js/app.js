@@ -182,8 +182,9 @@ $("#item-dialog").addEventListener("click", (e) => {
   if (act === "dec") item.qty = +(item.qty - stepAmount(item)).toFixed(2);
   if (act === "usedup" || item.qty <= 0) {
     state.inventory = state.inventory.filter((it) => it.id !== item.id);
-    toast(`${titleCase(item.name)} used up`);
     dlg.close();
+    commit();
+    return askRestock([item]);
   }
   if (move || act) {
     commit();
@@ -691,7 +692,8 @@ $("#inventory").addEventListener("click", (e) => {
   if (action === "dec") item.qty = +(item.qty - stepAmount(item)).toFixed(2);
   if (action === "remove" || item.qty <= 0) {
     state.inventory = state.inventory.filter((it) => it.id !== item.id);
-    toast(`${titleCase(item.name)} removed`);
+    commit();
+    return askRestock([item]);
   }
   commit();
 });
@@ -1323,11 +1325,14 @@ function openRecipe(id) {
       dlg.close();
     }
     if (act === "cook") {
+      const before = state.inventory;
       const { inventory, unchanged } = cookRecipe(recipe, state.inventory);
       state.inventory = inventory;
       commit();
       dlg.close();
-      toast(unchanged.length ? `Updated your kitchen. Check amounts of: ${unchanged.join(", ")}` : "Enjoy! Your kitchen has been updated.");
+      const gone = before.filter((it) => !inventory.some((x) => x.id === it.id));
+      if (gone.length) askRestock(gone, { intro: "Enjoy! That used up the last of" });
+      else toast(unchanged.length ? `Updated your kitchen. Check amounts of: ${unchanged.join(", ")}` : "Enjoy! Your kitchen has been updated.");
     }
     if (act === "delete") {
       state.customRecipes = state.customRecipes.filter((x) => x.id !== recipe.id);
@@ -1841,6 +1846,51 @@ $("#plan-dialog").addEventListener("click", (e) => {
 });
 
 // ---------- Shopping ----------
+
+// ---------- Used it up: add to the shopping list? ----------
+// Whenever something runs out (marked used up, stepped down to zero, removed,
+// or finished by cooking), ask whether to put it on the shopping list.
+
+const shopName = (it) => (it.label || it.name).toLowerCase();
+const onList = (it) => state.shopping.some((s) => !s.done && (s.name === shopName(it) || s.name === it.name));
+
+function askRestock(items, { intro } = {}) {
+  const seen = new Set();
+  items = items.filter((it) => !seen.has(shopName(it)) && seen.add(shopName(it)));
+  if (!items.length) return;
+  const dlg = $("#restock-dialog");
+  const fresh = items.filter((it) => !onList(it));
+  const label = (it) => titleCase(it.label || it.name);
+  if (!fresh.length) {
+    return toast(`${items.map(label).join(", ")} ${items.length > 1 ? "are" : "is"} used up and already on your shopping list`);
+  }
+  const one = items.length === 1;
+  $("#restock-detail").innerHTML = `
+    <form method="dialog" class="restock">
+      <span class="restock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M3.5 4.5h2.5l2.2 10.5h10l2-7.5H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19" r="1.5" fill="currentColor"/><circle cx="17" cy="19" r="1.5" fill="currentColor"/></svg></span>
+      <h2>${one ? `${esc(label(items[0]))} is all gone` : "All used up"}</h2>
+      <p class="muted">${intro ? `${esc(intro)} ${one ? "the " + esc(label(items[0]).toLowerCase()) : "these"}. ` : ""}Add ${one ? "it" : "them"} to your shopping list?</p>
+      ${one ? "" : `<div class="restock-list">${items.map((it, i) => onList(it)
+        ? `<div class="restock-item muted small">${esc(label(it))} <span>already on your list</span></div>`
+        : `<label class="restock-item"><input type="checkbox" data-restock="${i}" checked /> ${esc(label(it))}</label>`).join("")}</div>`}
+      <div class="row end">
+        <button type="button" class="btn" data-restock-no>No thanks</button>
+        <button type="button" class="btn primary" data-restock-yes>Add to list</button>
+      </div>
+    </form>`;
+  dlg.onclick = (e) => {
+    if (e.target === dlg || e.target.closest("[data-restock-no]")) return dlg.close();
+    if (!e.target.closest("[data-restock-yes]")) return;
+    const pick = one ? fresh : items.filter((it, i) => $(`[data-restock="${i}"]`)?.checked);
+    for (const it of pick) {
+      if (!onList(it)) state.shopping.push({ id: newId(), name: shopName(it), done: false, addedAt: Date.now() });
+    }
+    commit();
+    dlg.close();
+    if (pick.length) toast(`Added ${pick.map(label).join(", ")} to your shopping list`);
+  };
+  if (!dlg.open) dlg.showModal();
+}
 
 // names: what to buy. recipes: the recipes they're for, so each item can say how much
 // each recipe needs ("3 for Veggie Omelette").

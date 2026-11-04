@@ -125,6 +125,9 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   the planner lists recipes that suit the slot first. Never suggest a heavy dinner for breakfast.
 - Planned meals can be removed from Home and Plan (x on each slot, or Remove in the slot picker),
   with an Undo toast. The Home date badge opens the planner.
+- When something runs out (Used it up, minus to zero, removed in the list, or finished by cooking), a
+  pop-up asks "Add it to your shopping list?" (`askRestock`); several items get ticked checkboxes, and
+  items already on the list are not added twice. Varieties keep their name ("oat milk").
 - Shopping items added from a recipe or the week's plan show how much each recipe needs
   ("Need 2 for Banana Pancakes", stored as `item.needs`).
 - Recipes page sections fold: Fresh ideas, Filters (shows how many are on) and From the recipe book.
