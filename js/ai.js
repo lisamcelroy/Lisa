@@ -2,6 +2,7 @@
 // in Settings. The key stays in this browser and requests go straight to Anthropic.
 import { FOODS, LOCATIONS } from "./data/foods.js";
 import { KEYWORD_IDS } from "./data/keywords.js";
+import { MEAL_TYPE_IDS } from "./data/meals.js";
 
 const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.135.0/+esm";
 const MODEL = "claude-opus-5-5";
@@ -12,7 +13,8 @@ const KEYWORD_HINT =
   "(easy = easy to cook, quick = ready in 20 minutes, party = great for parties, entree = a main course, " +
   "comfort = cozy comfort food, healthy = light and healthy, mealprep = keeps well for meal prep, kids = kid friendly, " +
   "budget = budget friendly, brunch = weekend brunch, datenight = date night, onepan = one pan or pot, " +
-  "leftovers = good for using up leftovers).";
+  "leftovers = good for using up leftovers)." +
+  " Also give \"meals\": the meals each recipe genuinely suits, from breakfast, lunch, dinner and snack (a hearty dinner is not breakfast).";
 
 let sdkPromise = null;
 
@@ -100,7 +102,7 @@ const RECIPE_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["title", "minutes", "servings", "ingredients", "steps", "keywords"],
+        required: ["title", "minutes", "servings", "ingredients", "steps", "keywords", "meals"],
         properties: {
           title: { type: "string" },
           minutes: { type: "integer" },
@@ -121,6 +123,7 @@ const RECIPE_SCHEMA = {
           },
           steps: { type: "array", items: { type: "string" } },
           keywords: { type: "array", items: { type: "string", enum: KEYWORD_IDS } },
+          meals: { type: "array", items: { type: "string", enum: MEAL_TYPE_IDS } },
         },
       },
     },
@@ -149,7 +152,7 @@ export function buildIdeasPrompt(inventory, { soon = [], request = "", exclude =
 
 const JSON_SHAPE =
   'Reply with only JSON of this shape: {"recipes": [{"title": string, "minutes": integer, "servings": integer, ' +
-  '"ingredients": [{"name": string, "qty": number, "unit": string, "optional": boolean}], "steps": [string], "keywords": [string]}]}';
+  '"ingredients": [{"name": string, "qty": number, "unit": string, "optional": boolean}], "steps": [string], "keywords": [string], "meals": [string]}]}';
 
 /** Keep only well-formed recipes from a model reply. */
 export function cleanIdeas(data) {
@@ -165,6 +168,7 @@ export function cleanIdeas(data) {
         .map((i) => ({ name: i.name, qty: Number(i.qty) || 1, unit: String(i.unit || "count"), optional: Boolean(i.optional) })),
       steps: Array.isArray(r.steps) ? r.steps.map(String) : [],
       keywords: Array.isArray(r.keywords) ? [...new Set(r.keywords.filter((k) => KEYWORD_IDS.includes(k)))].slice(0, 3) : [],
+      meals: Array.isArray(r.meals) ? MEAL_TYPE_IDS.filter((m) => r.meals.includes(m)) : [],
     }));
 }
 

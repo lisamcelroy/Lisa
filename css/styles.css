@@ -1094,3 +1094,20 @@ body { background: var(--bg); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fam-blocked { color: #f0a9b6; } :root:not([data-theme="light"]) .fam-loves { color: #f4af30; } }
 :root[data-theme="dark"] .fam-blocked { color: #f0a9b6; }
 :root[data-theme="dark"] .fam-loves { color: #f4af30; }
+
+/* Suggested meals on recipes */
+.meal-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 10px; }
+.meal-row-label { font-size: .68rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.meal-for { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-size: .78rem; color: var(--muted); margin: 6px 0 2px; }
+.meal-tag { font-size: .72rem; font-weight: 800; border-radius: 999px; padding: 2px 9px; }
+.meal-tag.meal-breakfast { background: color-mix(in srgb, #f4af30 30%, var(--surface)); color: var(--text); }
+.meal-tag.meal-lunch { background: color-mix(in srgb, #d96c81 22%, var(--surface)); color: var(--text); }
+.meal-tag.meal-dinner { background: #9f4a5c; color: #fdf6ea; }
+.meal-tag.meal-snack { background: color-mix(in srgb, #f0a9b6 40%, var(--surface)); color: var(--text); }
+
+/* Header: see-through while scrolling. No tint, just a soft blur so the logo stays readable. */
+.topbar {
+  background: transparent;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 0; box-shadow: none;
+}

@@ -14,6 +14,7 @@ import { KEYWORDS, KEYWORD_IDS, KEYWORD_LABEL, keywordsFor } from "./data/keywor
 import { MEALS, MEAL_LABEL, isoDay, fromIsoDay, weekDays, dayCalories, prunePlan, plannedRecipeIds } from "./plan.js";
 import { UNIT_CHOICES, formatQty, normalizeUnit } from "./units.js";
 import { LEVELS, LEVEL_LABEL, familyCheck, familyNotes, familyRequest, eating } from "./family.js";
+import { MEAL_TYPES, MEAL_TYPE_LABEL, mealsFor, mealNow } from "./data/meals.js";
 import { TIME_OPTIONS, PREP_OPTIONS, fitsTime, todaysChoice, timeRequest } from "./cooktime.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -21,7 +22,7 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 let state = loadState();
-const ui = { tab: "home", show: "both", itemId: null, keywords: new Set(), loc: "all", search: "", recipeFilter: "ready", recipeSearch: "", review: [] };
+const ui = { tab: "home", show: "both", itemId: null, keywords: new Set(), loc: "all", search: "", recipeFilter: "ready", meal: "any", recipeSearch: "", review: [] };
 state.ideas ||= { key: "", recipes: [] };
 state.plan ||= {};
 // Sections the person has folded away (fridge drawing and list groups).
@@ -283,14 +284,14 @@ function renderHome() {
   const due = defrostReminders().filter((x) => x.when === "today");
   const soon = state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS && !needsDefrost(it));
   const ranked = recommend(allRecipes(), state.inventory, { assumeStaples: state.settings.assumeStaples });
-  const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length && !isBlocked(r));
+  const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length && !isBlocked(r) && mealsFor(r.recipe).includes(mealNow()));
 
   // What the assistant says.
   const lines = [];
   if (!state.inventory.length) lines.push("Your fridge is empty. Scan a receipt or add some food and I'll get to work.");
   else if (c.meals === 3) lines.push(`All three meals are planned today${c.total ? `, about ${c.total} kcal` : ""}.`);
   else if (c.meals) lines.push(`You have ${c.meals} of 3 meals planned today${c.total ? `, about ${c.total} kcal so far` : ""}.`);
-  else lines.push(`Nothing is planned for today yet.${ready.length ? ` You could make ${ready[0].recipe.title} right now.` : ""}`);
+  else lines.push(`Nothing is planned for today yet.${ready.length ? ` You could make ${ready[0].recipe.title} for ${mealNow()} right now.` : ""}`);
   if (due.length) lines.push(`Don't forget to defrost the ${frozenNames(due.flatMap((x) => x.frozen)).join(" and ")}.`);
   else if (soon.length) lines.push(`Use up the ${soon.slice(0, 2).map((it) => it.name).join(" and ")} soon.`);
   $("#hello-sub").textContent = lines.join(" ");
@@ -853,6 +854,7 @@ function recipeCard(r) {
   return `<button class="recipe" data-recipe="${esc(r.recipe.id)}">
     <h3>${esc(r.recipe.title)}</h3>
     <div class="tagline">${r.recipe.minutes} min &middot; serves ${r.recipe.servings}${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""}${extra}</div>
+    ${mealLine(r.recipe)}
     ${kwPills(r.recipe, 3)}
     <div class="meter" aria-label="${pct}% of ingredients on hand"><div style="width:${pct}%"></div></div>
     ${r.usesSoon.length ? `<div class="rescue">Uses up: ${esc(r.usesSoon.join(", "))}</div>` : ""}
@@ -914,6 +916,7 @@ $("#recipes").addEventListener("click", (e) => {
 
 function renderRecipes() {
   renderTimeCard();
+  renderMealFilter();
   renderIdeas();
   $$("#recipe-filter .chip").forEach((c) => c.classList.toggle("active", c.dataset.filter === ui.recipeFilter));
 
@@ -924,6 +927,7 @@ function renderRecipes() {
   if (ui.keywords.size) list = list.filter((r) => { const ks = keywordsFor(r.recipe); return [...ui.keywords].every((k) => ks.includes(k)); });
   const time = cookTime();
   if (time) list = list.filter((r) => fitsTime(r.recipe, time));
+  if (ui.meal !== "any") list = list.filter((r) => mealsFor(r.recipe).includes(ui.meal));
   const blockedCount = list.filter(isBlocked).length;
   if (!ui.showBlocked) list = list.filter((r) => !isBlocked(r));
 
@@ -957,6 +961,24 @@ function renderRecipes() {
   }
   $("#recipes").innerHTML = blockedNote(blockedCount) + list.map(recipeCard).join("");
 }
+
+// Suggested meals: a line on each recipe and a filter row.
+function mealLine(recipe) {
+  return `<div class="meal-for">Suggested for ${mealsFor(recipe).map((m) => `<span class="meal-tag meal-${m}">${MEAL_TYPE_LABEL[m]}</span>`).join("")}</div>`;
+}
+
+function renderMealFilter() {
+  $("#meal-filter").innerHTML = `<span class="meal-row-label">Suggested for</span>` +
+    [{ id: "any", label: "Any meal" }, ...MEAL_TYPES].map((m) =>
+      `<button class="chip ${ui.meal === m.id ? "active" : ""}" data-meal="${m.id}" aria-pressed="${ui.meal === m.id}">${m.label}</button>`).join("");
+}
+
+$("#meal-filter").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-meal]");
+  if (!b) return;
+  ui.meal = b.dataset.meal;
+  renderRecipes();
+});
 
 // Family preferences on the Recipes tab.
 const isBlocked = (r) => familyCheck(r.recipe, state.family).blocked.length > 0;
@@ -1036,6 +1058,7 @@ function openRecipe(id) {
   $("#recipe-detail").innerHTML = `
     <h2>${esc(recipe.title)}</h2>
     <p class="muted">${recipe.minutes} min &middot; serves ${recipe.servings}${kcalText(recipe) ? ` &middot; <span class="kcal" title="Estimated per serving from the ingredients, without optional extras">${kcalText(recipe)} per serving</span>` : ""}${r.usesSoon.length ? ` &middot; <span class="rescue">uses up ${esc(r.usesSoon.join(", "))}</span>` : ""}</p>
+    ${mealLine(recipe)}
     ${kwPills(recipe)}
     ${familyLines(recipe)}
     ${r.frozen.length ? `<p class="defrost-note">Defrost first: ${r.frozen.map((n) => `${esc(frozenItemFor(n)?.name || n)} (${esc(defrostHint(frozenItemFor(n) || { name: n }))})`).join(", ")}.</p>` : ""}
@@ -1109,7 +1132,7 @@ const HIDE_CODES = ["not_granted", "sampling_disabled", "not_declared", "capabil
 const kitchenKey = () => {
   const t = cookTime();
   return [...new Set(state.inventory.map((it) => it.name))].sort().join("|") + (t ? `@${t.time}:${t.prep.join(",")}` : "") +
-    (familyRequest(state.family) ? "#" + familyRequest(state.family) : "");
+    (familyRequest(state.family) ? "#" + familyRequest(state.family) : "") + (ui.meal !== "any" ? "~" + ui.meal : "");
 };
 
 function ideaSource() {
@@ -1140,7 +1163,8 @@ function renderIdeas() {
     const ranked = recommend(recipes, state.inventory, { assumeStaples: state.settings.assumeStaples })
       .filter((r) => !ui.keywords.size || [...ui.keywords].every((k) => keywordsFor(r.recipe).includes(k)))
       .filter((r) => !cookTime() || fitsTime(r.recipe, cookTime()))
-      .filter((r) => !isBlocked(r));
+      .filter((r) => !isBlocked(r))
+      .filter((r) => ui.meal === "any" || mealsFor(r.recipe).includes(ui.meal));
     $("#ideas-list").innerHTML = ranked.length
       ? ranked.map(recipeCard).join("")
       : `<div class="empty">None of these ideas match ${[...[...ui.keywords].map((k) => `"${KEYWORD_LABEL[k]}"`), ...(cookTime() ? [esc(timeSummary(cookTime()))] : [])].join(" + ")}. Tap More ideas for new ones.</div>`;
@@ -1166,7 +1190,7 @@ async function fetchIdeas({ fresh = false, more = false } = {}) {
 
   const opts = {
     soon: state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS).map((it) => it.name),
-    request: [$("#ai-request").value.trim(), timeRequest(cookTime()), familyRequest(state.family)].filter(Boolean).join(". "),
+    request: [$("#ai-request").value.trim(), timeRequest(cookTime()), familyRequest(state.family), ui.meal !== "any" ? `These are for ${ui.meal}, so every recipe must suit ${ui.meal}` : ""].filter(Boolean).join(". "),
     exclude: more ? state.ideas.recipes.map((r) => r.title) : [],
   };
   try {
@@ -1381,15 +1405,15 @@ $("#plan-days").addEventListener("click", (e) => {
 function pickList() {
   const { meal } = planUi.slot;
   const q = ($("#plan-search")?.value || "").trim().toLowerCase();
-  const fits = { breakfast: ["breakfast"], lunch: ["lunch", "salad", "soup", "quick"], dinner: ["dinner", "family", "soup"] }[meal];
+  const suits = (r) => mealsFor(r.recipe).includes(meal);
   const pool = [...allRecipes(), ...state.ideas.recipes];
   const ranked = recommend(pool, state.inventory, { assumeStaples: state.settings.assumeStaples })
     .filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.ingredients.some((i) => i.name.includes(q)))
-    .sort((a, b) => (isBlocked(a) - isBlocked(b)) || (fits.some((t) => b.recipe.tags?.includes(t)) - fits.some((t) => a.recipe.tags?.includes(t))) || b.score - a.score)
+    .sort((a, b) => (isBlocked(a) - isBlocked(b)) || (suits(b) - suits(a)) || b.score - a.score)
     .slice(0, 40);
   return ranked.length
     ? ranked.map((r) => `<button class="pick" data-recipe="${esc(r.recipe.id)}"><b>${esc(r.recipe.title)}</b>
-        <span>${r.recipe.minutes} min${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""} &middot; ${r.missing.length ? `need ${r.missing.length}` : "you have everything"}${r.recipe.idea ? " &middot; idea" : ""}${isBlocked(r) ? " &middot; someone won't eat this" : ""}</span></button>`).join("")
+        <span>${r.recipe.minutes} min${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""} &middot; ${r.missing.length ? `need ${r.missing.length}` : "you have everything"}${r.recipe.idea ? " &middot; idea" : ""}${isBlocked(r) ? " &middot; someone won't eat this" : ""}${suits(r) ? "" : ` &middot; usually ${mealsFor(r.recipe).map((m) => MEAL_TYPE_LABEL[m].toLowerCase()).join(" or ")}`}</span></button>`).join("")
     : `<div class="empty">No recipes match.</div>`;
 }
 

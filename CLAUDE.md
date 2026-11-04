@@ -49,6 +49,7 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 | `js/app.js` | UI wiring for every tab, dialogs, saving, splash, name prompt, folding |
 | `js/data/foods.js` | Food catalog: names, receipt aliases, category, default location, shelf life, `parent` (cheddar counts as cheese, cumin as spices) |
 | `js/data/recipes.js` | 34 built-in recipes using catalog ingredient names (tests enforce this) |
+| `js/data/meals.js` | Which meals each recipe suits (breakfast, lunch, dinner, snack); hand-picked for built-ins, Claude labels its ideas |
 | `js/data/keywords.js` | Occasion keywords; hand-picked per recipe, selective (at most 3 per recipe); quick/vegetarian/vegan worked out |
 | `js/normalize.js` | Free text and receipt shorthand to catalog foods (longest match wins) |
 | `js/receipt.js`, `js/recipeImport.js` | Parse receipt text and pasted recipes |
@@ -85,7 +86,7 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   Zalando Sans for body.
 - Style: clean and sleek. Hairline borders (`--hair`), soft shadows, flat pill buttons and chips,
   frosted header and tab bar, generous spacing. Respect `prefers-reduced-motion`.
-- Header: small centred logo; settings on the right; save status on the left
+- Header: small centred logo on a see-through bar (no tint, soft blur only); settings on the right; save status on the left
   (a dot on phones).
 - Tabs: Home, Fridge (Picture/List switch), Scan, Recipes, Plan, Family, Shopping.
 
@@ -105,6 +106,9 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   option); an optional one becomes "Leave out the X for Y"; tolerated foods get "Keep the X small or on
   the side"; loved foods get a note. Disliking a group (cheese) covers its members (cheddar). Claude's
   ideas get the same rules in the request. Stored in synced `state.family`.
+- Every recipe shows "Suggested for" meal tags, with a meal filter row on Recipes. Home only suggests
+  a recipe that suits the meal for the time of day (breakfast until 11, lunch until 4pm, then dinner);
+  the planner lists recipes that suit the slot first. Never suggest a heavy dinner for breakfast.
 - Seasonings live on a spice rack and count for recipes that just say "spices".
 - Anything in the freezer must be defrosted before use; recipes and the plan remind you.
 - Calories are estimates; say so in the UI.
