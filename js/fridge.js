@@ -7,21 +7,29 @@ import { needsDefrost } from "./frozen.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
+// Sorted like grocery store aisles.
 export const FRIDGE_ZONES = [
-  { id: "top", label: "Dairy and eggs" },
-  { id: "middle", label: "Meat and fish" },
-  { id: "bottom", label: "Leftovers and more" },
-  { id: "crisper", label: "Crisper drawer" },
-  { id: "door", label: "Door" },
+  { id: "dairy", label: "Dairy and eggs" },
+  { id: "meat", label: "Meat, fish and tofu" },
+  { id: "other", label: "Other" },
+  { id: "veg", label: "Vegetables" },
+  { id: "fruit", label: "Fruit" },
+  { id: "door", label: "Condiments and sauces" },
 ];
 
 export const PANTRY_ZONES = [
-  { id: "grains", label: "Grains and baking" },
-  { id: "cans", label: "Cans and jars" },
-  { id: "sauces", label: "Sauces and oils" },
-  { id: "bread", label: "Bread box" },
-  { id: "basket", label: "Produce basket" },
+  { id: "grains", label: "Pasta, rice and grains" },
+  { id: "baking", label: "Baking" },
+  { id: "cans", label: "Canned and jarred" },
+  { id: "sauces", label: "Oils and sauces" },
+  { id: "bread", label: "Bread and bakery" },
+  { id: "basket", label: "Fruit and veg" },
 ];
+
+// Produce is split into fruit and vegetables, the way a store lays it out.
+const FRUITS = new Set(["apple", "avocado", "banana", "berries", "lemon", "lime"]);
+const FRUITY = /\b(apples?|oranges?|clementines?|mandarins?|grapes?|mangos?|mangoes|peach(es)?|pears?|plums?|cherr(y|ies)|melons?|watermelon|kiwis?|pineapples?|berr(y|ies)|strawberr(y|ies)|blueberr(y|ies)|raspberr(y|ies)|nectarines?|apricots?|figs?|dates|grapefruit|pomegranates?|papayas?|limes?|lemons?|bananas?|avocados?)\b/i;
+export const isFruit = (item) => FRUITS.has(item.name) || FRUITY.test(item.name || "");
 
 /** Which shelf an item belongs on, from where it lives and what it is. */
 export function zoneFor(item) {
@@ -29,17 +37,18 @@ export function zoneFor(item) {
   if (c === "spices") return "rack"; // seasonings live on the spice rack wherever they're kept
   if (item.location === "freezer") return "freezer";
   if (item.location === "pantry") {
-    if (c === "grains" || c === "baking") return "grains";
+    if (c === "grains") return "grains";
+    if (c === "baking") return "baking";
     if (c === "condiments" || c === "staples") return "sauces";
     if (c === "bakery") return "bread";
     if (c === "produce") return "basket";
     return "cans";
   }
-  if (c === "dairy") return "top";
-  if (c === "meat" || c === "seafood" || c === "protein") return "middle";
-  if (c === "produce") return "crisper";
-  if (c === "condiments" || c === "spices") return "door";
-  return "bottom";
+  if (c === "dairy") return "dairy";
+  if (c === "meat" || c === "seafood" || c === "protein") return "meat";
+  if (c === "produce") return isFruit(item) ? "fruit" : "veg";
+  if (c === "condiments") return "door";
+  return "other";
 }
 
 export function groupByZone(inventory) {
@@ -77,6 +86,8 @@ function shelf(items, emptyText) {
 }
 
 /** A section header you can tap to fold the section away. */
+const label = (zones, id) => zones.find((x) => x.id === id).label;
+
 function foldHeader(id, label, n, collapsed, extra = "") {
   const shut = collapsed.has(id);
   return `<div class="zone-label">
@@ -104,21 +115,27 @@ export function renderAppliances(inventory, collapsed = new Set()) {
         <div class="fold-body">${shelf(z.freezer, "Nothing frozen yet")}</div>
       </div>
       <div class="fridge-section${shut("fridge")}">
-        <div class="fridge-head">${foldHeader("fridge", "Fridge", count(["top", "middle", "bottom", "crisper", "door"]), collapsed)}</div>
+        <div class="fridge-head">${foldHeader("fridge", "Fridge", count(FRIDGE_ZONES.map((x) => x.id)), collapsed)}</div>
         <div class="fold-body fridge-body">
           <div class="compartment main">
-            ${["top", "middle", "bottom"].map((id) => `
+            ${["dairy", "meat", "other"].filter((id) => id !== "other" || z.other?.length).map((id) => `
               <div class="shelf" data-zone="${id}">
-                <div class="shelf-label">${FRIDGE_ZONES.find((x) => x.id === id).label}</div>
-                ${shelf(z[id], "Empty shelf")}
+                <div class="shelf-label">${label(FRIDGE_ZONES, id)}</div>
+                ${shelf(z[id], { dairy: "No dairy or eggs", meat: "No meat or fish" }[id] || "Empty shelf")}
               </div>`).join("")}
-            <div class="drawer">
-              <div class="shelf-label">Crisper drawer</div>
-              ${shelf(z.crisper, "No fruit or veg")}
+            <div class="drawers">
+              <div class="drawer" data-zone="veg">
+                <div class="shelf-label">Vegetables</div>
+                ${shelf(z.veg, "No veg")}
+              </div>
+              <div class="drawer" data-zone="fruit">
+                <div class="shelf-label">Fruit</div>
+                ${shelf(z.fruit, "No fruit")}
+              </div>
             </div>
           </div>
           <div class="compartment door">
-            <div class="shelf-label">Door</div>
+            <div class="shelf-label">${label(FRIDGE_ZONES, "door")}</div>
             ${shelf(z.door, "Sauces go here")}
           </div>
         </div>
@@ -130,14 +147,14 @@ export function renderAppliances(inventory, collapsed = new Set()) {
       <div class="pantry-top" aria-hidden="true"></div>
       ${foldHeader("pantry", "Pantry", count(PANTRY_ZONES.map((p) => p.id)), collapsed)}
       <div class="fold-body">
-        ${["grains", "cans", "sauces"].map((id) => `
+        ${["grains", "baking", "cans", "sauces"].map((id) => `
           <div class="shelf wood" data-zone="${id}">
-            <div class="shelf-label">${PANTRY_ZONES.find((x) => x.id === id).label}</div>
+            <div class="shelf-label">${label(PANTRY_ZONES, id)}</div>
             ${shelf(z[id], "Empty shelf")}
           </div>`).join("")}
         <div class="pantry-bins">
-          <div class="bin bread-box"><div class="shelf-label">Bread box</div>${shelf(z.bread, "No bread")}</div>
-          <div class="bin basket"><div class="shelf-label">Produce basket</div>${shelf(z.basket, "Onions, potatoes...")}</div>
+          <div class="bin bread-box"><div class="shelf-label">${label(PANTRY_ZONES, "bread")}</div>${shelf(z.bread, "No bread")}</div>
+          <div class="bin basket"><div class="shelf-label">${label(PANTRY_ZONES, "basket")}</div>${shelf(z.basket, "Onions, potatoes...")}</div>
         </div>
       </div>
     </section>`;

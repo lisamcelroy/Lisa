@@ -7,10 +7,18 @@ import { makeItem } from "../js/store.js";
 
 test("items land on sensible shelves", () => {
   const z = (name, location) => zoneFor(makeItem({ name, location }));
-  assert.equal(z("milk"), "top");
-  assert.equal(z("chicken breast"), "middle");
-  assert.equal(z("spinach"), "crisper");
+  assert.equal(z("milk"), "dairy");
+  assert.equal(z("eggs"), "dairy");
+  assert.equal(z("chicken breast"), "meat");
+  assert.equal(z("tofu"), "meat");
+  assert.equal(z("spinach"), "veg");
+  assert.equal(z("tomato", "fridge"), "veg");
+  assert.equal(z("apple"), "fruit");
+  assert.equal(z("lemon"), "fruit");
+  assert.equal(zoneFor({ name: "mango", category: "produce", location: "fridge" }), "fruit");
+  assert.equal(zoneFor({ name: "leftover curry", category: "other", location: "fridge" }), "other");
   assert.equal(z("mustard"), "door");
+  assert.equal(z("flour"), "baking");
   assert.equal(z("frozen peas"), "freezer");
   assert.equal(z("rice"), "grains");
   assert.equal(z("black beans"), "cans");

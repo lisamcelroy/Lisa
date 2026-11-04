@@ -1177,3 +1177,11 @@ button.date-badge:active { transform: scale(.95); }
 .recipe-edit .row.two { align-items: start; }
 .ing-edit { grid-template-columns: 76px 1fr auto 32px; grid-template-areas: "name name name x" "qty unit opt ."; }
 .ing-edit .ie-opt { justify-self: start; padding: 0 4px; }
+
+/* Fridge drawers: vegetables and fruit side by side, like a store's produce aisle. */
+.drawers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.drawers .drawer { margin-top: 0; min-width: 0; }
+.drawer[data-zone="fruit"] { background: color-mix(in srgb, #f4af30 16%, var(--drawer)); }
+
+/* The "use soon" card style is for the Home card only, not fridge tiles that expire soon. */
+.food.soon { background: none; border-left: 0; }

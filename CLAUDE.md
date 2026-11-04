@@ -59,7 +59,7 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 | `js/family.js` | Family food preferences (allergic, hates, tolerates, loves) and what they mean for a recipe |
 | `js/cooktime.js` | Time to cook today: time limits, quick prep and hands-off checks |
 | `js/plan.js` | Meal plan dates (weeks start Monday), totals, pruning |
-| `js/fridge.js` | Fridge, pantry and spice rack drawing with foldable sections |
+| `js/fridge.js` | Fridge, pantry and spice rack drawing with foldable sections, sorted like grocery aisles (fridge: Dairy and eggs; Meat, fish and tofu; Other only when used; Vegetables and Fruit drawers; Condiments and sauces door. Pantry: Pasta, rice and grains; Baking; Canned and jarred; Oils and sauces; Bread and bakery; Fruit and veg) |
 | `js/icons.js`, `js/mascot.js` | Flat food icons and the fridge assistant |
 | `js/ai.js`, `js/ocr.js`, `js/cloud.js`, `js/store.js`, `js/units.js` | Claude calls, OCR loader, account sync, state and merge rules, unit conversion |
 
