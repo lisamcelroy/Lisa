@@ -1242,3 +1242,6 @@ body.searching #rec-book > .fold .chev { display: none; }
 .mt-row { grid-template-columns: 1fr auto 1fr; grid-template-areas: "meal meal meal" "from to until"; gap: 4px 8px; }
 .mt-row .mt-meal { grid-area: meal; }
 .mt-row input[type="time"] { font-size: 1rem; padding: 8px 12px; }
+
+/* Fridge door: sauces and drinks in separate bins. */
+.door-bin + .door-bin { margin-top: 10px; padding-top: 10px; border-top: 3px solid color-mix(in srgb, var(--fridge-edge) 70%, transparent); }

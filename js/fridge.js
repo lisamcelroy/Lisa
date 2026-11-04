@@ -15,7 +15,8 @@ export const FRIDGE_ZONES = [
   { id: "other", label: "Other" },
   { id: "veg", label: "Vegetables" },
   { id: "fruit", label: "Fruit" },
-  { id: "door", label: "Sauces and drinks" },
+  { id: "door", label: "Sauces and condiments" },
+  { id: "drinks", label: "Drinks" },
 ];
 
 export const PANTRY_ZONES = [
@@ -25,7 +26,8 @@ export const PANTRY_ZONES = [
   { id: "sauces", label: "Oils and sauces" },
   { id: "bread", label: "Bread and bakery" },
   { id: "basket", label: "Fruit and veg" },
-  { id: "snacks", label: "Snacks and drinks" },
+  { id: "snacks", label: "Snacks" },
+  { id: "pantry-drinks", label: "Drinks" },
 ];
 
 // Produce is split into fruit and vegetables, the way a store lays it out.
@@ -42,13 +44,15 @@ export function zoneFor(item) {
     if (c === "condiments" || c === "staples") return "sauces";
     if (c === "bakery") return "bread";
     if (c === "produce") return "basket";
-    if (c === "snacks" || c === "drinks") return "snacks";
+    if (c === "snacks") return "snacks";
+    if (c === "drinks") return "pantry-drinks";
     return "cans";
   }
   if (c === "dairy") return "dairy";
   if (c === "meat" || c === "seafood" || c === "protein") return "meat";
   if (c === "produce") return isFruit(item) ? "fruit" : "veg";
-  if (c === "condiments" || c === "drinks") return "door";
+  if (c === "condiments") return "door";
+  if (c === "drinks") return "drinks";
   return "other";
 }
 
@@ -77,7 +81,7 @@ function tile(item, { showQty = true } = {}) {
   const ice = needsDefrost(item);
   return `<button class="food ${f} ${ice ? "frozen" : ""}" data-id="${esc(item.id)}" style="${style}" aria-label="${esc(item.label || item.name)}, ${esc(qty)}${ice ? ", frozen, defrost before using" : ""}${note ? ", " + note : ""}">
     <span class="food-bubble">${svg}${showQty ? `<span class="food-qty">${esc(qty)}</span>` : ""}</span>
-    <span class="food-name">${esc(item.label || item.name)}</span>
+    <span class="food-name">${esc(item.label || item.name).replace(/\bbbq\b/gi, "BBQ")}</span>
   </button>`;
 }
 
@@ -136,8 +140,14 @@ export function renderAppliances(inventory, collapsed = new Set()) {
             </div>
           </div>
           <div class="compartment door">
-            <div class="shelf-label">${label(FRIDGE_ZONES, "door")}</div>
-            ${shelf(z.door, "Sauces go here")}
+            <div class="door-bin" data-zone="door">
+              <div class="shelf-label">${label(FRIDGE_ZONES, "door")}</div>
+              ${shelf(z.door, "Sauces go here")}
+            </div>
+            <div class="door-bin" data-zone="drinks">
+              <div class="shelf-label">${label(FRIDGE_ZONES, "drinks")}</div>
+              ${shelf(z.drinks, "No drinks")}
+            </div>
           </div>
         </div>
       </div>
@@ -148,7 +158,7 @@ export function renderAppliances(inventory, collapsed = new Set()) {
       <div class="pantry-top" aria-hidden="true"></div>
       ${foldHeader("pantry", "Pantry", count(PANTRY_ZONES.map((p) => p.id)), collapsed)}
       <div class="fold-body">
-        ${["grains", "baking", "cans", "sauces", "snacks"].filter((id) => id !== "snacks" || z.snacks?.length).map((id) => `
+        ${["grains", "baking", "cans", "sauces", "snacks", "pantry-drinks"].filter((id) => !["snacks", "pantry-drinks"].includes(id) || z[id]?.length).map((id) => `
           <div class="shelf wood" data-zone="${id}">
             <div class="shelf-label">${label(PANTRY_ZONES, id)}</div>
             ${shelf(z[id], "Empty shelf")}

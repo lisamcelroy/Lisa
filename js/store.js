@@ -33,8 +33,11 @@ function safeParse(raw) {
  */
 export function recategorize(inventory = []) {
   return inventory.map((it) => {
+    const known = foodInfo(it.name) || foodInfo(canonicalName(it.name));
+    // A catalog food always uses the catalog's category (fixes earlier wrong guesses).
+    if (known && known.category !== it.category) return { ...it, category: known.category };
     if (it.category && it.category !== "other") return it;
-    const better = foodInfo(it.name)?.category || foodInfo(canonicalName(it.name))?.category || guessFood(it.name)?.category;
+    const better = guessFood(it.name)?.category;
     return better ? { ...it, category: better } : it;
   });
 }
@@ -83,7 +86,7 @@ export function makeItem({ name, qty = 1, unit = "count", location, category, ex
   const loc = location || (isFrozenText(name) ? "freezer" : info?.location || guess?.location || "fridge");
   const days = shelfLife ?? (loc === "freezer" ? freezerDays(canonical, cat) : info?.shelfLife ?? guess?.shelfLife);
   // "oat milk" is stored as plant milk for recipes, but keeps its own name on screen.
-  const typed = tidyName(name).replace(/\bfrozen\b/g, "").replace(/\s+/g, " ").trim();
+  const typed = tidyName(name).replace(/\bfrozen\b/g, "").replace(/\s+/g, " ").trim().replace(/\bbbq\b/g, "BBQ");
   const label = !keepName && info && VARIETY_GROUPS.has(info.name) && typed && searchText(typed) !== searchText(canonical) ? typed : undefined;
   return {
     id: newId(),

@@ -112,6 +112,7 @@ export const FOODS = [
   { name: "snap peas", aliases: ["sugar snap peas", "snow peas", "pea pods"], category: "produce", location: "fridge", shelfLife: 5 },
   { name: "corn on the cob", aliases: ["corn cob", "corn cobs", "sweet corn", "ears of corn"], category: "produce", location: "fridge", shelfLife: 4 },
   { name: "cauliflower", aliases: ["cauli", "cauliflower head"], category: "produce", location: "fridge", shelfLife: 10 },
+  { name: "broccolini", aliases: ["baby broccoli", "broccolette", "tenderstem broccoli", "tenderstem", "broccoli rabe", "rapini"], category: "produce", location: "fridge", shelfLife: 6 },
   { name: "brussels sprouts", aliases: ["brussel sprouts", "brussels sprout", "brussels"], category: "produce", location: "fridge", shelfLife: 10 },
   { name: "eggplant", aliases: ["eggplants", "aubergine", "aubergines"], category: "produce", location: "fridge", shelfLife: 7 },
   { name: "butternut squash", aliases: ["squash", "acorn squash", "spaghetti squash", "butternut"], category: "produce", location: "pantry", shelfLife: 60 },
@@ -194,6 +195,7 @@ export const FOODS = [
   { name: "yeast", aliases: ["dry yeast", "instant yeast"], category: "baking", location: "pantry", shelfLife: 365 },
   { name: "cornstarch", aliases: ["corn starch", "cornflour"], category: "baking", location: "pantry", shelfLife: 730 },
   { name: "orange juice", aliases: ["oj", "apple juice", "fruit juice", "cranberry juice"], category: "drinks", location: "fridge", shelfLife: 10 },
+  { name: "soda", aliases: ["diet coke", "coke", "coke zero", "coca cola", "cola", "pepsi", "diet pepsi", "sprite", "7up", "ginger ale", "root beer", "dr pepper", "soft drink", "soft drinks", "pop", "sparkling water", "soda water", "club soda", "seltzer", "la croix", "lacroix", "bubly", "tonic water", "energy drink", "red bull", "iced tea"], category: "drinks", location: "fridge", shelfLife: 180 },
   { name: "coffee", aliases: ["coffee beans", "ground coffee", "instant coffee"], category: "drinks", location: "pantry", shelfLife: 180 },
   { name: "tea", aliases: ["tea bags", "green tea", "black tea"], category: "drinks", location: "pantry", shelfLife: 730 },
   { name: "chips", aliases: ["potato chips", "crisps"], category: "snacks", location: "pantry", shelfLife: 60 },
@@ -230,6 +232,7 @@ export const FOODS = [
   { name: "garlic powder", aliases: ["granulated garlic"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
   { name: "onion powder", aliases: [], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
   { name: "ground ginger", aliases: ["ginger powder"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
+  { name: "spice rub", aliases: ["bbq rub", "barbecue rub", "dry rub", "steak rub", "rib rub", "chicken rub", "rub", "cajun seasoning", "jerk seasoning", "montreal steak spice", "steak spice", "everything bagel seasoning", "lemon pepper"], category: "spices", location: "pantry", shelfLife: 730, parent: "spices" },
   { name: "vanilla", aliases: ["vanilla extract"], category: "spices", location: "pantry", shelfLife: 1000, parent: "spices" },
 ];
 
@@ -242,4 +245,5 @@ export const VARIETY_GROUPS = new Set([
   "orange", "peach", "melon", "buns", "jam", "hot sauce", "teriyaki sauce", "salad dressing", "cereal", "orange juice",
   "frozen berries", "lamb", "pork", "turkey", "french fries", "berries", "lettuce", "butternut squash", "jalapeno",
   "pasta", "noodles", "rice", "steak", "vinegar", "broth", "canned tomatoes", "sugar", "oil", "coffee", "tea",
+  "soda", "spice rub", "broccolini",
 ]);

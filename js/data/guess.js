@@ -7,18 +7,18 @@ const FRUIT = /\b(apples?|oranges?|clementines?|mandarins?|tangerines?|grapes?|m
 // Checked in order: the first rule that matches wins.
 const RULES = [
   ["frozen", /\b(frozen|ice cream|gelato|popsicles?|sorbet)\b/i],
+  ["spices", /\b(spices?|seasonings?|rubs?|spice blend|powder|paprika|cumin|oregano|thyme|rosemary|cinnamon|nutmeg|cloves|cardamom|coriander seeds?|peppercorns?|flakes)\b/i],
   ["seafood", /\b(fish|salmon|tuna|cod|haddock|halibut|tilapia|trout|mackerel|sardines?|anchov(y|ies)|shrimps?|prawns?|crabs?|lobsters?|scallops?|mussels?|clams?|oysters?|squid|calamari|octopus|seafood)\b/i],
   ["meat", /\b(beef|pork|lamb|veal|chicken|turkey|duck|goose|bacon|ham|sausages?|salami|chorizo|prosciutto|pepperoni|steaks?|ribs?|brisket|roast|mince|jerky|meatballs?|venison|bison|hot ?dogs?|wieners?|pastrami|deli meat|cold cuts?)\b/i],
   ["condiments", /\b(sauce|ketchup|dressing|jam|jelly|marmalade|syrup|vinegar|oil|relish|pickles?|mayo|mustard|spread|dip|salsa|pesto|hummus|tahini|aioli|sriracha|gochujang|miso|chutney|honey)\b/i],
+  ["drinks", /\b(juice|soda|pop|sparkling|water|coffee|tea|kombucha|beer|wine|cider|drinks?|lemonade|smoothies?|cola|coke|pepsi|sprite|ginger ale|root beer|seltzer|tonic|gatorade|powerade|energy drink|espresso|latte|milkshake)\b/i],
   ["dairy", /\b(cheese|milk|cream|yogh?o?urt|kefir|ghee|custard|creamer|eggs?|brie|camembert|gouda|provolone|ricotta|mascarpone|halloumi|paneer)\b/i],
   ["fruit", FRUIT],
-  ["produce", /\b(lettuce|greens|salad|squash|peppers?|chil(i|e|li)s?|cabbage|chard|collards?|radicchio|endive|kohlrabi|rutabagas?|turnips?|parsnips?|beets?|radish(es)?|yams?|roots?|sprouts?|tomatillos?|celeriac|herbs?|chives?|sage|tarragon|watercress|microgreens|asparagus|artichokes?|okra|fennel|leeks?|shallots?|scallions?|eggplants?|aubergines?|cauliflower|beans? sprouts?|green beans?|snap peas?|snow peas?|corn on the cob|pumpkins?|gourds?|cress|arugula|rocket|bok choy|pak choi|veg|vegetables?|veggies?)\b/i],
+  ["produce", /\b(lettuce|greens|salad|squash|peppers?|chil(i|e|li)s?|cabbage|chard|collards?|radicchio|endive|kohlrabi|rutabagas?|turnips?|parsnips?|beets?|radish(es)?|yams?|roots?|sprouts?|tomatillos?|celeriac|herbs?|chives?|sage|tarragon|watercress|microgreens|asparagus|broccol\w*|rapini|romanesco|artichokes?|okra|fennel|leeks?|shallots?|scallions?|eggplants?|aubergines?|cauliflower|beans? sprouts?|green beans?|snap peas?|snow peas?|corn on the cob|pumpkins?|gourds?|cress|arugula|rocket|bok choy|pak choi|veg|vegetables?|veggies?)\b/i],
   ["bakery", /\b(bread|buns?|rolls?|bagels?|muffins?|croissants?|pitas?|naan|tortillas?|baguettes?|loaf|brioche|scones?|cakes?|pies?|donuts?|doughnuts?|wraps?|flatbreads?|crumpets?)\b/i],
   ["baking", /\b(flour|sugar|yeast|baking|cocoa|chocolate chips?|extract|cornstarch|corn starch|icing|sprinkles|molasses|gelatin)\b/i],
   ["grains", /\b(rice|pasta|noodles?|grains?|oats?|oatmeal|barley|couscous|farro|cereal|granola|bulgur|polenta|quinoa|orzo|lasagna|macaroni|breadcrumbs?|panko)\b/i],
-  ["spices", /\b(spices?|seasonings?|powder|dried|paprika|cumin|oregano|thyme|rosemary|cinnamon|nutmeg|cloves|cardamom|coriander seeds?|peppercorns?|salt|flakes)\b/i],
   ["canned", /\b(canned|tinned|beans|lentils|chickpeas|soup|broth|stock)\b/i],
-  ["drinks", /\b(juice|soda|pop|sparkling|water|coffee|tea|kombucha|beer|wine|cider|drinks?|lemonade|smoothies?)\b/i],
   ["snacks", /\b(chips|crisps|crackers?|cookies?|biscuits?|pretzels?|popcorn|nuts?|almonds?|cashews?|walnuts?|pecans?|pistachios?|peanuts?|trail mix|bars?|candy|chocolate|gummies|seeds)\b/i],
 ];
 

@@ -21,7 +21,7 @@ test("everyday groceries land in the right aisle", () => {
   assert.equal(z("cod"), "meat");
   assert.equal(z("oat milk"), "dairy");
   assert.equal(z("ketchup"), "door");
-  assert.equal(z("orange juice"), "door");
+  assert.equal(z("orange juice"), "drinks");
   assert.equal(z("bagels"), "bread");
   assert.equal(z("tortilla chips"), "snacks");
   assert.equal(z("ice cream"), "freezer");
@@ -57,4 +57,24 @@ test("a variety keeps the name you typed but counts as its group", () => {
   assert.equal(makeItem({ name: "oranges" }).label, undefined, "a plural is not a variety");
   assert.equal(makeItem({ name: "asparagus" }).label, undefined);
   assert.equal(makeItem({ name: "frozen blueberries" }).label, "blueberries");
+});
+
+test("sauces and drinks are kept apart, and the owner's examples are right", () => {
+  const z = (name) => zoneFor(makeItem({ name }));
+  assert.equal(z("broccolini"), "veg");
+  assert.equal(z("diet coke"), "drinks");
+  assert.equal(makeItem({ name: "diet coke" }).label, "diet coke");
+  assert.equal(z("orange juice"), "drinks");
+  assert.equal(z("ketchup"), "door");
+  assert.equal(z("bbq rub"), "rack");
+  assert.equal(z("steak rub"), "rack");
+  assert.equal(z("coffee"), "pantry-drinks");
+  assert.equal(guessFood("cherry cola").category, "drinks");
+  assert.equal(guessFood("smoky chipotle rub").category, "spices");
+  assert.equal(guessFood("purple sprouting broccoli").category, "produce");
+});
+
+test("items the catalog now knows are re-sorted even if guessed before", () => {
+  const [a] = recategorize([{ name: "diet coke", category: "other", location: "fridge" }]);
+  assert.equal(a.category, "drinks");
 });
