@@ -751,8 +751,11 @@ function renderIdeas() {
   if (ideas.loading && !recipes.length) {
     $("#ideas-list").innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
   } else if (recipes.length) {
-    const ranked = recommend(recipes, state.inventory, { assumeStaples: state.settings.assumeStaples });
-    $("#ideas-list").innerHTML = ranked.map(recipeCard).join("");
+    const ranked = recommend(recipes, state.inventory, { assumeStaples: state.settings.assumeStaples })
+      .filter((r) => !ui.keywords.size || [...ui.keywords].every((k) => keywordsFor(r.recipe).includes(k)));
+    $("#ideas-list").innerHTML = ranked.length
+      ? ranked.map(recipeCard).join("")
+      : `<div class="empty">None of these ideas match ${[...ui.keywords].map((k) => `"${KEYWORD_LABEL[k]}"`).join(" + ")}. Type what you're after below and tap Get ideas.</div>`;
   } else {
     $("#ideas-list").innerHTML = "";
   }

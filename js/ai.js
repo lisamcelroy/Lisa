@@ -7,7 +7,8 @@ const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.135.0/+esm";
 const MODEL = "claude-opus-5-5";
 const FOOD_NAMES = FOODS.map((f) => f.name).join(", ");
 const KEYWORD_HINT =
-  `Tag each recipe with every keyword that fits, using only these ids: ${KEYWORD_IDS.join(", ")} ` +
+  "Add keywords sparingly: only ones that clearly and specifically describe the recipe, at most 3, and an empty list is fine. " +
+  `Use only these ids: ${KEYWORD_IDS.join(", ")} ` +
   "(easy = easy to cook, quick = ready in 20 minutes, party = great for parties, entree = a main course, " +
   "comfort = cozy comfort food, healthy = light and healthy, mealprep = keeps well for meal prep, kids = kid friendly, " +
   "budget = budget friendly, brunch = weekend brunch, datenight = date night, onepan = one pan or pot, " +
@@ -161,7 +162,7 @@ export function cleanIdeas(data) {
         .filter((i) => i && typeof i.name === "string" && i.name.trim())
         .map((i) => ({ name: i.name, qty: Number(i.qty) || 1, unit: String(i.unit || "count"), optional: Boolean(i.optional) })),
       steps: Array.isArray(r.steps) ? r.steps.map(String) : [],
-      keywords: Array.isArray(r.keywords) ? r.keywords.filter((k) => KEYWORD_IDS.includes(k)) : [],
+      keywords: Array.isArray(r.keywords) ? [...new Set(r.keywords.filter((k) => KEYWORD_IDS.includes(k)))].slice(0, 3) : [],
     }));
 }
 

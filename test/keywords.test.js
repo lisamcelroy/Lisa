@@ -4,12 +4,25 @@ import { keywordsFor, KEYWORD_IDS } from "../js/data/keywords.js";
 import { RECIPES } from "../js/data/recipes.js";
 import { cleanIdeas } from "../js/ai.js";
 
-test("every built-in recipe has at least two keywords, all valid", () => {
-  for (const r of RECIPES) {
-    const ks = keywordsFor(r);
-    assert.ok(ks.length >= 2, `${r.title}: ${ks}`);
-    for (const k of ks) assert.ok(KEYWORD_IDS.includes(k));
+test("keywords are selective, not on every recipe", () => {
+  const occasion = KEYWORD_IDS.filter((k) => !["quick", "vegetarian", "vegan"].includes(k));
+  for (const k of occasion) {
+    const n = RECIPES.filter((r) => keywordsFor(r).includes(k)).length;
+    assert.ok(n >= 2 && n <= 10, `${k} is on ${n} of ${RECIPES.length} recipes`);
   }
+  for (const r of RECIPES) {
+    const n = keywordsFor(r).filter((k) => occasion.includes(k)).length;
+    assert.ok(n <= 3, `${r.title} has ${n} occasion keywords`);
+  }
+});
+
+test("diet keywords only where they are true", () => {
+  const kw = (id) => keywordsFor(RECIPES.find((r) => r.id === id));
+  assert.ok(!kw("tuna-melt").includes("vegetarian"), "tuna is fish");
+  assert.ok(!kw("minestrone").includes("vegan"), "broth may be chicken broth");
+  assert.ok(!kw("spaghetti-bolognese").includes("vegetarian"));
+  assert.ok(kw("chickpea-curry").includes("vegan"));
+  assert.ok(kw("garlic-butter-pasta").includes("vegetarian") && !kw("garlic-butter-pasta").includes("vegan"));
 });
 
 test("quick and diet keywords are worked out for any recipe", () => {
@@ -27,4 +40,16 @@ test("quick and diet keywords are worked out for any recipe", () => {
 test("Claude's keywords are kept only when they are known ids", () => {
   const [r] = cleanIdeas({ recipes: [{ title: "Dip", ingredients: [{ name: "salsa" }], keywords: ["party", "spicy"] }] });
   assert.deepEqual(r.keywords, ["party"]);
+  const [many] = cleanIdeas({ recipes: [{ title: "All", ingredients: [{ name: "salsa" }], keywords: ["easy", "party", "kids", "budget", "comfort"] }] });
+  assert.equal(many.keywords.length, 3);
+});
+
+test("recipes saved with lots of keywords only show three", () => {
+  const old = { minutes: 45, ingredients: [{ name: "steak" }], keywords: ["easy", "party", "kids", "budget", "comfort", "entree"] };
+  assert.deepEqual(keywordsFor(old), ["easy", "party", "kids"]);
+});
+
+test("a wrong vegetarian label is overruled by the ingredients", () => {
+  assert.ok(!keywordsFor({ minutes: 30, ingredients: [{ name: "bacon" }], keywords: ["vegetarian"] }).includes("vegetarian"));
+  assert.ok(keywordsFor({ minutes: 30, ingredients: [{ name: "seitan" }], keywords: ["vegan"] }).includes("vegan"));
 });
