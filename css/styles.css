@@ -1,14 +1,14 @@
 :root {
   /* Palette: Tangerine #F08C21, Butter #F2D88F, Blush #E36888, Sea #6698CC, Matcha #B4B534.
-     Text uses a deep navy darkened from Sea so it stays readable on Butter. */
+     Text uses a warm cocoa brown (deepened Tangerine) so it stays lively and readable on Butter. */
   --bg: #f2d88f;
   --blob-1: #f2d88f;
   --blob-2: #f2d88f;
   --blob-3: #f2d88f;
   --surface: #fff7e2;
   --surface-2: #faecc4;
-  --text: #24405f;
-  --muted: #45658a;
+  --text: #6b3416;
+  --muted: #9a5b2c;
   --border: #e6c97a;
   /* named slots from earlier palettes, now mapped onto the five colours */
   --olive: #b4b534;
@@ -19,7 +19,7 @@
   --coral: #f08c21;
   --accent: #f08c21;
   --accent-deep: #d8760c;
-  --accent-ink: #1f3550;
+  --accent-ink: #5a2a0e;
   --accent-soft: #fbdcb5;
   --pink-soft: #f8d3dc;
   --warn: #b65f06;
@@ -31,7 +31,7 @@
   --pantry: #8c8d1a;
   --radius: 28px;
   --radius-sm: 18px;
-  --shadow: 0 1px 2px rgb(36 64 95 / 5%), 0 14px 34px -22px rgb(36 64 95 / 30%);
+  --shadow: 0 1px 2px rgb(107 52 22 / 5%), 0 14px 34px -22px rgb(107 52 22 / 30%);
   --press: none;
 
   /* fridge (Sea), pantry (Matcha) */
@@ -51,15 +51,15 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1d2a3d;
-    --blob-1: #1d2a3d;
-    --blob-2: #1d2a3d;
-    --blob-3: #1d2a3d;
-    --surface: #26364d;
-    --surface-2: #2f415b;
+    --bg: #2a1a12;
+    --blob-1: #2a1a12;
+    --blob-2: #2a1a12;
+    --blob-3: #2a1a12;
+    --surface: #3a251a;
+    --surface-2: #4a3022;
     --text: #f2d88f;
-    --muted: #b7c7dc;
-    --border: #3a4d68;
+    --muted: #ecc9a0;
+    --border: #5a3b2a;
     --olive: #c9ca4f;
     --raspberry: #ec85a1;
     --sun: #f2d88f;
@@ -68,7 +68,7 @@
     --coral: #f5a04a;
     --accent: #f5a04a;
     --accent-deep: #f08c21;
-    --accent-ink: #1d2a3d;
+    --accent-ink: #2a1a12;
     --accent-soft: #4a3a2a;
     --pink-soft: #4a2d3a;
     --warn: #f5b25e;
@@ -94,15 +94,15 @@
 }
 
 :root[data-theme="dark"] {
-  --bg: #1d2a3d;
-  --blob-1: #1d2a3d;
-  --blob-2: #1d2a3d;
-  --blob-3: #1d2a3d;
-  --surface: #26364d;
-  --surface-2: #2f415b;
+  --bg: #2a1a12;
+  --blob-1: #2a1a12;
+  --blob-2: #2a1a12;
+  --blob-3: #2a1a12;
+  --surface: #3a251a;
+  --surface-2: #4a3022;
   --text: #f2d88f;
-  --muted: #b7c7dc;
-  --border: #3a4d68;
+  --muted: #ecc9a0;
+  --border: #5a3b2a;
   --olive: #c9ca4f;
   --raspberry: #ec85a1;
   --sun: #f2d88f;
@@ -111,7 +111,7 @@
   --coral: #f5a04a;
   --accent: #f5a04a;
   --accent-deep: #f08c21;
-  --accent-ink: #1d2a3d;
+  --accent-ink: #2a1a12;
   --accent-soft: #4a3a2a;
   --pink-soft: #4a2d3a;
   --warn: #f5b25e;
@@ -383,7 +383,7 @@ ol.steps li { margin-bottom: 8px; }
 .item-dialog .stepper .qty { font-family: "Funnel Sans", "Zalando Sans", system-ui, sans-serif; font-weight: 800; font-size: 1.3rem; min-width: 90px; }
 .item-dialog .where { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 .item-dialog .where .chip.active.loc-fridge { background: var(--fridge); color: #fff7e2; }
-.item-dialog .where .chip.active.loc-freezer { background: var(--freezer); color: #1f3550; }
+.item-dialog .where .chip.active.loc-freezer { background: var(--freezer); color: #5a2a0e; }
 .item-dialog .where .chip.active.loc-pantry { background: var(--pantry); color: #fff7e2; }
 .item-dialog .row.end { justify-content: center; }
 
@@ -647,7 +647,7 @@ ol.steps li { margin-bottom: 8px; }
   color: var(--text); padding: 6px 12px; border-radius: 999px; transition: background .15s, transform .12s;
 }
 .kw-chip:active { transform: scale(.94); }
-.kw-chip.on { background: var(--kw); border-color: var(--kw); color: #1f3550; }
+.kw-chip.on { background: var(--kw); border-color: var(--kw); color: #5a2a0e; }
 .kw-chip.on[style*="--sun"] { color: var(--text); }
 .kw-chip.clear { --kw: var(--muted); background: transparent; }
 .kw-pills { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -731,7 +731,7 @@ ol.steps li { margin-bottom: 8px; }
 
 .home-hero { display: flex; align-items: center; gap: 10px; margin: 6px 0 16px; }
 .mascot-wrap { flex: none; width: 104px; animation: float 3.6s ease-in-out infinite; }
-.mascot.big { width: 100%; height: auto; display: block; filter: drop-shadow(0 8px 10px rgb(36 64 95 / 16%)); }
+.mascot.big { width: 100%; height: auto; display: block; filter: drop-shadow(0 8px 10px rgb(107 52 22 / 16%)); }
 @keyframes float { 50% { transform: translateY(-6px); } }
 .speech {
   position: relative; flex: 1; background: var(--surface); border-radius: 26px; padding: 16px 18px; box-shadow: var(--shadow);
@@ -843,9 +843,9 @@ button.group-title { width: 100%; }
    Same palette, icons and fonts; overrides the earlier, chunkier styling.
    ===================================================================== */
 :root {
-  --hair: rgb(36 64 95 / 11%);
+  --hair: rgb(107 52 22 / 11%);
   --radius: 28px;
-  --shadow: 0 1px 2px rgb(36 64 95 / 5%), 0 14px 34px -22px rgb(36 64 95 / 30%);
+  --shadow: 0 1px 2px rgb(107 52 22 / 5%), 0 14px 34px -22px rgb(107 52 22 / 30%);
   --press: none;
 }
 @media (prefers-color-scheme: dark) {
@@ -895,7 +895,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .tabbar {
   background: color-mix(in srgb, var(--surface) 74%, transparent);
   backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid var(--hair); box-shadow: 0 18px 40px -20px rgb(36 64 95 / 35%);
+  border: 1px solid var(--hair); box-shadow: 0 18px 40px -20px rgb(107 52 22 / 35%);
 }
 .tabbar button { font-weight: 700; }
 .tabbar button.active { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent-deep); }

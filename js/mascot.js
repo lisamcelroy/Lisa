@@ -2,7 +2,7 @@
 // Used in the header, on the Home page, in the opening splash and when it asks your name.
 
 export function mascotSvg(cls = "mascot", { sparkle = false } = {}) {
-  const ink = "#24405f";
+  const ink = "#6b3416";
   return `<svg class="${cls}" viewBox="0 0 64 68" aria-hidden="true" focusable="false">
   <g class="arm-l"><path d="M17 40C11 39 7.5 35 6.6 30.6" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>
     <circle cx="6.3" cy="28.8" r="2.7" fill="#fff7e2" stroke="${ink}" stroke-width="2.4"/></g>

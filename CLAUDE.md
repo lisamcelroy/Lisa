@@ -63,8 +63,8 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 ## Design system
 
 - Palette: Tangerine `#F08C21` (accent), Butter `#F2D88F` (solid page background), Blush `#E36888`,
-  Sea `#6698CC`, Matcha `#B4B534`. Text is deep navy `#24405f` (darkened Sea) for readability; cards
-  are light Butter cream `#fff7e2`. Dark mode: navy `#1d2a3d` with Butter text.
+  Sea `#6698CC`, Matcha `#B4B534`. Text is warm cocoa brown `#6b3416` (deepened Tangerine; muted `#9a5b2c`). The owner dislikes navy: never use it; cards
+  are light Butter cream `#fff7e2`. Dark mode: deep chocolate `#2a1a12` (cards `#3a251a`) with Butter text.
 - Older token names are kept and remapped: `--olive` Matcha, `--raspberry`/`--pink` Blush,
   `--lilac` Sea, `--coral` Tangerine, `--sun` deeper Butter.
 - Meaning colours: missing ingredients and dinner Blush, frozen food Sea blue, fridge and freezer
