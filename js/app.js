@@ -61,7 +61,10 @@ function toast(msg, { action, onAction } = {}) {
 }
 
 const claudeOn = () => Boolean(state.settings.useClaude && state.settings.apiKey);
-const allRecipes = () => [...state.customRecipes, ...RECIPES];
+const allRecipes = () => {
+  const mine = new Set(state.customRecipes.map((r) => r.id));
+  return [...state.customRecipes, ...RECIPES.filter((r) => !mine.has(r.id))];
+};
 const unitOptions = (selected) =>
   UNIT_CHOICES.map((u) => `<option value="${u}" ${u === selected ? "selected" : ""}>${u}</option>`).join("");
 const locationOptions = (selected) =>
@@ -758,7 +761,7 @@ $("#parse-receipt-text").addEventListener("click", () => {
 function saveCustomRecipe(recipe) {
   const clean = {
     id: recipe.id || "custom-" + newId(),
-    title: recipe.title || "My recipe",
+    title: (recipe.title || "").trim() || "My recipe",
     minutes: recipe.minutes || 30,
     servings: recipe.servings || 2,
     tags: recipe.tags || ["mine"],
@@ -770,6 +773,8 @@ function saveCustomRecipe(recipe) {
     })),
     steps: recipe.steps || [],
     keywords: (recipe.keywords || []).filter((k) => KEYWORD_IDS.includes(k)),
+    meals: Array.isArray(recipe.meals) ? recipe.meals : undefined,
+    edited: recipe.edited || undefined,
     custom: true,
     addedAt: recipe.addedAt || Date.now(),
   };
@@ -785,8 +790,7 @@ $("#import-recipe").addEventListener("click", () => {
   if (!recipe.ingredients.length) return toast("Couldn't find any ingredients. Put each one on its own line.");
   const saved = saveCustomRecipe(recipe);
   $("#recipe-text").value = "";
-  toast(`Saved "${saved.title}" with ${saved.ingredients.length} ingredients`);
-  openRecipe(saved.id);
+  openRecipeEditor(saved.id, { checking: true });
 });
 
 async function readRecipeTextOnDevice(files) {
@@ -821,8 +825,7 @@ async function importRecipePhotos(fileList) {
       if (engine !== "device") {
         if (!recipe) throw { code: "no_recipe" };
         const saved = saveCustomRecipe({ ...recipe, tags: ["mine", "book"] });
-        toast(`Saved "${saved.title}" with ${saved.ingredients.length} ingredients`);
-        openRecipe(saved.id);
+        openRecipeEditor(saved.id, { checking: true });
         return;
       }
     }
@@ -1099,7 +1102,9 @@ function openRecipe(id) {
     <details class="fold-details" open><summary><h3>Steps</h3></summary>
     <ol class="steps">${recipe.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></details>
     <div class="row end">
-      ${recipe.custom ? `<button class="btn danger" data-act="delete">Delete</button>` : ""}
+      ${recipe.custom && !recipe.edited ? `<button class="btn danger" data-act="delete">Delete</button>` : ""}
+      ${recipe.edited ? `<button class="btn" data-act="restore">Restore original</button>` : ""}
+      <button class="btn" data-act="edit">Edit</button>
       ${isIdea ? `<button class="btn" data-act="keep">Save to my recipes</button>` : ""}
       ${r.missing.length ? `<button class="btn" data-act="shop">Add ${r.missing.length} to shopping list</button>` : ""}
       <button class="btn" data-act="plan">Plan it</button>
@@ -1130,6 +1135,13 @@ function openRecipe(id) {
       commit();
       dlg.close();
     }
+    if (act === "edit") return openRecipeEditor(recipe.id);
+    if (act === "restore") {
+      state.customRecipes = state.customRecipes.filter((x) => x.id !== recipe.id);
+      commit();
+      toast("Back to the original recipe");
+      return openRecipe(recipe.id);
+    }
     if (act === "plan") {
       dlg.close();
       return openPlanFor(recipe);
@@ -1141,6 +1153,95 @@ function openRecipe(id) {
       toast("Saved to your recipes");
     }
   };
+  if (!dlg.open) dlg.showModal();
+}
+
+// ---------- Edit a recipe ----------
+// Any recipe can be corrected: your own and imported ones are changed in place;
+// a recipe-book recipe or one of Claude's ideas is saved as your version (same id,
+// so plans and favourites still find it), and a book recipe can be restored.
+
+function ingRow(ing = { qty: 1, unit: "count", name: "", optional: false }) {
+  return `<div class="ing-edit">
+    <input class="ie-qty" type="number" min="0" step="any" value="${esc(String(ing.qty ?? ""))}" aria-label="Amount" />
+    <select class="ie-unit" aria-label="Unit">${unitOptions(normalizeUnit(ing.unit) || "count")}</select>
+    <input class="ie-name" list="food-names" value="${esc(ing.name || "")}" placeholder="Ingredient" aria-label="Ingredient" />
+    <label class="ie-opt" title="Optional"><input type="checkbox" ${ing.optional ? "checked" : ""} /> optional</label>
+    <button type="button" class="x" data-ie="del" aria-label="Remove ingredient">&times;</button>
+  </div>`;
+}
+
+function openRecipeEditor(id, { checking = false } = {}) {
+  const recipe = findRecipe(id);
+  if (!recipe) return;
+  const meals = mealsFor(recipe);
+  $("#recipe-detail").innerHTML = `
+    <form id="recipe-edit" class="recipe-edit" autocomplete="off">
+      <h2>${checking ? "Check your recipe" : "Edit recipe"}</h2>
+      ${checking ? `<p class="muted small">Here's what was read. Fix anything that came out wrong, then save.</p>` : ""}
+      ${!recipe.custom ? `<p class="muted small">This saves your own version. You can restore the original any time.</p>` : ""}
+      <label class="field">Name<input name="title" value="${esc(recipe.title)}" required /></label>
+      <div class="row two">
+        <label class="field">Minutes<input name="minutes" type="number" min="1" step="1" value="${recipe.minutes || 30}" /></label>
+        <label class="field">Serves<input name="servings" type="number" min="1" step="1" value="${recipe.servings || 2}" /></label>
+      </div>
+      <div class="field">Suggested for
+        <div class="chips">${MEAL_TYPES.map((m) => `<label class="chip check-chip"><input type="checkbox" name="meal" value="${m.id}" ${meals.includes(m.id) ? "checked" : ""} />${m.label}</label>`).join("")}</div>
+      </div>
+      <h3>Ingredients</h3>
+      <div id="ie-list">${recipe.ingredients.map(ingRow).join("")}</div>
+      <button type="button" class="btn small" data-ie="add">+ Add ingredient</button>
+      <h3>Steps</h3>
+      <p class="muted small">One step per line.</p>
+      <textarea name="steps" rows="7">${esc((recipe.steps || []).join("\n"))}</textarea>
+      <div class="row end">
+        <button type="button" class="btn" data-ie="cancel">Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </div>
+    </form>`;
+
+  const form = $("#recipe-edit");
+  form.addEventListener("click", (e) => {
+    const act = e.target.closest("[data-ie]")?.dataset.ie;
+    if (act === "add") {
+      $("#ie-list").insertAdjacentHTML("beforeend", ingRow());
+      $("#ie-list .ing-edit:last-child .ie-name").focus();
+    }
+    if (act === "del") e.target.closest(".ing-edit").replaceWith();
+    if (act === "cancel") openRecipe(recipe.id);
+  });
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const ingredients = [...form.querySelectorAll(".ing-edit")].map((row) => ({
+      name: row.querySelector(".ie-name").value.trim(),
+      qty: Number(row.querySelector(".ie-qty").value) || 1,
+      unit: row.querySelector(".ie-unit").value,
+      optional: row.querySelector(".ie-opt input").checked,
+    })).filter((i) => i.name);
+    if (!ingredients.length) return toast("Add at least one ingredient");
+    const chosen = [...form.querySelectorAll('input[name="meal"]:checked')].map((i) => i.value);
+    const fromBook = !recipe.custom && !recipe.idea;
+    const saved = saveCustomRecipe({
+      ...recipe,
+      id: recipe.id,
+      title: form.title.value,
+      minutes: Math.max(1, Math.round(Number(form.minutes.value) || 30)),
+      servings: Math.max(1, Math.round(Number(form.servings.value) || 2)),
+      meals: chosen.length ? chosen : undefined,
+      ingredients,
+      steps: form.steps.value.split("\n").map((x) => x.trim()).filter(Boolean),
+      keywords: recipe.custom || recipe.idea ? recipe.keywords : keywordsFor(recipe),
+      tags: recipe.custom ? recipe.tags : [...(recipe.tags || []), "mine"],
+      edited: recipe.edited || fromBook,
+      idea: undefined,
+    });
+    if (recipe.idea) state.ideas.recipes = state.ideas.recipes.filter((x) => x.id !== recipe.id);
+    commit();
+    toast(`Saved "${saved.title}"`);
+    openRecipe(saved.id);
+  });
+  const dlg = $("#recipe-dialog");
+  dlg.onclick = (e) => { if (e.target === dlg) dlg.close(); };
   if (!dlg.open) dlg.showModal();
 }
 

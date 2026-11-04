@@ -115,6 +115,11 @@ current ones: `sample` (with `images: true`), `db` and `user`.
 - Shopping items added from a recipe or the week's plan show how much each recipe needs
   ("Need 2 for Banana Pancakes", stored as `item.needs`).
 - Recipes page sections fold: Fresh ideas, Filters (shows how many are on) and From the recipe book.
+- Every recipe can be edited (Edit in the recipe dialog): name, minutes, serves, meals, ingredients
+  (amount, unit, name, optional) and steps. Imported recipes (pasted or photo) open straight in the
+  editor as "Check your recipe". Editing a recipe-book recipe or an idea saves your version with the
+  same id (`edited: true` for book recipes, which get "Restore original"); `allRecipes()` lets your
+  version replace the book one.
 - Seasonings live on a spice rack and count for recipes that just say "spices".
 - Anything in the freezer must be defrosted before use; recipes and the plan remind you.
 - Calories are estimates; say so in the UI.
