@@ -1,4 +1,4 @@
-// The FridgeForMe assistant: a little fridge with a face that waves and blinks.
+// The Inside my Kitchen assistant: a little fridge with a face that waves and blinks.
 // Used in the header, on the Home page, in the opening splash and when it asks your name.
 
 export function mascotSvg(cls = "mascot", { sparkle = false } = {}) {

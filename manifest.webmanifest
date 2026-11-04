@@ -1,6 +1,6 @@
 {
-  "name": "FridgeForMe",
-  "short_name": "FridgeForMe",
+  "name": "Inside my Kitchen",
+  "short_name": "My Kitchen",
   "description": "Your fridge and pantry, receipt scanning, and recipes from what you have.",
   "start_url": "./",
   "display": "standalone",

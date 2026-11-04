@@ -1,4 +1,4 @@
-# FridgeForMe
+# Inside my Kitchen
 
 A phone-first web app that acts as your fridge and pantry: it tracks what you have, reads grocery
 receipts and recipe photos, suggests recipes from what's on hand, plans meals with calories, and
@@ -69,18 +69,22 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   `--lilac` Sea, `--coral` Tangerine, `--sun` deeper Butter.
 - Meaning colours: missing ingredients and dinner Blush, frozen food Sea blue, fridge and freezer
   Sea, pantry Matcha, breakfast deeper Butter, lunch Tangerine.
-- Fonts (Google Fonts): Climate Crisis for the FridgeForMe wordmark (its YEAR axis melts and
-  freezes in the splash), Funnel Sans for headings, Zalando Sans for body, Chewy for the tagline
-  "fresh from your fridge".
+- Logo: name only, one solid colour (Tangerine, `var(--coral)`), no mascot. "Inside my" in DM Serif
+  Display sits up and right of a heavy Poppins 800 "Kitchen", with the slogan "let's make cooking fun
+  again" in tracked Poppins 600 caps underneath (`.logomark`, `.lm-top`, `.lm-main`, `.lm-tag`).
+  The splash shows the same logo inside the ring of food icons.
+- Fonts (Google Fonts): DM Serif Display and Poppins for the logo, Funnel Sans for headings,
+  Zalando Sans for body.
 - Style: clean and sleek. Hairline borders (`--hair`), soft shadows, flat pill buttons and chips,
   frosted header and tab bar, generous spacing. Respect `prefers-reduced-motion`.
-- Header: small centred logo with the assistant; settings on the right; save status on the left
+- Header: small centred logo; settings on the right; save status on the left
   (a dot on phones).
 - Tabs: Home, Fridge (Picture/List switch), Scan, Recipes, Plan, Shopping.
 
 ## App behaviour to preserve
 
-- Home greets the person by name ("Hi, Lisa") with a date badge and an assistant summary of today.
+- Home greets the person by time of day and name ("Good morning, Lisa"; afternoon from 12,
+  evening from 18; refreshes every minute) with a date badge and an assistant summary of today.
   The name is asked once after the splash and never again (skipping counts); editable in Settings.
 - Recipes tab shows Claude's fresh ideas first; ideas refetch automatically when the set of
   ingredients changes.

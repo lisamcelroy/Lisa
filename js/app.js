@@ -262,9 +262,15 @@ function greeting() {
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
+// Keep the greeting in step with the clock while the app stays open.
+setInterval(() => {
+  const el = $("#hello"), name = (state.settings.name || "").trim();
+  if (el) el.textContent = name ? `${greeting()}, ${name}` : greeting();
+}, 60000);
+
 function renderHome() {
   const name = (state.settings.name || "").trim();
-  $("#hello").textContent = name ? `Hi, ${name}` : "Hi there";
+  $("#hello").textContent = name ? `${greeting()}, ${name}` : greeting();
   const now = new Date();
   $("#badge-day").textContent = String(now.getDate()).padStart(2, "0");
   $("#badge-month").textContent = now.toLocaleDateString(undefined, { month: "short" });
@@ -280,9 +286,9 @@ function renderHome() {
   // What the assistant says.
   const lines = [];
   if (!state.inventory.length) lines.push("Your fridge is empty. Scan a receipt or add some food and I'll get to work.");
-  else if (c.meals === 3) lines.push(`${greeting()}! All three meals are planned today${c.total ? `, about ${c.total} kcal` : ""}.`);
-  else if (c.meals) lines.push(`${greeting()}! You have ${c.meals} of 3 meals planned today${c.total ? `, about ${c.total} kcal so far` : ""}.`);
-  else lines.push(`${greeting()}! Nothing is planned for today yet.${ready.length ? ` You could make ${ready[0].recipe.title} right now.` : ""}`);
+  else if (c.meals === 3) lines.push(`All three meals are planned today${c.total ? `, about ${c.total} kcal` : ""}.`);
+  else if (c.meals) lines.push(`You have ${c.meals} of 3 meals planned today${c.total ? `, about ${c.total} kcal so far` : ""}.`);
+  else lines.push(`Nothing is planned for today yet.${ready.length ? ` You could make ${ready[0].recipe.title} right now.` : ""}`);
   if (due.length) lines.push(`Don't forget to defrost the ${frozenNames(due.flatMap((x) => x.frozen)).join(" and ")}.`);
   else if (soon.length) lines.push(`Use up the ${soon.slice(0, 2).map((it) => it.name).join(" and ")} soon.`);
   $("#hello-sub").textContent = lines.join(" ");
@@ -1488,7 +1494,7 @@ $("#import-data").addEventListener("change", async (e) => {
     commit();
     toast("Backup restored");
   } catch {
-    toast("That doesn't look like a FridgeForMe backup");
+    toast("That doesn't look like a Inside my Kitchen backup");
   }
 });
 

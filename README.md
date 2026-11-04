@@ -1,4 +1,4 @@
-# FridgeForMe
+# Inside my Kitchen
 
 A phone-friendly web app that acts as your fridge and pantry. It keeps track of what you have,
 reads your grocery receipts so purchases are added automatically, and suggests recipes based on

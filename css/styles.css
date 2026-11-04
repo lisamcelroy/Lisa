@@ -1011,3 +1011,23 @@ body { background: var(--bg); }
 .wordmark span:nth-child(4n+2) { color: var(--pink); }
 .wordmark span:nth-child(4n+3) { color: var(--lilac); }
 .wordmark span:nth-child(4n) { color: var(--olive); }
+
+/* ---------- Inside my Kitchen logo ----------
+   Name only, one solid colour (Tangerine). Serif "Inside my" sits up and right of a heavy
+   geometric "Kitchen", with a small tracked slogan underneath. */
+.logomark { display: inline-flex; flex-direction: column; align-items: flex-start; color: var(--coral); margin: 0; line-height: 1; letter-spacing: 0; }
+.logomark span { color: inherit; }
+.lm-top { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: .98rem; line-height: .9; align-self: flex-end; margin-right: -.1em; letter-spacing: -.01em; }
+.lm-main { font-family: "Poppins", "Funnel Sans", system-ui, sans-serif; font-weight: 800; font-size: 1.32rem; line-height: .86; letter-spacing: -.045em; }
+.lm-tag { font-family: "Poppins", "Zalando Sans", system-ui, sans-serif; font-weight: 600; font-size: .44rem; text-transform: uppercase; letter-spacing: .2em; margin-top: 4px; padding-left: .2em; }
+.logo { gap: 0; }
+.splash-center .logomark { font-size: clamp(2.4rem, 13vw, 4.2rem); }
+.splash-center .lm-top { font-size: 1em; }
+.splash-center .lm-main { font-size: 1.42em; }
+.splash-center .lm-tag { font-size: .2em; margin-top: .55em; }
+.splash-word { animation: rise .6s cubic-bezier(.3, 1.4, .5, 1) .3s both; margin-top: 0; }
+.splash-word span { animation: none; display: block; }
+@media (prefers-reduced-motion: reduce) { .splash-word { animation: none; } }
+/* Header: the slogan is wider than "Kitchen", so it hangs centred without widening the logo. */
+.topbar .lm-tag { width: 0; align-self: center; display: flex; justify-content: center; white-space: nowrap; padding: 0; letter-spacing: .16em; }
+.topbar .logomark { margin-bottom: 2px; }
