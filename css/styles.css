@@ -144,11 +144,6 @@ html, body { margin: 0; }
 
 body {
   background-color: var(--bg);
-  background-image:
-    radial-gradient(420px 320px at 0% 0%, var(--blob-1), transparent 70%),
-    radial-gradient(380px 300px at 100% 30%, var(--blob-2), transparent 70%),
-    radial-gradient(460px 360px at 30% 100%, var(--blob-3), transparent 70%);
-  background-attachment: fixed;
   color: var(--text);
   font-size: 16px;
   line-height: 1.45;
@@ -203,14 +198,22 @@ p { margin: 0 0 10px; }
 
 main { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 8px 16px 16px; }
 
-.fruit-deco { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.fruit-deco svg { position: absolute; opacity: .42; }
-.fruit-deco .d1 { width: 120px; top: 88px; right: -26px; transform: rotate(14deg); }
-.fruit-deco .d2 { width: 96px; top: 46%; left: -30px; transform: rotate(-18deg); }
-.fruit-deco .d3 { width: 110px; bottom: 120px; right: -18px; transform: rotate(-8deg); }
-.fruit-deco .d4 { width: 84px; bottom: 34%; right: 18%; opacity: .22; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fruit-deco svg { opacity: .25; } }
-:root[data-theme="dark"] .fruit-deco svg { opacity: .25; }
+/* Background art: retro squiggles with a scatter of cute fruit on top.
+   Two fixed layers so each can have its own softness and the cards stay readable. */
+.bg-art { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.bg-art::before, .bg-art::after { content: ""; position: absolute; inset: 0; }
+.bg-art::before { background: url("../images/squiggles.svg") center / cover no-repeat; opacity: .32; }
+.bg-art::after { background: url("../images/fruit-pattern.svg") 0 0 / 300px 300px repeat; opacity: .85; }
+/* A soft apricot halo keeps text that sits straight on the background easy to read. */
+.fridge-hero, .plan-head, .ideas-hint, .plan-note, .section-title, .group-title, .empty, .toolbar + p {
+  text-shadow: 0 0 4px var(--bg), 0 0 10px var(--bg), 0 0 18px var(--bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bg-art::before { opacity: .16; }
+  :root:not([data-theme="light"]) .bg-art::after { opacity: .2; }
+}
+:root[data-theme="dark"] .bg-art::before { opacity: .16; }
+:root[data-theme="dark"] .bg-art::after { opacity: .2; }
 
 /* ---------- Building blocks ---------- */
 
@@ -724,6 +727,8 @@ ol.steps li { margin-bottom: 8px; }
     radial-gradient(360px 300px at 15% 10%, var(--blob-1), transparent 70%),
     radial-gradient(360px 300px at 90% 85%, var(--blob-3), transparent 70%),
     radial-gradient(320px 260px at 85% 15%, var(--blob-2), transparent 70%),
+    radial-gradient(240px 230px at 50% 54%, var(--bg) 45%, transparent 100%),
+    url("../images/squiggles.svg") center / cover no-repeat,
     var(--bg);
   transition: opacity .45s ease, transform .45s ease;
 }
