@@ -989,3 +989,11 @@ dialog::backdrop { background: rgb(40 20 10 / 30%); backdrop-filter: blur(6px); 
 .defrost-card { background: var(--surface); border-left: 4px solid #5b8fd6; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .defrost-card { background: var(--surface); } }
 :root[data-theme="dark"] .defrost-card { background: var(--surface); }
+
+/* On phones the save status is a small dot so it never crowds the centred logo (full text in its tooltip/label). */
+@media (max-width: 480px) {
+  .sync:not(:empty) { font-size: 0; padding: 0; width: 10px; height: 10px; min-width: 0; border-radius: 50%; box-shadow: none; border: 0; left: 18px; background: var(--muted); }
+  .sync[data-status="saved"] { background: #3aa66b; }
+  .sync[data-status="offline"], .sync[data-status="local"] { background: var(--warn); }
+  .sync[data-status="saved"]::before { content: none; }
+}

@@ -225,16 +225,6 @@
 
     <!-- Recipes -->
     <section id="view-recipes" class="view" data-view="recipes" hidden>
-      <div class="toolbar">
-        <div class="chips" id="recipe-filter">
-          <button class="chip active" data-filter="ready">Ready to cook</button>
-          <button class="chip" data-filter="almost">Almost there</button>
-          <button class="chip" data-filter="all">All</button>
-          <button class="chip" data-filter="mine">Mine</button>
-        </div>
-        <input id="recipe-search" type="search" placeholder="Search recipes" aria-label="Search recipes" />
-      </div>
-      <div class="kw-row" id="keyword-filter" role="group" aria-label="Filter by occasion"></div>
       <div class="card ideas" id="ideas" hidden>
         <div class="ideas-head">
           <h2>Fresh ideas for your kitchen</h2>
@@ -248,6 +238,16 @@
         </div>
       </div>
       <p class="muted small ideas-hint" id="ideas-hint" hidden>Want recipe ideas made from your exact ingredients? Add a Claude API key in Settings.</p>
+      <div class="toolbar">
+        <div class="chips" id="recipe-filter">
+          <button class="chip active" data-filter="ready">Ready to cook</button>
+          <button class="chip" data-filter="almost">Almost there</button>
+          <button class="chip" data-filter="all">All</button>
+          <button class="chip" data-filter="mine">Mine</button>
+        </div>
+        <input id="recipe-search" type="search" placeholder="Search recipes" aria-label="Search recipes" />
+      </div>
+      <div class="kw-row" id="keyword-filter" role="group" aria-label="Filter by occasion"></div>
       <h2 class="section-title" id="library-title">From the recipe book</h2>
       <div id="recipes" class="recipe-grid"></div>
     </section>
