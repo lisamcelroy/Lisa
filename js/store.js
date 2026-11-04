@@ -1,5 +1,5 @@
 // Local persistence. Everything stays in this browser's localStorage.
-import { foodInfo, canonicalName, tidyName, searchText } from "./normalize.js";
+import { foodInfo, canonicalName, tidyName, searchText, SAUCE_WORDS } from "./normalize.js";
 import { VARIETY_GROUPS } from "./data/foods.js";
 import { normalizeUnit } from "./units.js";
 import { isFrozenText, freezerDays } from "./frozen.js";
@@ -33,6 +33,12 @@ function safeParse(raw) {
  */
 export function recategorize(inventory = []) {
   return inventory.map((it) => {
+    // A sauce filed as something else ("burger sauce" as burger patties) becomes a sauce.
+    const shown = it.label || it.name;
+    if (SAUCE_WORDS.test(shown) && !["condiments", "canned"].includes(it.category)) {
+      const { label, ...rest } = it;
+      return { ...rest, name: tidyName(shown), category: "condiments" };
+    }
     const known = foodInfo(it.name) || foodInfo(canonicalName(it.name));
     // A catalog food always uses the catalog's category (fixes earlier wrong guesses).
     if (known && known.category !== it.category) return { ...it, category: known.category };

@@ -145,6 +145,9 @@ current ones: `sample` (with `images: true`), `db` and `user`.
   (each needs nutrition and ideally an icon), then `guessFood` for anything else, and `recategorize`
   fixes items saved as "other" on load. Foods in `VARIETY_GROUPS` keep the typed variety as
   `item.label` ("oat milk", "cod") while matching recipes as the group (plant milk, white fish).
+- Anything with sauce, dressing, gravy, marinade or glaze in its name is a sauce (`SAUCE_WORDS` in
+  `js/normalize.js`), never the food it mentions: "burger sauce" is not burgers. Catalog sauces keep
+  their own aisle (pasta sauce stays canned).
 - Seasonings live on a spice rack and count for recipes that just say "spices".
 - Anything in the freezer must be defrosted before use. Reminders are timed: "Take out by 6 PM today"
   from the meal's start time (Settings, Meal times) minus how long the food takes to thaw

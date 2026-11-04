@@ -6,6 +6,7 @@ const FRUIT = /\b(apples?|oranges?|clementines?|mandarins?|tangerines?|grapes?|m
 
 // Checked in order: the first rule that matches wins.
 const RULES = [
+  ["sauce", /\b(sauces?|dressings?|gravy|gravies|marinades?|glazes?)\b/i],
   ["frozen", /\b(frozen|ice cream|gelato|popsicles?|sorbet)\b/i],
   ["spices", /\b(spices?|seasonings?|rubs?|spice blend|powder|paprika|cumin|oregano|thyme|rosemary|cinnamon|nutmeg|cloves|cardamom|coriander seeds?|peppercorns?|flakes)\b/i],
   ["protein", /\b(veggie|plant[- ]based|meatless|vegan|beyond|impossible|tempeh|seitan|falafel)\b/i],
@@ -25,7 +26,7 @@ const RULES = [
 
 // Where each kind usually lives and roughly how long it keeps there (days).
 const DEFAULTS = {
-  protein: ["fridge", 7], produce: ["fridge", 7], fruit: ["fridge", 7], meat: ["fridge", 2], seafood: ["fridge", 2], dairy: ["fridge", 14],
+  sauce: ["fridge", 60], protein: ["fridge", 7], produce: ["fridge", 7], fruit: ["fridge", 7], meat: ["fridge", 2], seafood: ["fridge", 2], dairy: ["fridge", 14],
   bakery: ["pantry", 6], baking: ["pantry", 365], grains: ["pantry", 365], condiments: ["pantry", 180],
   spices: ["pantry", 730], canned: ["pantry", 730], drinks: ["fridge", 14], snacks: ["pantry", 90], frozen: ["freezer", 180],
 };
@@ -38,7 +39,7 @@ export function guessFood(name) {
   for (const [kind, re] of RULES) {
     if (!re.test(text)) continue;
     const [location, shelfLife] = DEFAULTS[kind];
-    return { category: kind === "fruit" ? "produce" : kind, location, shelfLife };
+    return { category: kind === "fruit" ? "produce" : kind === "sauce" ? "condiments" : kind, location, shelfLife };
   }
   return null;
 }

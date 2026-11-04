@@ -94,16 +94,22 @@ const DESCRIPTORS = new Set([
  * "chicken wings" never quietly turns into "chicken".
  */
 export function typedName(text) {
-  const food = matchFood(text);
+  let food = matchFood(text);
+  if (food && SAUCE_WORDS.test(String(text)) && !["condiments", "canned"].includes(food.category)) food = null;
   const words = singularPhrase(expand(text)).split(" ").filter((w) => w && !DESCRIPTORS.has(w));
   if (!food) return expand(text) || cleanText(text);
   const known = new Set([food.name, ...food.aliases].flatMap((p) => singularPhrase(cleanText(p)).split(" ")));
   return words.every((w) => known.has(w)) ? food.name : words.join(" ");
 }
 
+// Anything called a sauce (or dressing, gravy, marinade, glaze) is a sauce, whatever
+// else is in the name: "burger sauce" is not burgers, "garlic sauce" is not garlic.
+export const SAUCE_WORDS = /\b(sauces?|dressings?|gravy|gravies|marinades?|glazes?)\b/i;
+
 /** Canonical name for anything typed by the user, falling back to a tidy version of their text. */
 export function canonicalName(text) {
   const food = matchFood(text);
+  if (food && SAUCE_WORDS.test(String(text)) && !["condiments", "canned"].includes(food.category)) return expand(text) || cleanText(text);
   if (food) return food.name;
   return expand(text) || cleanText(text);
 }

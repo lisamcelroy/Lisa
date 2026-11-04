@@ -90,3 +90,17 @@ test("kotleti and other patties are meat", () => {
   const [k] = recategorize([{ name: "kotleti", category: "other", location: "fridge" }]);
   assert.equal(k.category, "meat");
 });
+
+test("anything called a sauce is a sauce", () => {
+  const z = (name) => { const it = makeItem({ name }); return `${it.name}|${it.category}|${zoneFor(it)}`; };
+  assert.equal(z("burger sauce"), "burger sauce|condiments|door");
+  assert.equal(z("garlic sauce"), "garlic sauce|condiments|door");
+  assert.equal(z("chicken sauce"), "chicken sauce|condiments|door");
+  assert.equal(z("mushroom gravy"), "mushroom gravy|condiments|door");
+  assert.equal(z("beef marinade"), "beef marinade|condiments|door");
+  assert.equal(makeItem({ name: "pasta sauce" }).category, "canned", "known sauces keep their aisle");
+  assert.equal(makeItem({ name: "fish sauce" }).name, "fish sauce");
+  const [fixed] = recategorize([{ name: "burger patties", label: "burger sauce", category: "meat", location: "fridge" }]);
+  assert.equal(fixed.name, "burger sauce");
+  assert.equal(fixed.category, "condiments");
+});
