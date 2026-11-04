@@ -1,137 +1,138 @@
 :root {
-  /* Fruit-bowl palette on warm cream */
-  --bg: #fff8e7;
-  --blob-1: #ffe3ec;
-  --blob-2: #fbf0c4;
-  --blob-3: #efe2fb;
-  --surface: #fffdf6;
-  --surface-2: #fbf0d8;
-  --text: #3b2930;
-  --muted: #8b7670;
-  --border: #f1e2c3;
-  --olive: #a0a73a;
-  --raspberry: #d93653;
-  --sun: #f2d32f;
-  --lilac: #9a6bc9;
-  --pink: #ff86c2;
-  --coral: #ff7650;
-  --accent: #8e9a26;
-  --accent-deep: #6f7a17;
-  --accent-ink: #fffdf6;
-  --accent-soft: #eef0cc;
-  --pink-soft: #ffe1ee;
-  --warn: #e36a12;
-  --warn-soft: #ffe9cf;
-  --danger: #d93653;
-  --danger-soft: #ffe0e6;
-  --fridge: #9a6bc9;
-  --freezer: #e46aa6;
-  --pantry: #8e9a26;
+  /* Apricot and orange: pale apricot background, vibrant orange accent */
+  --bg: #ffecae;
+  --blob-1: #ffd99a;
+  --blob-2: #fff3cf;
+  --blob-3: #ffd2b0;
+  --surface: #fff8e3;
+  --surface-2: #ffefc4;
+  --text: #4a2414;
+  --muted: #87492a;
+  --border: #f6d48a;
+  /* supporting shades, all from the orange family (names kept from the fruit palette) */
+  --olive: #f17141;
+  --raspberry: #c9452a;
+  --sun: #f7a93b;
+  --lilac: #e0794f;
+  --pink: #f59a76;
+  --coral: #f17141;
+  --accent: #f17141;
+  --accent-deep: #d65a2b;
+  --accent-ink: #fff8e3;
+  --accent-soft: #fdd7b9;
+  --pink-soft: #fde0c8;
+  --warn: #b4530f;
+  --warn-soft: #ffe1b0;
+  --danger: #c0262d;
+  --danger-soft: #fbd9d2;
+  --fridge: #f17141;
+  --freezer: #e0794f;
+  --pantry: #c9672e;
   --radius: 26px;
   --radius-sm: 18px;
-  --shadow: 0 2px 0 rgb(59 41 48 / 4%), 0 10px 24px -12px rgb(120 70 60 / 25%);
-  --press: 0 4px 0 rgb(59 41 48 / 16%);
+  --shadow: 0 2px 0 rgb(120 60 20 / 5%), 0 10px 24px -12px rgb(160 80 30 / 30%);
+  --press: 0 4px 0 rgb(120 50 20 / 20%);
 
   /* fridge and pantry */
-  --fridge-shell: #f6eeff;
-  --fridge-edge: #dcc6f4;
-  --fridge-inside: #fffaff;
-  --freezer-inside: #ffeef6;
-  --glass: rgb(154 107 201 / 32%);
-  --drawer: #ffe6f1;
-  --wood: #ead566;
-  --wood-dark: #a0a73a;
-  --wood-inside: #fffbe9;
-  --bin: #fff0b8;
+  --fridge-shell: #fff6dc;
+  --fridge-edge: #f7c08f;
+  --fridge-inside: #fffbef;
+  --freezer-inside: #fff0d4;
+  --glass: rgb(241 113 65 / 26%);
+  --drawer: #ffe3c8;
+  --wood: #f7bf73;
+  --wood-dark: #e0804a;
+  --wood-inside: #fff6dc;
+  --bin: #ffdfa0;
   color-scheme: light;
   font-family: "Zalando Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #1e1519;
-    --blob-1: #3a1a28;
-    --blob-2: #2e2a12;
-    --blob-3: #291d3a;
-    --surface: #2a1f24;
-    --surface-2: #36292f;
-    --text: #fbefe4;
-    --muted: #bba59f;
-    --border: #463539;
-    --olive: #c3cb55;
-    --raspberry: #ff5f7a;
-    --sun: #ffe15a;
-    --lilac: #c09bf0;
-    --pink: #ff9fcf;
-    --coral: #ff9473;
-    --accent: #c3cb55;
-    --accent-deep: #a2aa34;
-    --accent-ink: #1e1519;
-    --accent-soft: #343619;
-    --pink-soft: #3d2030;
-    --warn: #ffab5c;
-    --warn-soft: #3d2b17;
-    --danger: #ff6f88;
-    --danger-soft: #422029;
-    --fridge: #c09bf0;
-    --freezer: #ff9fcf;
-    --pantry: #c3cb55;
+    --bg: #24160d;
+    --blob-1: #3a2312;
+    --blob-2: #2f2010;
+    --blob-3: #3a1d12;
+    --surface: #33200f;
+    --surface-2: #402a16;
+    --text: #ffecae;
+    --muted: #d4a77f;
+    --border: #553620;
+    --olive: #f58a5e;
+    --raspberry: #ff7a5c;
+    --sun: #ffc163;
+    --lilac: #f09a72;
+    --pink: #ffb393;
+    --coral: #f58a5e;
+    --accent: #f58a5e;
+    --accent-deep: #f17141;
+    --accent-ink: #24160d;
+    --accent-soft: #4a2a17;
+    --pink-soft: #45261a;
+    --warn: #ffc163;
+    --warn-soft: #3d2a12;
+    --danger: #ff7a7a;
+    --danger-soft: #45201c;
+    --fridge: #f58a5e;
+    --freezer: #f09a72;
+    --pantry: #e59a5c;
     --shadow: 0 10px 24px -12px rgb(0 0 0 / 60%);
     --press: 0 4px 0 rgb(0 0 0 / 40%);
-    --fridge-shell: #2e2440;
-    --fridge-edge: #4f3d6e;
-    --fridge-inside: #251d33;
-    --freezer-inside: #33202e;
-    --glass: rgb(192 155 240 / 30%);
-    --drawer: #3a2435;
-    --wood: #6e6528;
-    --wood-dark: #8e9a26;
-    --wood-inside: #29251a;
-    --bin: #3a3418;
+    --fridge-shell: #3a2414;
+    --fridge-edge: #6b3f22;
+    --fridge-inside: #2e1c0e;
+    --freezer-inside: #3a2312;
+    --glass: rgb(245 138 94 / 30%);
+    --drawer: #45291a;
+    --wood: #6e4520;
+    --wood-dark: #a8622f;
+    --wood-inside: #2e1d0f;
+    --bin: #4a3014;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #1e1519;
-  --blob-1: #3a1a28;
-  --blob-2: #2e2a12;
-  --blob-3: #291d3a;
-  --surface: #2a1f24;
-  --surface-2: #36292f;
-  --text: #fbefe4;
-  --muted: #bba59f;
-  --border: #463539;
-  --olive: #c3cb55;
-  --raspberry: #ff5f7a;
-  --sun: #ffe15a;
-  --lilac: #c09bf0;
-  --pink: #ff9fcf;
-  --coral: #ff9473;
-  --accent: #c3cb55;
-  --accent-deep: #a2aa34;
-  --accent-ink: #1e1519;
-  --accent-soft: #343619;
-  --pink-soft: #3d2030;
-  --warn: #ffab5c;
-  --warn-soft: #3d2b17;
-  --danger: #ff6f88;
-  --danger-soft: #422029;
-  --fridge: #c09bf0;
-  --freezer: #ff9fcf;
-  --pantry: #c3cb55;
+  --bg: #24160d;
+  --blob-1: #3a2312;
+  --blob-2: #2f2010;
+  --blob-3: #3a1d12;
+  --surface: #33200f;
+  --surface-2: #402a16;
+  --text: #ffecae;
+  --muted: #d4a77f;
+  --border: #553620;
+  --olive: #f58a5e;
+  --raspberry: #ff7a5c;
+  --sun: #ffc163;
+  --lilac: #f09a72;
+  --pink: #ffb393;
+  --coral: #f58a5e;
+  --accent: #f58a5e;
+  --accent-deep: #f17141;
+  --accent-ink: #24160d;
+  --accent-soft: #4a2a17;
+  --pink-soft: #45261a;
+  --warn: #ffc163;
+  --warn-soft: #3d2a12;
+  --danger: #ff7a7a;
+  --danger-soft: #45201c;
+  --fridge: #f58a5e;
+  --freezer: #f09a72;
+  --pantry: #e59a5c;
   --shadow: 0 10px 24px -12px rgb(0 0 0 / 60%);
   --press: 0 4px 0 rgb(0 0 0 / 40%);
-  --fridge-shell: #2e2440;
-  --fridge-edge: #4f3d6e;
-  --fridge-inside: #251d33;
-  --freezer-inside: #33202e;
-  --glass: rgb(192 155 240 / 30%);
-  --drawer: #3a2435;
-  --wood: #6e6528;
-  --wood-dark: #8e9a26;
-  --wood-inside: #29251a;
-  --bin: #3a3418;
+  --fridge-shell: #3a2414;
+  --fridge-edge: #6b3f22;
+  --fridge-inside: #2e1c0e;
+  --freezer-inside: #3a2312;
+  --glass: rgb(245 138 94 / 30%);
+  --drawer: #45291a;
+  --wood: #6e4520;
+  --wood-dark: #a8622f;
+  --wood-inside: #2e1d0f;
+  --bin: #4a3014;
   color-scheme: dark;
 }
 
@@ -180,7 +181,7 @@ p { margin: 0 0 10px; }
 .wordmark span:nth-child(6n+3) { color: var(--sun); }
 .wordmark span:nth-child(6n+4) { color: var(--lilac); }
 .wordmark span:nth-child(6n+5) { color: var(--pink); }
-.wordmark span:nth-child(6n) { color: var(--coral); }
+.wordmark span:nth-child(6n) { color: #e85d2f; }
 .hand { font-family: "Chewy", "Zalando Sans", system-ui, sans-serif; font-weight: 400; color: var(--coral); letter-spacing: .03em; }
 .logo .hand { font-size: .82rem; margin-top: 1px; }
 
@@ -260,7 +261,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   padding: 8px 15px; border-radius: 999px; box-shadow: var(--shadow); transition: transform .12s, background .15s;
 }
 .chip:active { transform: scale(.94); }
-.chip.active { background: var(--text); color: var(--bg); }
+.chip.active { background: var(--accent); color: var(--accent-ink); }
 
 /* ---------- List view ---------- */
 
@@ -452,7 +453,7 @@ ol.steps li { margin-bottom: 8px; }
 }
 .fridge .handle {
   position: absolute; right: -9px; top: 70px; width: 12px; height: 70px; border-radius: 999px;
-  background: linear-gradient(90deg, #efe2fb, #c6a6ea); box-shadow: 0 3px 0 rgb(0 0 0 / 10%);
+  background: linear-gradient(90deg, #ffe3c8, #f7a06e); box-shadow: 0 3px 0 rgb(0 0 0 / 10%);
 }
 .compartment { border-radius: 24px; padding: 10px; }
 .compartment.freezer {
@@ -682,9 +683,9 @@ ol.steps li { margin-bottom: 8px; }
 .day-kcal { font-size: .8rem; font-weight: 800; color: var(--coral); white-space: nowrap; }
 .slots { display: grid; gap: 6px; }
 .slot { --meal: var(--sun); display: flex; align-items: center; gap: 6px; border-radius: 16px; font: inherit; color: inherit; text-align: left; }
-.slot.meal-breakfast { --meal: #f2c72f; }
+.slot.meal-breakfast { --meal: var(--sun); }
 .slot.meal-lunch { --meal: var(--olive); }
-.slot.meal-dinner { --meal: var(--lilac); }
+.slot.meal-dinner { --meal: var(--raspberry); }
 .slot.empty {
   border: 2px dashed color-mix(in srgb, var(--meal) 55%, var(--border)); background: transparent; cursor: pointer;
   padding: 9px 12px; justify-content: space-between; transition: background .15s;
