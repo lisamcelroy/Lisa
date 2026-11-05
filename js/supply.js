@@ -3,7 +3,7 @@
 // Pure so it can be tested: pass in what the app already knows.
 
 const DAY = 864e5;
-const PERISHABLE = new Set(["produce", "meat", "seafood", "dairy", "bakery", "protein"]);
+const PERISHABLE = new Set(["produce", "meat", "seafood", "dairy", "bakery", "protein", "leftovers"]);
 
 const startOf = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
 const addDays = (d, n) => { const x = startOf(d); x.setDate(x.getDate() + n); return x; };

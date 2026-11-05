@@ -198,6 +198,7 @@ export const FOODS = [
   { name: "cornstarch", aliases: ["corn starch", "cornflour"], category: "baking", location: "pantry", shelfLife: 730 },
   { name: "orange juice", aliases: ["oj", "apple juice", "fruit juice", "cranberry juice"], category: "drinks", location: "fridge", shelfLife: 10 },
   { name: "soda", aliases: ["diet coke", "coke", "coke zero", "coca cola", "cola", "pepsi", "diet pepsi", "sprite", "7up", "ginger ale", "root beer", "dr pepper", "soft drink", "soft drinks", "pop", "sparkling water", "soda water", "club soda", "seltzer", "la croix", "lacroix", "bubly", "tonic water", "energy drink", "red bull", "iced tea"], category: "drinks", location: "fridge", shelfLife: 180 },
+  { name: "tomato juice", aliases: ["tomatoe juice", "tomato juices", "v8", "vegetable juice", "clamato", "clamato juice"], category: "drinks", location: "pantry", shelfLife: 365 },
   { name: "coffee", aliases: ["coffee beans", "ground coffee", "instant coffee"], category: "drinks", location: "pantry", shelfLife: 180 },
   { name: "tea", aliases: ["tea bags", "green tea", "black tea"], category: "drinks", location: "pantry", shelfLife: 730 },
   { name: "chips", aliases: ["potato chips", "crisps"], category: "snacks", location: "pantry", shelfLife: 60 },

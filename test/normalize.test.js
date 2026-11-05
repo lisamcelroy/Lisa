@@ -48,3 +48,14 @@ test("search text is forgiving", () => {
   assert.equal(searchText("Wings!"), "wing");
   assert.ok(searchText("Crispy Chicken Wings").includes(searchText("wings")));
 });
+
+import { listName } from "../js/normalize.js";
+
+test("shopping list keeps what you typed", () => {
+  assert.equal(listName("tomatoe juice"), "tomato juice");
+  assert.equal(listName("Tomato Juice"), "tomato juice");
+  assert.equal(listName("tomatoes"), "tomato");
+  assert.equal(listName("apple juice"), "apple juice", "a variety keeps its own name");
+  assert.equal(listName("pink himalayan salt"), "pink himalayan salt", "never shortened to salt");
+  assert.equal(listName("oat milk"), "oat milk");
+});

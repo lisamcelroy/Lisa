@@ -1,5 +1,5 @@
 // Turn free text ("ORG BNNA", "2 cups baby spinach") into a catalog food.
-import { FOODS, FOOD_BY_NAME } from "./data/foods.js";
+import { FOODS, FOOD_BY_NAME, VARIETY_GROUPS } from "./data/foods.js";
 
 // Common grocery receipt abbreviations, expanded before matching.
 const ABBREVIATIONS = {
@@ -69,6 +69,18 @@ export function matchFood(text) {
     if (containsPhrase(expanded, phrase) || containsPhrase(raw, phrase)) return food;
   }
   return null;
+}
+
+/**
+ * Name for something typed onto the shopping list: what you wrote, tidied, unless it is
+ * exactly a known food's name or spelling ("tomatoe juice" -> "tomato juice"). Never
+ * shortened to a different food ("tomato juice" stays juice, not tomato).
+ */
+export function listName(text) {
+  const tidy = expand(text) || cleanText(text);
+  const food = matchFood(text);
+  const same = food && [food.name, ...food.aliases].some((p) => singularPhrase(cleanText(p)) === singularPhrase(tidy));
+  return same && !VARIETY_GROUPS.has(food.name) ? food.name : tidy;
 }
 
 /** The typed text, tidied (lower case, receipt shorthand expanded, packaging words dropped). */

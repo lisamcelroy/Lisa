@@ -19,6 +19,11 @@ function shade(hex, amt) {
 
 // Each shape gets (c = main colour, d = darker shade, l = lighter tint).
 const SHAPES = {
+  container: (c, d, l) => `<rect x="3.6" y="9" width="16.8" height="11" rx="2.6" fill="${l}"/>
+    <rect x="3.6" y="13.4" width="16.8" height="6.6" rx="2.4" fill="${c}"/>
+    <rect x="2.6" y="6.4" width="18.8" height="3.6" rx="1.6" fill="${d}"/>
+    <rect x="9.4" y="4.6" width="5.2" height="2.4" rx="1" fill="${d}"/>
+    <path d="M6.6 16.4h4.6" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity=".8"/>`,
   fruit: (c, d) => `<circle cx="12" cy="13.5" r="8" fill="${c}"/>
     <path d="M17.6 7.8A8 8 0 0 1 7.6 20.2A9.6 9.6 0 0 0 17.6 7.8Z" fill="${d}"/>
     <path d="M12 6V3.4" stroke="${STEM}" stroke-width="1.4" stroke-linecap="round"/>
@@ -147,7 +152,7 @@ const FOOD_ICONS = {
   nutmeg: ["shaker", "#9a6a3d"], turmeric: ["shaker", "#f2b01e"], "curry powder": ["shaker", "#e8a21e"], "garlic powder": ["shaker", "#efe3cf"],
   "onion powder": ["shaker", "#ead9b8"], "ground ginger": ["shaker", "#e0b06a"], vanilla: ["bottle", "#5a3b2e"],
   kotleti: ["disc", "#c98b4f"], "burger patties": ["disc", "#9a5a3a"],
-  broccolini: ["bunch", "#2f9a5a"], soda: ["can", "#d8301e"], "spice rub": ["shaker", "#a0402a"],
+  broccolini: ["bunch", "#2f9a5a"], soda: ["can", "#d8301e"], "tomato juice": ["carton", "#e8452a"], "spice rub": ["shaker", "#a0402a"],
   "asparagus": ["spears", "#5fae4e"],
   "green beans": ["pods", "#4fa84a"],
   "snap peas": ["pods", "#7cc456"],
@@ -251,7 +256,7 @@ const CATEGORY_ICONS = {
   produce: ["fruit", "#8ccf7a"], dairy: ["carton", "#7ab8e8"], meat: ["meat", "#e8604c"], seafood: ["fish", "#f07a5c"],
   protein: ["block", "#f4efe2"], bakery: ["bread", "#e3a55a"], frozen: ["box", "#7ab8e8"], canned: ["can", "#c4a3cc"],
   grains: ["jar", "#f4c95d"], baking: ["bag", "#efe9dc"], condiments: ["bottle", "#f7923a"], spices: ["shaker", "#e07a3a"],
-  staples: ["bottle", "#9fd8ff"], other: ["jar", "#c4a3cc"],
+  staples: ["bottle", "#9fd8ff"], other: ["jar", "#c4a3cc"], leftovers: ["container", "#f4af30"],
 };
 
 /** @returns {{svg: string, color: string}} */

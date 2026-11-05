@@ -10,6 +10,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 
 // Sorted like grocery store aisles.
 export const FRIDGE_ZONES = [
+  { id: "leftovers", label: "Leftovers" },
   { id: "dairy", label: "Dairy and eggs" },
   { id: "meat", label: "Meat, fish and tofu" },
   { id: "other", label: "Other" },
@@ -38,6 +39,7 @@ export function zoneFor(item) {
   const c = item.category;
   if (c === "spices") return "rack"; // seasonings live on the spice rack wherever they're kept
   if (item.location === "freezer") return "freezer";
+  if (c === "leftovers") return "leftovers";
   if (item.location === "pantry") {
     if (c === "grains") return "grains";
     if (c === "baking") return "baking";
@@ -123,7 +125,7 @@ export function renderAppliances(inventory, collapsed = new Set()) {
         <div class="fridge-head">${foldHeader("fridge", "Fridge", count(FRIDGE_ZONES.map((x) => x.id)), collapsed)}</div>
         <div class="fold-body fridge-body">
           <div class="compartment main">
-            ${["dairy", "meat", "other"].filter((id) => id !== "other" || z.other?.length).map((id) => `
+            ${["leftovers", "dairy", "meat", "other"].filter((id) => !["other", "leftovers"].includes(id) || z[id]?.length).map((id) => `
               <div class="shelf" data-zone="${id}">
                 <div class="shelf-label">${label(FRIDGE_ZONES, id)}</div>
                 ${shelf(z[id], { dairy: "No dairy or eggs", meat: "No meat or fish" }[id] || "Empty shelf")}

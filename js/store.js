@@ -34,6 +34,7 @@ function safeParse(raw) {
 export function recategorize(inventory = []) {
   return inventory.map((it) => {
     // A sauce filed as something else ("burger sauce" as burger patties) becomes a sauce.
+    if (it.category === "leftovers") return it;
     const shown = it.label || it.name;
     if (SAUCE_WORDS.test(shown) && !["condiments", "canned"].includes(it.category)) {
       const { label, ...rest } = it;
@@ -107,6 +108,26 @@ export function makeItem({ name, qty = 1, unit = "count", location, category, ex
     category: cat,
     addedAt: now,
     expiresAt: expiresAt ?? (days ? now + days * DAY : null),
+  };
+}
+
+/**
+ * Leftovers from a cooked recipe: a fridge item ("Leftover Coconut Chicken Curry")
+ * counted in servings, good for about 3 days, that can be planned as a meal.
+ */
+export function makeLeftover(recipe, servings, kcalPerServing = null, now = Date.now()) {
+  return {
+    id: newId(),
+    name: "leftovers",
+    label: `Leftover ${recipe.title}`,
+    qty: Math.max(1, Math.round(servings)),
+    unit: "serving",
+    location: "fridge",
+    category: "leftovers",
+    recipeId: recipe.id,
+    kcal: Number.isFinite(kcalPerServing) && kcalPerServing > 0 ? kcalPerServing : null,
+    addedAt: now,
+    expiresAt: now + 3 * DAY,
   };
 }
 

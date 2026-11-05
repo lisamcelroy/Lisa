@@ -141,6 +141,13 @@ current ones: `sample` (with `images: true`), `db`, `user` and `downloads` (for 
 - When something runs out (Used it up, minus to zero, removed in the list, or finished by cooking), a
   pop-up asks "Add it to your shopping list?" (`askRestock`); several items get ticked checkboxes, and
   items already on the list are not added twice. Varieties keep their name ("oat milk").
+- Leftovers: after "I cooked this" (or Save leftovers on a recipe) a pop-up asks how many servings
+  are left (`askLeftovers`). They become a fridge item (`makeLeftover`: category `leftovers`, unit
+  `serving`, label "Leftover <recipe>", kcal per serving, 3 days) on a Leftovers shelf at the top of
+  the fridge, and are listed first in the meal planner (plan entry with `leftoverId`). Home suggests
+  them for a meal their recipe suits. Never offered for the shopping list when used up.
+- Typed shopping items keep what you wrote (`listName`): "tomato juice" never becomes "tomato";
+  exact known spellings are tidied ("tomatoe juice" -> "tomato juice"). A duplicate says so.
 - Shopping items added from a recipe or the week's plan show how much each recipe needs
   ("Need 2 for Banana Pancakes", stored as `item.needs`).
 - Recipes page sections fold: Fresh ideas, Filters (shows how many are on) and From the recipe book.

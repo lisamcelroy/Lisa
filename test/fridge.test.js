@@ -40,3 +40,19 @@ test("appliances render every item once and escape names", () => {
   assert.equal((html.match(/class="food /g) || []).length, 3);
   assert.ok(!html.includes("<b>odd"));
 });
+
+import { makeLeftover, recategorize } from "../js/store.js";
+import { formatQty } from "../js/units.js";
+
+test("leftovers go on their own shelf and stay leftovers", () => {
+  const lo = makeLeftover({ id: "chicken-curry", title: "Teriyaki Glaze Chicken", servings: 4 }, 2, 450);
+  assert.equal(lo.label, "Leftover Teriyaki Glaze Chicken");
+  assert.equal(zoneFor(lo), "leftovers");
+  assert.equal(zoneFor({ ...lo, location: "freezer" }), "freezer");
+  assert.equal(recategorize([lo])[0].category, "leftovers", "the word glaze doesn't make it a sauce");
+  assert.equal(formatQty(2, "serving"), "2 servings");
+  assert.equal(formatQty(1, "servings"), "1 serving");
+  const { fridge } = renderAppliances([lo]);
+  assert.match(fridge, /Leftovers/);
+  assert.doesNotMatch(renderAppliances([]).fridge, />Leftovers</, "shelf only shows when there are some");
+});

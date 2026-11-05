@@ -54,6 +54,7 @@ const N = {
   kotleti: { kcal: 220, each: 90, pkg: 500 },
   "burger patties": { kcal: 250, each: 115, pkg: 450 },
   broccolini: { kcal: 35, each: 20, bunch: 200, density: 0.4 },
+  "tomato juice": { kcal: 17, density: 1.02, can: 340 },
   soda: { kcal: 40, density: 1.04, can: 355, each: 355 },
   "spice rub": { kcal: 300, each: 2, density: 0.5 },
   "asparagus": { kcal: 20, each: 16, bunch: 450, density: 0.5 },

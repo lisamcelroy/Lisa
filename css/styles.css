@@ -1325,3 +1325,14 @@ body.searching #rec-book > .fold .chev { display: none; }
 .away-meals i { font-style: normal; font-size: .52rem; font-weight: 800; width: 12px; height: 12px; border-radius: 50%; display: grid; place-items: center; color: #fdf6ea; }
 .away-meals .meal-breakfast { background: #f4af30; } .away-meals .meal-lunch { background: #d96c81; } .away-meals .meal-dinner { background: #9f4a5c; }
 .away-chip small { font-size: .7rem; font-weight: 600; opacity: .8; margin-left: 6px; }
+
+/* Leftovers */
+.leftover-stepper { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px 0 6px; }
+.leftover-stepper .step { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--hair); background: var(--surface); font-size: 1.4rem; font-weight: 700; color: var(--text); cursor: pointer; }
+.leftover-stepper .step:disabled { opacity: .35; cursor: default; }
+.leftover-count { min-width: 110px; font-size: 1rem; }
+.leftover-count b { font: 800 1.6rem "Funnel Sans", sans-serif; margin-right: 4px; }
+.restock-icon svg { width: 32px; height: 32px; }
+.pick-head { font-size: .7rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 10px 2px 4px; }
+.pick.pick-leftover { background: color-mix(in srgb, #f4af30 14%, var(--surface)); }
+.shelf[data-zone="leftovers"] .shelf-label { color: #c98a12; }

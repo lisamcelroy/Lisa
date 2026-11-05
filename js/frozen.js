@@ -7,13 +7,13 @@ const DAY = 24 * 60 * 60 * 1000;
 
 /** Roughly how long food keeps in the freezer, by category (days). */
 export const FREEZER_DAYS = {
-  meat: 120, seafood: 90, protein: 120, dairy: 120, bakery: 90, produce: 240,
+  leftovers: 90, meat: 120, seafood: 90, protein: 120, dairy: 120, bakery: 90, produce: 240,
   grains: 180, canned: 90, condiments: 90, frozen: 240,
 };
 
 /** How long food keeps in the fridge once defrosted, by category (days). */
 export const DEFROST_DAYS = {
-  meat: 2, seafood: 2, protein: 3, dairy: 5, bakery: 4, produce: 3, frozen: 3,
+  leftovers: 2, meat: 2, seafood: 2, protein: 3, dairy: 5, bakery: 4, produce: 3, frozen: 3,
 };
 
 /** Does this text say the food is frozen? ("frozen salmon", receipt shorthand "FRZ CHKN") */
@@ -38,7 +38,7 @@ const DEFROST_HOURS_BY_NAME = {
   kotleti: 12, "burger patties": 12, sausage: 12, bacon: 12, "hot dogs": 12, ham: 12, shrimp: 8, scallops: 8, salmon: 12, "white fish": 12,
   bread: 2, buns: 2, bagel: 2, tortilla: 1, "frozen berries": 4,
 };
-const DEFROST_HOURS_BY_CATEGORY = { meat: 24, seafood: 12, protein: 12, dairy: 12, bakery: 2, produce: 6 };
+const DEFROST_HOURS_BY_CATEGORY = { leftovers: 12, meat: 24, seafood: 12, protein: 12, dairy: 12, bakery: 2, produce: 6 };
 
 /** Hours an item needs to defrost before it can be cooked. */
 export function defrostHours(item) {

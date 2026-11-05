@@ -1,10 +1,10 @@
 import { FOODS, LOCATIONS } from "./data/foods.js";
 import { RECIPES } from "./data/recipes.js";
-import { canonicalName, titleCase, foodInfo, matchFood, satisfies, searchText, typedName } from "./normalize.js";
+import { canonicalName, titleCase, foodInfo, matchFood, satisfies, searchText, typedName, listName } from "./normalize.js";
 import { parseReceipt } from "./receipt.js";
 import { parseRecipeText } from "./recipeImport.js";
 import { recommend, cookRecipe, daysLeft, SOON_DAYS } from "./recommend.js";
-import { loadState, saveState, makeItem, addToInventory, newId, toSynced, adoptRemote, mergeOnLoad, toKitchen, adoptKitchen, toPersonal, adoptSettings, newHouseholdCode, cleanCode, showCode } from "./store.js";
+import { loadState, saveState, makeItem, makeLeftover, addToInventory, newId, toSynced, adoptRemote, mergeOnLoad, toKitchen, adoptKitchen, toPersonal, adoptSettings, newHouseholdCode, cleanCode, showCode } from "./store.js";
 import { connectCloud } from "./cloud.js";
 import { accountsAvailable, startAccounts, backendFor, signInWithGoogle, signInWithEmail, createAccount, resetPassword, signOut } from "./firebase.js";
 import { renderAppliances } from "./fridge.js";
@@ -389,7 +389,7 @@ function renderHome() {
   const day = state.plan[today] || {};
   const c = dayCalories(day);
   const due = defrostReminders().filter((x) => !x.done && x.when === "today");
-  const soon = state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS && !needsDefrost(it));
+  const soon = state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS && !needsDefrost(it) && it.category !== "leftovers");
   const ranked = recommend(allRecipes(), state.inventory, { assumeStaples: state.settings.assumeStaples });
   const ready = ranked.filter((r) => !r.missing.length && r.have.length && !r.frozen.length && !isBlocked(r) && mealsFor(r.recipe).includes(currentMeal(state.settings.mealTimes)) && !disliked(r));
 
@@ -400,7 +400,16 @@ function renderHome() {
   else if (c.meals) lines.push(`You have ${c.meals} of 3 meals planned today${c.total ? `, about ${c.total} kcal so far` : ""}.`);
   else lines.push(`Nothing is planned for today yet.${ready.length ? ` You could make ${ready[0].recipe.title} for ${currentMeal(state.settings.mealTimes)} right now.` : ""}`);
   if (due.length) lines.push(`Don't forget to defrost the ${frozenNames(due.flatMap((x) => x.frozen)).join(" and ")}.`);
-  else if (soon.length) lines.push(`Use up the ${soon.slice(0, 2).map((it) => it.name).join(" and ")} soon.`);
+  else if (soon.length) lines.push(`Use up the ${soon.slice(0, 2).map((it) => it.label || it.name).join(" and ")} soon.`);
+  const lo = leftovers().filter((it) => !Object.values(state.plan[today] || {}).some((e) => e?.leftoverId === it.id));
+  if (lo.length && c.meals < 3) {
+    // Suggest the leftovers for a meal their recipe suits: now if it fits, otherwise the next one that does.
+    const suits = mealsFor(findRecipe(lo[0].recipeId) || { tags: [] });
+    const now = currentMeal(state.settings.mealTimes);
+    const order = ["breakfast", "lunch", "dinner"];
+    const when = suits.includes(now) ? now : order.slice(order.indexOf(now)).find((m) => suits.includes(m)) || `tomorrow's ${suits.find((m) => order.includes(m)) || "lunch"}`;
+    lines.push(`You have ${lo[0].label.replace(/^Leftover /, "leftover ").toLowerCase()} in the fridge, perfect for ${when}.`);
+  }
   $("#hello-sub").textContent = lines.join(" ");
 
   // Today's meals.
@@ -1308,6 +1317,7 @@ function openRecipe(id) {
       ${isIdea ? `<button class="btn" data-act="keep">Save to my recipes</button>` : ""}
       ${r.missing.length ? `<button class="btn" data-act="shop">Add ${r.missing.length} to shopping list</button>` : ""}
       <button class="btn" data-act="plan">Plan it</button>
+      <button class="btn" data-act="leftovers">Save leftovers</button>
       <button class="btn primary" data-act="cook">I cooked this</button>
       <button class="btn" data-act="close">Close</button>
     </div>
@@ -1335,8 +1345,10 @@ function openRecipe(id) {
       commit();
       dlg.close();
       const gone = before.filter((it) => !inventory.some((x) => x.id === it.id));
-      if (gone.length) askRestock(gone, { intro: "Enjoy! That used up the last of" });
-      else toast(unchanged.length ? `Updated your kitchen. Check amounts of: ${unchanged.join(", ")}` : "Enjoy! Your kitchen has been updated.");
+      askLeftovers(recipe, () => {
+        if (gone.length) askRestock(gone, { intro: "That used up the last of" });
+        else if (unchanged.length) toast(`Updated your kitchen. Check amounts of: ${unchanged.join(", ")}`);
+      });
     }
     if (act === "delete") {
       state.customRecipes = state.customRecipes.filter((x) => x.id !== recipe.id);
@@ -1344,6 +1356,7 @@ function openRecipe(id) {
       dlg.close();
     }
     if (act === "edit") return openRecipeEditor(recipe.id);
+    if (act === "leftovers") { dlg.close(); return askLeftovers(recipe, null, { asked: false }); }
     if (act === "rate-up" || act === "rate-down") {
       const want = act === "rate-up" ? "up" : "down";
       state.recipeFeedback = { ...(state.recipeFeedback || {}) };
@@ -1763,10 +1776,15 @@ function pickList() {
     .filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.ingredients.some((i) => i.name.includes(q)))
     .sort((a, b) => (isBlocked(a, planUi.slot.day, planUi.slot.meal) - isBlocked(b, planUi.slot.day, planUi.slot.meal)) || (disliked(a) - disliked(b)) || (suits(b) - suits(a)) || b.score - a.score)
     .slice(0, 40);
-  return ranked.length
+  const lo = q ? [] : leftovers();
+  const loHtml = lo.length
+    ? `<p class="pick-head">Leftovers in your fridge</p>` + lo.map((it) => `<button class="pick pick-leftover" data-leftover="${esc(it.id)}"><b>${esc(it.label || "Leftovers")}</b>
+        <span>${it.qty} serving${it.qty === 1 ? "" : "s"} left${it.kcal ? ` &middot; ~${it.kcal} kcal` : ""} &middot; ${expiryText(it) || "eat soon"}</span></button>`).join("") + `<p class="pick-head">Recipes</p>`
+    : "";
+  return loHtml + (ranked.length
     ? ranked.map((r) => `<button class="pick" data-recipe="${esc(r.recipe.id)}"><b>${esc(r.recipe.title)}</b>
         <span>${r.recipe.minutes} min${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""} &middot; ${r.missing.length ? `need ${r.missing.length}` : "you have everything"}${r.recipe.idea ? " &middot; idea" : ""}${isBlocked(r, planUi.slot.day, planUi.slot.meal) ? " &middot; someone won't eat this" : ""}${suits(r) ? "" : ` &middot; usually ${mealsFor(r.recipe).map((m) => MEAL_TYPE_LABEL[m].toLowerCase()).join(" or ")}`}</span></button>`).join("")
-    : `<div class="empty">No recipes match.</div>`;
+    : `<div class="empty">No recipes match.</div>`);
 }
 
 function openSlotPicker(day, meal) {
@@ -1834,6 +1852,12 @@ $("#plan-dialog").addEventListener("click", (e) => {
     dlg.close();
     return toast(`Planned for ${MEAL_LABEL[planUi.meal].toLowerCase()} on ${shortDate(fromIsoDay(day))}`);
   }
+  const loId = e.target.closest("[data-leftover]")?.dataset.leftover;
+  if (loId && planUi.slot) {
+    const it = state.inventory.find((x) => x.id === loId);
+    if (it) setPlan(planUi.slot.day, planUi.slot.meal, { text: it.label || "Leftovers", kcal: it.kcal || null, leftoverId: it.id });
+    return dlg.close();
+  }
   const id = e.target.closest("[data-recipe]")?.dataset.recipe;
   if (id && planUi.slot) {
     const recipe = findRecipe(id);
@@ -1851,6 +1875,51 @@ $("#plan-dialog").addEventListener("click", (e) => {
 
 // ---------- Shopping ----------
 
+// ---------- Leftovers ----------
+// After cooking (or from Save leftovers on a recipe): how many servings are left?
+// They go on the fridge's Leftovers shelf and show up first when planning a meal.
+
+function askLeftovers(recipe, then, { asked = true } = {}) {
+  const dlg = $("#restock-dialog");
+  let n = asked ? 0 : 1;
+  const max = Math.max(1, Number(recipe.servings) || 4);
+  const draw = () => {
+    $("#restock-detail").innerHTML = `
+      <div class="restock">
+        <span class="restock-icon" aria-hidden="true">${foodIcon("leftovers", "leftovers").svg}</span>
+        <h2>${asked ? "Enjoy! Any leftovers?" : "Save leftovers"}</h2>
+        <p class="muted">${asked ? "Save them to the fridge and plan them for another meal." : `How many servings of ${esc(recipe.title)} are left?`}</p>
+        <div class="leftover-stepper" role="group" aria-label="Servings left over">
+          <button type="button" class="step" data-lo="dec" aria-label="Fewer servings" ${n <= (asked ? 0 : 1) ? "disabled" : ""}>&minus;</button>
+          <span class="leftover-count"><b>${n}</b> serving${n === 1 ? "" : "s"}</span>
+          <button type="button" class="step" data-lo="inc" aria-label="More servings" ${n >= max ? "disabled" : ""}>+</button>
+        </div>
+        <div class="row end">
+          <button type="button" class="btn" data-lo="no">${asked ? "No leftovers" : "Cancel"}</button>
+          <button type="button" class="btn primary" data-lo="save" ${n ? "" : "disabled"}>Save to fridge</button>
+        </div>
+      </div>`;
+  };
+  const finish = () => { dlg.close(); if (then) setTimeout(then, 150); };
+  dlg.onclick = (e) => {
+    const act = e.target.closest("[data-lo]")?.dataset.lo;
+    if (e.target === dlg || act === "no") return finish();
+    if (act === "inc") { n = Math.min(max, n + 1); return draw(); }
+    if (act === "dec") { n = Math.max(asked ? 0 : 1, n - 1); return draw(); }
+    if (act === "save" && n) {
+      const item = makeLeftover(recipe, n, kcalOf(recipe));
+      state.inventory = [...state.inventory, item];
+      commit();
+      toast(`${item.label} saved: ${n} serving${n === 1 ? "" : "s"} in the fridge`);
+      finish();
+    }
+  };
+  draw();
+  if (!dlg.open) dlg.showModal();
+}
+
+const leftovers = () => state.inventory.filter((it) => it.category === "leftovers" && it.qty > 0 && (!it.expiresAt || it.expiresAt > Date.now()));
+
 // ---------- Used it up: add to the shopping list? ----------
 // Whenever something runs out (marked used up, stepped down to zero, removed,
 // or finished by cooking), ask whether to put it on the shopping list.
@@ -1859,6 +1928,7 @@ const shopName = (it) => (it.label || it.name).toLowerCase();
 const onList = (it) => state.shopping.some((s) => !s.done && (s.name === shopName(it) || s.name === it.name));
 
 function askRestock(items, { intro } = {}) {
+  items = items.filter((it) => it.category !== "leftovers");
   const seen = new Set();
   items = items.filter((it) => !seen.has(shopName(it)) && seen.add(shopName(it)));
   if (!items.length) return;
@@ -1937,10 +2007,17 @@ function renderShopping() {
     : `<div class="empty">Your list is empty. Missing recipe ingredients can be added from any recipe.</div>`;
 }
 
+// Typed items keep what you wrote; tell the person if it's already there.
 $("#shop-form").addEventListener("submit", (e) => {
   e.preventDefault();
-  addToShopping([$("#shop-name").value]);
+  const name = listName($("#shop-name").value);
+  if (!name) return;
+  const dup = state.shopping.find((s) => !s.done && searchText(s.name) === searchText(name));
+  if (dup) return toast(`${titleCase(dup.name)} is already on your list`);
+  state.shopping = state.shopping.filter((s) => !(s.done && searchText(s.name) === searchText(name)));
+  state.shopping.push({ id: newId(), name, done: false, addedAt: Date.now() });
   $("#shop-name").value = "";
+  commit();
 });
 
 $("#shopping").addEventListener("click", (e) => {

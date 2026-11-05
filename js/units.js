@@ -17,6 +17,7 @@ const UNIT_ALIASES = {
   bunch: "bunch", bunches: "bunch", head: "head", heads: "head",
   dozen: "dozen", dz: "dozen", doz: "dozen",
   slice: "slice", slices: "slice",
+  serving: "serving", servings: "serving", portion: "serving", portions: "serving",
 };
 
 // Base unit and factor for each family.
@@ -36,7 +37,7 @@ export function isUnitWord(word) {
   return key !== "" && key in UNIT_ALIASES;
 }
 
-export const UNIT_CHOICES = ["count", "g", "kg", "lb", "oz", "ml", "l", "cup", "tbsp", "tsp", "can", "pkg", "bunch", "head", "slice"];
+export const UNIT_CHOICES = ["count", "g", "kg", "lb", "oz", "ml", "l", "cup", "tbsp", "tsp", "can", "pkg", "bunch", "head", "slice", "serving"];
 
 /**
  * Subtract `amount useUnit` from `stock stockUnit`.
@@ -60,5 +61,6 @@ export function formatQty(qty, unit) {
   const u = normalizeUnit(unit);
   const q = Number.isFinite(qty) ? +qty.toFixed(2) : "";
   if (u === "count") return `${q}`;
+  if (u === "serving") return `${q} serving${q === 1 ? "" : "s"}`;
   return `${q} ${u}`;
 }
