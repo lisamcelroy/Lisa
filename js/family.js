@@ -19,14 +19,52 @@ export function prefHits(food, ing) {
   return FOOD_BY_NAME.get(ing)?.parent === food;
 }
 
-/** Is this person out on `day` (an ISO date like "2026-11-06")? */
-export const isOut = (m, day) => Boolean(day && (m.away || []).includes(day));
+// Days out are stored as "2026-11-06" (out all day) or "2026-11-06:dinner" (out for one meal).
+const MEALS3 = ["breakfast", "lunch", "dinner"];
+const dayOf = (entry) => entry.slice(0, 10);
 
-/** Members eating at home on `day` (everyone who hasn't said they're out that day). */
-export const eating = (family = [], day) => family.filter((m) => !isOut(m, day));
+/**
+ * Is this person out on `day`? With a `meal`, true when they're out for that meal
+ * (or all day); without one, only when they're out all day.
+ */
+export const isOut = (m, day, meal) => Boolean(day && ((m.away || []).includes(day) || (meal && (m.away || []).includes(`${day}:${meal}`))));
+
+/** "all" when out all day, otherwise the meals they're out for that day (maybe none). */
+export function outMeals(m, day) {
+  const away = m.away || [];
+  if (away.includes(day)) return "all";
+  return MEALS3.filter((meal) => away.includes(`${day}:${meal}`));
+}
+
+/** "all day", "dinner", "lunch and dinner" */
+export function outLabel(m, day) {
+  const meals = outMeals(m, day);
+  if (meals === "all") return "all day";
+  return meals.length < 2 ? meals.join("") : `${meals.slice(0, -1).join(", ")} and ${meals.at(-1)}`;
+}
+
+/**
+ * Tap a day in the calendar: `choice` is "all" or a meal.
+ * All day toggles the whole day; a meal toggles just that meal (all three make all day).
+ */
+export function toggleAway(away = [], day, choice) {
+  const others = away.filter((e) => dayOf(e) !== day);
+  const now = outMeals({ away }, day);
+  if (choice === "all") return now === "all" ? others : [...others, day].sort();
+  let meals = now === "all" ? [...MEALS3] : now;
+  meals = meals.includes(choice) ? meals.filter((x) => x !== choice) : [...meals, choice];
+  if (meals.length === MEALS3.length) return [...others, day].sort();
+  return [...others, ...meals.map((x) => `${day}:${x}`)].sort();
+}
+
+/** Members eating at home on `day` (for `meal`, if given). */
+export const eating = (family = [], day, meal) => family.filter((m) => !isOut(m, day, meal));
 
 /** Forget days out that are already over. */
-export const pruneAway = (away = [], today) => away.filter((d) => d >= today).sort();
+export const pruneAway = (away = [], today) => away.filter((d) => dayOf(d) >= today).sort();
+
+/** The days (today on) someone is out at least partly, in order. */
+export const awayDays = (m, today) => [...new Set((m.away || []).map(dayOf))].filter((d) => d >= today).sort();
 
 /**
  * What the people eating think of a recipe.
@@ -35,9 +73,9 @@ export const pruneAway = (away = [], today) => away.filter((d) => d >= today).so
  * tolerate: someone tolerates it; keep it small or on the side.
  * loves: someone loves an ingredient in it.
  */
-export function familyCheck(recipe, family = [], day) {
+export function familyCheck(recipe, family = [], day, meal) {
   const out = { blocked: [], leaveOut: [], tolerate: [], loves: [], advice: [] };
-  for (const m of eating(family, day)) {
+  for (const m of eating(family, day, meal)) {
     // Allergies and diets rule ingredients out, like "allergic" and "hates" do.
     const rules = [
       ...(m.allergies || []).map((id) => ALLERGEN_BY_ID[id] && { test: ALLERGEN_BY_ID[id].test, level: "allergic", why: `${ALLERGEN_BY_ID[id].label.toLowerCase()} allergy` }),
@@ -98,8 +136,8 @@ export function familyNotes(check) {
 }
 
 /** A line for Claude so fresh ideas respect everyone at the table. */
-export function familyRequest(family = [], day) {
-  const at = eating(family, day).filter((m) => m.name);
+export function familyRequest(family = [], day, meal) {
+  const at = eating(family, day, meal).filter((m) => m.name);
   if (!at.length) return "";
   const group = (level) => {
     const out = [];

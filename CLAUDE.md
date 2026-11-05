@@ -166,7 +166,11 @@ current ones: `sample` (with `images: true`), `db`, `user` and `downloads` (for 
   from the meal's start time (Settings, Meal times) minus how long the food takes to thaw
   (`defrostHours` in `js/frozen.js`: chicken 24h, shrimp 8h, bread 2h...). Each reminder has a tick:
   ticking moves the food to the fridge, unticking puts it back (`state.defrostLog`, synced).
-- Days out are set in a calendar dialog (next five weeks); tap a day to mark it, tap again to undo.
+- Days out are set in a calendar dialog (next five weeks): pick All day, Breakfast, Lunch or Dinner,
+  then tap days; tap again to undo. Stored in `m.away` as "2026-11-06" (all day) or
+  "2026-11-06:dinner" (`toggleAway`, `outMeals`, `outLabel` in `js/family.js`); all three meals
+  collapse to all day. Family checks take the meal: the planner uses the slot's meal, everything
+  else today uses the meal filter or the current meal.
 - Backups (Settings, Your data): Export backup saves a .json file (through the `downloads` capability
   on claude.ai, a normal download elsewhere); Copy backup puts the same text on the clipboard; Import
   backup or Paste backup restores it. Backups never include the API key or share code.

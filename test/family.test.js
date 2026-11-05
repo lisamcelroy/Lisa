@@ -76,3 +76,25 @@ test("salt diets give advice instead of hiding recipes", () => {
   assert.match(familyNotes(familyCheck(byTitle("Veggie Omelette"), high)).map((n) => n.text).join(" "), /High salt for Andrey/);
   assert.match(familyRequest([{ id: "x", name: "Andrey", allergies: ["peanuts"], diets: ["keto"], prefs: [] }]), /Andrey is allergic to peanuts.*Andrey eats keto/);
 });
+
+import { toggleAway, outMeals, outLabel } from "../js/family.js";
+
+test("days out can be for one meal or the whole day", () => {
+  const fam = [{ id: "a", name: "Lisa", prefs: [{ food: "mushroom", level: "hates" }], away: ["2026-11-06:dinner"] }];
+  const pasta = byTitle("Creamy Mushroom Pasta");
+  assert.equal(familyCheck(pasta, fam, "2026-11-06", "dinner").blocked.length, 0, "out for dinner");
+  assert.equal(familyCheck(pasta, fam, "2026-11-06", "lunch").blocked.length, 1, "home for lunch");
+  assert.equal(outLabel(fam[0], "2026-11-06"), "dinner");
+  let away = toggleAway([], "2026-11-07", "lunch");
+  away = toggleAway(away, "2026-11-07", "dinner");
+  assert.equal(outLabel({ away }, "2026-11-07"), "lunch and dinner");
+  away = toggleAway(away, "2026-11-07", "breakfast");
+  assert.equal(outMeals({ away }, "2026-11-07"), "all", "all three meals is all day");
+  away = toggleAway(away, "2026-11-07", "dinner");
+  assert.deepEqual(outMeals({ away }, "2026-11-07"), ["breakfast", "lunch"], "taking one meal off an all-day");
+  away = toggleAway(away, "2026-11-07", "all");
+  assert.equal(outMeals({ away }, "2026-11-07"), "all");
+  away = toggleAway(away, "2026-11-07", "all");
+  assert.deepEqual(away, []);
+  assert.deepEqual(pruneAway(["2026-11-01:dinner", "2026-11-09:lunch"], "2026-11-05"), ["2026-11-09:lunch"]);
+});

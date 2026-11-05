@@ -15,7 +15,7 @@ import { estimateCalories } from "./nutrition.js";
 import { KEYWORDS, KEYWORD_IDS, KEYWORD_LABEL, keywordsFor } from "./data/keywords.js";
 import { MEALS, MEAL_LABEL, isoDay, fromIsoDay, weekDays, dayCalories, prunePlan, plannedRecipeIds } from "./plan.js";
 import { UNIT_CHOICES, formatQty, normalizeUnit } from "./units.js";
-import { LEVELS, LEVEL_LABEL, familyCheck, familyNotes, familyRequest, eating, isOut, pruneAway, ALLERGENS, DIETS } from "./family.js";
+import { LEVELS, LEVEL_LABEL, familyCheck, familyNotes, familyRequest, eating, isOut, pruneAway, outMeals, outLabel, toggleAway, awayDays, ALLERGENS, DIETS } from "./family.js";
 import { MEAL_TYPES, MEAL_TYPE_LABEL, mealsFor, mealNow } from "./data/meals.js";
 import { groceryOutlook, dayWord, isoOf } from "./supply.js";
 import { TIME_OPTIONS, PREP_OPTIONS, fitsTime, todaysChoice, timeRequest } from "./cooktime.js";
@@ -1199,17 +1199,18 @@ function ratingRequest() {
 
 // Family preferences on the Recipes tab (for whoever is eating that day; today unless given).
 const todayIso = () => isoDay(new Date());
-const isBlocked = (r, day = todayIso()) => familyCheck(r.recipe, state.family, day).blocked.length > 0;
+const mealNowFor = () => (ui.meal && ["breakfast", "lunch", "dinner"].includes(ui.meal) ? ui.meal : currentMeal(state.settings.mealTimes));
+const isBlocked = (r, day = todayIso(), meal = day === todayIso() ? mealNowFor() : undefined) => familyCheck(r.recipe, state.family, day, meal).blocked.length > 0;
 
 function blockedNote(n) {
   if (!n) return "";
-  const who = eating(state.family, todayIso()).map((m) => m.name);
+  const who = eating(state.family, todayIso(), mealNowFor()).map((m) => m.name);
   return `<div class="family-hidden">${ui.showBlocked ? `Showing ${n} recipe${n > 1 ? "s" : ""} someone won't eat.` : `Hiding ${n} recipe${n > 1 ? "s" : ""} ${esc(who.length > 1 ? "someone at the table" : who[0] || "someone")} won't eat.`}
     <button class="btn small" data-act="toggle-blocked">${ui.showBlocked ? "Hide them" : "Show them"}</button></div>`;
 }
 
 function familyLines(recipe) {
-  return familyNotes(familyCheck(recipe, state.family, todayIso()))
+  return familyNotes(familyCheck(recipe, state.family, todayIso(), mealNowFor()))
     .map((n) => `<div class="fam-note fam-${n.kind}">${esc(n.text)}</div>`).join("");
 }
 
@@ -1474,7 +1475,7 @@ const HIDE_CODES = ["not_granted", "sampling_disabled", "not_declared", "capabil
 const kitchenKey = () => {
   const t = cookTime();
   return [...new Set(state.inventory.map((it) => it.name))].sort().join("|") + (t ? `@${t.time}:${t.prep.join(",")}` : "") +
-    (familyRequest(state.family, todayIso()) ? "#" + familyRequest(state.family, todayIso()) : "") + (ui.meal !== "any" ? "~" + ui.meal : "");
+    (familyRequest(state.family, todayIso(), mealNowFor()) ? "#" + familyRequest(state.family, todayIso(), mealNowFor()) : "") + (ui.meal !== "any" ? "~" + ui.meal : "");
 };
 
 function ideaSource() {
@@ -1532,7 +1533,7 @@ async function fetchIdeas({ fresh = false, more = false } = {}) {
 
   const opts = {
     soon: state.inventory.filter((it) => daysLeft(it) <= SOON_DAYS).map((it) => it.name),
-    request: [$("#ai-request").value.trim(), timeRequest(cookTime()), familyRequest(state.family, todayIso()), ratingRequest(), ui.meal !== "any" ? `These are for ${ui.meal}, so every recipe must suit ${ui.meal}` : ""].filter(Boolean).join(". "),
+    request: [$("#ai-request").value.trim(), timeRequest(cookTime()), familyRequest(state.family, todayIso(), mealNowFor()), ratingRequest(), ui.meal !== "any" ? `These are for ${ui.meal}, so every recipe must suit ${ui.meal}` : ""].filter(Boolean).join(". "),
     exclude: more ? state.ideas.recipes.map((r) => r.title) : [],
   };
   try {
@@ -1760,11 +1761,11 @@ function pickList() {
   const pool = [...allRecipes(), ...state.ideas.recipes];
   const ranked = recommend(pool, state.inventory, { assumeStaples: state.settings.assumeStaples })
     .filter((r) => !q || r.recipe.title.toLowerCase().includes(q) || r.recipe.ingredients.some((i) => i.name.includes(q)))
-    .sort((a, b) => (isBlocked(a, planUi.slot.day) - isBlocked(b, planUi.slot.day)) || (disliked(a) - disliked(b)) || (suits(b) - suits(a)) || b.score - a.score)
+    .sort((a, b) => (isBlocked(a, planUi.slot.day, planUi.slot.meal) - isBlocked(b, planUi.slot.day, planUi.slot.meal)) || (disliked(a) - disliked(b)) || (suits(b) - suits(a)) || b.score - a.score)
     .slice(0, 40);
   return ranked.length
     ? ranked.map((r) => `<button class="pick" data-recipe="${esc(r.recipe.id)}"><b>${esc(r.recipe.title)}</b>
-        <span>${r.recipe.minutes} min${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""} &middot; ${r.missing.length ? `need ${r.missing.length}` : "you have everything"}${r.recipe.idea ? " &middot; idea" : ""}${isBlocked(r, planUi.slot.day) ? " &middot; someone won't eat this" : ""}${suits(r) ? "" : ` &middot; usually ${mealsFor(r.recipe).map((m) => MEAL_TYPE_LABEL[m].toLowerCase()).join(" or ")}`}</span></button>`).join("")
+        <span>${r.recipe.minutes} min${kcalText(r.recipe) ? " &middot; " + kcalText(r.recipe) : ""} &middot; ${r.missing.length ? `need ${r.missing.length}` : "you have everything"}${r.recipe.idea ? " &middot; idea" : ""}${isBlocked(r, planUi.slot.day, planUi.slot.meal) ? " &middot; someone won't eat this" : ""}${suits(r) ? "" : ` &middot; usually ${mealsFor(r.recipe).map((m) => MEAL_TYPE_LABEL[m].toLowerCase()).join(" or ")}`}</span></button>`).join("")
     : `<div class="empty">No recipes match.</div>`;
 }
 
@@ -2373,7 +2374,7 @@ function renderFamily() {
       return prefs.length ? `<div class="pref-group"><span class="pref-level lvl-${l.id}">${l.label}</span>${prefs.map((p) =>
         `<span class="pref-chip lvl-${l.id}">${esc(p.food)}<button aria-label="Remove ${esc(p.food)}" data-fam="del-pref" data-member="${m.id}" data-food="${esc(p.food)}">&times;</button></span>`).join("")}</div>` : "";
     }).join("");
-    const later = (m.away || []).filter((d) => d > today);
+    const later = awayDays(m, today).filter((d) => d > today || outMeals(m, d) !== "all");
     return `<div class="card member${isOut(m, today) ? " away" : ""}">
       <div class="member-head">
         <span class="avatar" style="background:${AVATAR[i % AVATAR.length]}">${esc((m.name[0] || "?").toUpperCase())}</span>
@@ -2395,7 +2396,7 @@ function renderFamily() {
       ${byLevel || `<p class="muted small">No food preferences yet.</p>`}
       <div class="away-row">
         <span class="pref-level">Out on</span>
-        ${later.map((d) => `<span class="pref-chip away-chip">${esc(shortDate(fromIsoDay(d)))}<button aria-label="${esc(m.name)} is home on ${esc(shortDate(fromIsoDay(d)))}" data-fam="del-away" data-member="${m.id}" data-day="${d}">&times;</button></span>`).join("")}
+        ${later.map((d) => `<span class="pref-chip away-chip">${esc(d === today ? "Today" : shortDate(fromIsoDay(d)))}<small>${esc(outLabel(m, d))}</small><button aria-label="${esc(m.name)} is home on ${esc(shortDate(fromIsoDay(d)))}" data-fam="del-away" data-member="${m.id}" data-day="${d}">&times;</button></span>`).join("")}
         <button type="button" class="btn small" data-fam="away" data-member="${m.id}">${later.length ? "Change days out" : "+ A day out"}</button>
       </div>
       <form class="pref-form" data-member="${m.id}">
@@ -2442,11 +2443,11 @@ $("#family-list").addEventListener("click", (e) => {
   if (act === "add-me") addMember(state.settings.name || "");
   if (act === "today" && m) {
     const today = todayIso();
-    m.away = isOut(m, today) ? m.away.filter((d) => d !== today) : [...(m.away || []), today];
+    m.away = toggleAway(m.away, today, "all");
     commit();
     toast(isOut(m, today) ? `${m.name} is out today. Recipes are for everyone else.` : `${m.name} is eating at home today`);
   }
-  if (act === "del-away" && m) { m.away = m.away.filter((d) => d !== b.dataset.day); commit(); toast(`${m.name} is home on ${shortDate(fromIsoDay(b.dataset.day))}`); }
+  if (act === "del-away" && m) { m.away = m.away.filter((d) => d.slice(0, 10) !== b.dataset.day); commit(); toast(`${m.name} is home on ${shortDate(fromIsoDay(b.dataset.day))}`); }
   if (act === "away" && m) openAwayPicker(m.id);
   if ((act === "allergy" || act === "diet") && m) {
     const key = act === "allergy" ? "allergies" : "diets";
@@ -2490,27 +2491,35 @@ function openAwayPicker(memberId) {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
       const iso = isoDay(d);
-      const out = isOut(m, iso);
+      const meals = outMeals(m, iso);
+      const all = meals === "all";
+      const part = !all && meals.length > 0;
       const past = iso < today;
-      cells.push(`<button type="button" class="away-day${out ? " on" : ""}${iso === today ? " today" : ""}" ${past ? "disabled" : ""} data-away-day="${iso}" aria-pressed="${out}" aria-label="${esc(shortDate(d))}${out ? ", out" : ""}">
-        ${d.getDate() === 1 || i === 0 ? `<small>${d.toLocaleDateString(undefined, { month: "short" })}</small>` : ""}${d.getDate()}</button>`);
+      cells.push(`<button type="button" class="away-day${all ? " on" : ""}${part ? " part" : ""}${iso === today ? " today" : ""}" ${past ? "disabled" : ""} data-away-day="${iso}" aria-pressed="${all || part}" aria-label="${esc(shortDate(d))}${all || part ? `, out ${outLabel(m, iso)}` : ""}">
+        ${d.getDate() === 1 || i === 0 ? `<small>${d.toLocaleDateString(undefined, { month: "short" })}</small>` : ""}${d.getDate()}
+        ${part ? `<span class="away-meals">${meals.map((x) => `<i class="meal-${x}">${x[0].toUpperCase()}</i>`).join("")}</span>` : ""}</button>`);
     }
-    const days = (m.away || []).filter((d) => d >= today);
+    const days = awayDays(m, today);
+    const pick = ui.awayMeal || "all";
     $("#away-detail").innerHTML = `
       <h2>Days ${esc(m.name)} is out</h2>
-      <p class="muted small">Tap a day to mark ${esc(m.name)} as out. Tap it again if plans change.</p>
+      <p class="muted small">Pick what ${esc(m.name)} is out for, then tap the days. Tap a day again if plans change.</p>
+      <div class="chips away-pick" role="group" aria-label="Out for">${[["all", "All day"], ["breakfast", "Breakfast"], ["lunch", "Lunch"], ["dinner", "Dinner"]].map(([id, label]) =>
+        `<button type="button" class="chip ${pick === id ? "active" : ""}" data-away-pick="${id}" aria-pressed="${pick === id}">${label}</button>`).join("")}</div>
       <div class="away-head">${["M", "T", "W", "T", "F", "S", "S"].map((x) => `<span>${x}</span>`).join("")}</div>
       <div class="away-grid">${cells.join("")}</div>
-      <p class="small away-summary">${days.length ? `Out on ${days.map((d) => esc(shortDate(fromIsoDay(d)))).join(", ")}` : "Home every day"}</p>
+      <p class="small away-summary">${days.length ? `Out on ${days.map((d) => `${esc(shortDate(fromIsoDay(d)))} (${esc(outLabel(m, d))})`).join(", ")}` : "Home every day"}</p>
       <div class="row end">${days.length ? `<button type="button" class="btn" data-away-clear>Clear all</button>` : ""}<button type="button" class="btn primary" data-away-done>Done</button></div>`;
   };
   dlg.onclick = (e) => {
     if (e.target === dlg || e.target.closest("[data-away-done]")) return dlg.close();
     const m = state.family.find((x) => x.id === memberId);
     if (!m) return;
+    const pickBtn = e.target.closest("[data-away-pick]");
+    if (pickBtn) { ui.awayMeal = pickBtn.dataset.awayPick; return draw(); }
     if (e.target.closest("[data-away-clear]")) m.away = [];
     const day = e.target.closest("[data-away-day]")?.dataset.awayDay;
-    if (day) m.away = isOut(m, day) ? m.away.filter((d) => d !== day) : pruneAway([...(m.away || []), day], todayIso());
+    if (day) m.away = pruneAway(toggleAway(m.away, day, ui.awayMeal || "all"), todayIso());
     if (day || e.target.closest("[data-away-clear]")) { commit(); draw(); }
   };
   draw();
